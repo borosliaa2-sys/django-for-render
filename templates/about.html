@@ -1,0 +1,77 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}درباره ما | عطارباشی{% endblock title %}
+{% block content %}
+<div class="static-page-wrap">
+  <div class="static-card">
+    <div class="page-badge"><i class="ri-leaf-line"></i> داستان عطارباشی</div>
+    <h1>درباره فروشگاه عطاری و محصولات سنتی عطارباشی</h1>
+    
+    <div class="static-content">
+      <p class="lead-text">
+        «عطارباشی» فقط یک فروشگاه آنلاین نیست؛ پاتوقی جان‌آشنا برای علاقه‌مندان به سبک زندگی سالم، طب کهن ایرانی و درمان‌های اصیل گیاهی است.
+      </p>
+
+      <h2>رسالت و ارزش‌های ما</h2>
+      <p>
+        هدف ما در عطارباشی ارائه باکیفیت‌ترین و تازه‌ترین گیاهان دارویی، دمنوش‌های ارگانیک، عرقیات سنتی دوآتشه و خشکبار اعلا است. تمامی محصولات پس از بازبینی کیفی دقیق و با رعایت بالاترین استانداردهای بهداشتی بسته‌بندی می‌شوند تا طراوت و خواص طبیعی آن‌ها به طور کامل حفظ گردد.
+      </p>
+
+      <div class="about-grid">
+        <div class="about-item">
+          <i class="ri-shield-check-line"></i>
+          <h3>تضمین اصالت ۱۰۰٪</h3>
+          <p>تهیه مستقیم از بهترین مزارع و تولیدکنندگان سنتی کشور</p>
+        </div>
+        <div class="about-item">
+          <i class="ri-microscope-line"></i>
+          <h3>خلوص و بهداشت</h3>
+          <p>بدون اسانس‌های مصنوعی و فرآوری استاندارد بدون رطوبت</p>
+        </div>
+        <div class="about-item">
+          <i class="ri-heart-pulse-line"></i>
+          <h3>مشاوره تخصصی مزاج</h3>
+          <p>راهنمایی انتخاب مصلحات متناسب با طبع هر فرد</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+  .static-page-wrap {
+    padding: 20px 14px 40px;
+    background: #fdfcfb;
+  }
+  .static-card {
+    max-width: 900px;
+    margin: 0 auto;
+    background: #fff;
+    border: 1.5px solid rgba(255, 128, 93, 0.2);
+    border-radius: 20px;
+    padding: 36px 28px;
+    box-shadow: 0 8px 30px rgba(0,0,0,0.03);
+  }
+  .page-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: #faece1;
+    color: var(--secondary-color, #ff805d);
+    font-size: 0.82rem;
+    font-weight: 800;
+    padding: 4px 14px;
+    border-radius: 20px;
+    margin-bottom: 12px;
+  }
+  .static-card h1 { font-size: 1.5rem; font-weight: 900; color: #2b1f15; margin-bottom: 18px; }
+  .lead-text { font-size: 1.05rem; font-weight: 700; color: #4a3b2c; line-height: 1.8; background: #fff8f4; border-right: 4px solid var(--secondary-color, #ff805d); padding: 14px 18px; border-radius: 10px; margin-bottom: 24px; }
+  .static-content p { font-size: 0.95rem; line-height: 1.8; color: #554433; margin-bottom: 20px; text-align: justify; }
+  .static-content h2 { font-size: 1.2rem; font-weight: 800; color: #2b1f15; margin: 24px 0 10px; }
+  .about-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; margin-top: 24px; }
+  .about-item { background: #fbf9f7; border: 1px solid #ebd0bc; border-radius: 14px; padding: 20px; text-align: center; }
+  .about-item i { font-size: 2rem; color: var(--secondary-color, #ff805d); margin-bottom: 8px; display: inline-block; }
+  .about-item h3 { font-size: 1rem; font-weight: 800; margin-bottom: 6px; }
+  .about-item p { font-size: 0.85rem; color: #7c6c5d; margin: 0; line-height: 1.5; }
+</style>
+{% endblock content %}

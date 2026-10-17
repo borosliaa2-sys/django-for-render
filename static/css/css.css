@@ -1,0 +1,40 @@
+@import url("https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css");
+
+/* === ریست پایه — توضیح: همه‌ی مرورگرها margin/padding پیش‌فرض دارند؛ این ریست یکدست می‌کند === */
+*{
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    scroll-behavior: smooth;
+}
+a, a:link, a:visited{
+    text-decoration: none;
+    color: inherit;
+}
+a:focus-visible{
+    outline: 2px solid var(--secondary-color);
+    outline-offset: 2px;
+}
+ul{
+    list-style-type: none;
+}
+html, body{
+    font-family: Vazirmatn, sans-serif;
+    background: #fff;
+    color: #1a1a1a;
+    direction: rtl;
+    overflow-x: hidden;
+    width: 100%;
+}
+img{
+    max-width: 100%;
+    display: block;
+}
+/* متغیر ارتفاع هدر — بقیه‌ی صفحات با calc(var(--site-header-height)+...) فاصله می‌گیرند */
+:root{
+    --site-header-height: 110px;
+    --main-color:#faece1;
+    --main-light:#f3d6bf;
+    --secondary-color:#ff805d;
+    --product-bg-color:#f8f8f8;
+}

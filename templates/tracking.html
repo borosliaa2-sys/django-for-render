@@ -1,0 +1,395 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}پیگیری سفارش و مرسوله پستی | عطارباشی{% endblock title %}
+{% block content %}
+<div class="tracking-page-wrap">
+  <div class="tracking-container">
+    <div class="tracking-search-card">
+      <div class="tracking-badge"><i class="ri-radar-line"></i> رهگیری مرسوله</div>
+      <h1>پیگیری وضعیت سفارش و ارسال</h1>
+      <p>شماره سفارش یا شماره موبایل خود را وارد نمایید تا وضعیت آماده‌سازی، ارسال و کد رهگیری پستی را مشاهده کنید.</p>
+
+      <form method="get" action="{% url 'shop:order_tracking' %}" class="track-form">
+        <div class="track-input-wrap">
+          <i class="ri-search-2-line"></i>
+          <input type="text" name="query" value="{{ query|default:'' }}" placeholder="شماره سفارش (مثلاً AT-9821) یا شماره همراه..." required>
+        </div>
+        <button type="submit" class="btn-track-submit">
+          <i class="ri-focus-3-line"></i>
+          <span>استعلام وضعیت</span>
+        </button>
+      </form>
+    </div>
+
+    {% if searched %}
+      {% if orders %}
+        {% for order in orders %}
+        <div class="order-result-card">
+          <!-- هدر سفارش -->
+          <div class="order-card-top">
+            <div class="order-id-block">
+              <span class="ord-lbl">شماره سفارش:</span>
+              <strong class="ord-num">#{{ order.order_number }}</strong>
+              <span class="ord-status-badge status-{{ order.status }}">{{ order.status_label }}</span>
+            </div>
+            <div class="ord-date">
+              <i class="ri-calendar-line"></i>
+              <span>{{ order.created_at|date:"Y/m/d - H:i" }}</span>
+            </div>
+          </div>
+
+          <!-- استپر وضعیت سفارش -->
+          <div class="tracking-stepper">
+            <div class="step-item {% if order.status_step >= 1 %}completed{% endif %}">
+              <div class="step-circle"><i class="ri-shopping-bag-3-line"></i></div>
+              <span class="step-label">ثبت و تایید</span>
+            </div>
+            <div class="step-line {% if order.status_step >= 2 %}active{% endif %}"></div>
+            <div class="step-item {% if order.status_step >= 2 %}completed{% endif %}">
+              <div class="step-circle"><i class="ri-gift-line"></i></div>
+              <span class="step-label">آماده‌سازی بسته</span>
+            </div>
+            <div class="step-line {% if order.status_step >= 3 %}active{% endif %}"></div>
+            <div class="step-item {% if order.status_step >= 3 %}completed{% endif %}">
+              <div class="step-circle"><i class="ri-truck-line"></i></div>
+              <span class="step-label">تحویل به پست</span>
+            </div>
+            <div class="step-line {% if order.status_step >= 4 %}active{% endif %}"></div>
+            <div class="step-item {% if order.status_step >= 4 %}completed{% endif %}">
+              <div class="step-circle"><i class="ri-home-smile-line"></i></div>
+              <span class="step-label">تحویل مرسوله</span>
+            </div>
+          </div>
+
+          <!-- اطلاعات کد رهگیری پستی (اگر ارسال شده باشد) -->
+          {% if order.postal_tracking_code %}
+          <div class="postal-track-banner">
+            <div class="pt-icon"><i class="ri-mail-send-line"></i></div>
+            <div class="pt-info">
+              <span class="pt-title">کد رهگیری شرکت ملی پست (۲۴ رقمی):</span>
+              <strong class="pt-code" id="code-{{ order.id }}">{{ order.postal_tracking_code }}</strong>
+            </div>
+            <div class="pt-actions">
+              <button type="button" class="btn-copy-code" onclick="navigator.clipboard.writeText('{{ order.postal_tracking_code }}'); alert('کد رهگیری پستی کپی شد!');"><i class="ri-file-copy-line"></i> کپی کد</button>
+              <a href="https://tracking.post.ir/?id={{ order.postal_tracking_code }}" target="_blank" rel="noopener" class="btn-post-link"><i class="ri-external-link-line"></i> رهگیری در سایت پست</a>
+            </div>
+          </div>
+          {% endif %}
+
+          <!-- مشخصات تحویل‌گیرنده و آدرس -->
+          <div class="order-details-grid">
+            <div class="det-col">
+              <h4><i class="ri-user-location-line"></i> اطلاعات گیرنده</h4>
+              <p><strong>نام:</strong> {{ order.full_name }}</p>
+              <p><strong>شماره تماس:</strong> <span dir="ltr">{{ order.phone_number }}</span></p>
+              <p><strong>آدرس:</strong> {{ order.province }} {{ order.city }} - {{ order.address }}</p>
+            </div>
+            <div class="det-col">
+              <h4><i class="ri-file-list-3-line"></i> جزئیات مالی</h4>
+              <p><strong>مبلغ اقلام:</strong> {{ order.total_price|default:0 }} تومان</p>
+              <p><strong>هزینه ارسال:</strong> {{ order.shipping_cost|default:35000 }} تومان</p>
+              <p class="grand-price"><strong>مبلغ کل پرداختی:</strong> <span>{{ order.grand_total }} تومان</span></p>
+            </div>
+          </div>
+
+          <!-- لیست اقلام خریداری شده -->
+          {% if order.items.all %}
+          <div class="order-items-table">
+            <h4>اقلام این سفارش ({{ order.items.count }} قلم کالا)</h4>
+            <div class="items-list">
+              {% for item in order.items.all %}
+              <div class="item-row">
+                <div class="it-name">
+                  <strong>{{ item.product_name }}</strong>
+                  {% if item.variant_weight %}<small>({{ item.variant_weight }})</small>{% endif %}
+                </div>
+                <div class="it-qty">{{ item.quantity }} عدد</div>
+                <div class="it-price">{{ item.total_price }} تومان</div>
+              </div>
+              {% endfor %}
+            </div>
+          </div>
+          {% endif %}
+        </div>
+        {% endfor %}
+      {% else %}
+        <div class="empty-track-result">
+          <i class="ri-inbox-line"></i>
+          <h3>سفارشی با این مشخصات یافت نشد!</h3>
+          <p>لطفاً شماره سفارش یا شماره موبایل را بررسی کرده و مجدداً تلاش فرمایید. در صورت نیاز می‌توانید با پشتیبانی تماس بگیرید.</p>
+          <a href="{% url 'shop:contact' %}" class="btn-track-help">تماس با پشتیبانی</a>
+        </div>
+      {% endif %}
+    {% endif %}
+  </div>
+</div>
+
+<style>
+.tracking-page-wrap {
+  padding: 30px 16px 60px;
+  background: #fdfcfb;
+  min-height: calc(100vh - var(--site-header-height, 80px) - 200px);
+}
+.tracking-container {
+  max-width: 860px;
+  margin: 0 auto;
+}
+.tracking-search-card {
+  text-align: center;
+  background: #ffffff;
+  border: 1.5px solid rgba(255, 128, 93, 0.2);
+  border-radius: 20px;
+  padding: 36px 24px;
+  box-shadow: 0 8px 30px rgba(0,0,0,0.03);
+  margin-bottom: 24px;
+}
+.tracking-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: #faece1;
+  color: var(--secondary-color, #ff805d);
+  font-size: 0.84rem;
+  font-weight: 800;
+  padding: 4px 14px;
+  border-radius: 20px;
+  margin-bottom: 12px;
+}
+.tracking-search-card h1 { font-size: 1.5rem; font-weight: 900; color: #2b1f15; margin-bottom: 8px; }
+.tracking-search-card p { color: #7c6c5d; font-size: 0.92rem; max-width: 580px; margin: 0 auto 24px; line-height: 1.6; }
+.track-form {
+  display: flex;
+  gap: 10px;
+  max-width: 540px;
+  margin: 0 auto;
+}
+.track-input-wrap {
+  position: relative;
+  flex: 1;
+  display: flex;
+  align-items: center;
+}
+.track-input-wrap i { position: absolute; right: 14px; font-size: 1.2rem; color: #a39281; }
+.track-input-wrap input {
+  width: 100%;
+  padding: 12px 42px 12px 14px;
+  border: 1.5px solid #ebd0bc;
+  border-radius: 30px;
+  font-family: inherit;
+  font-size: 0.92rem;
+  outline: none;
+  background: #fdfaf7;
+  transition: all 0.2s ease;
+}
+.track-input-wrap input:focus {
+  border-color: var(--secondary-color, #ff805d);
+  background: #fff;
+  box-shadow: 0 4px 14px rgba(255, 128, 93, 0.15);
+}
+.btn-track-submit {
+  background: linear-gradient(135deg, var(--secondary-color, #ff805d) 0%, #ff6b4a 100%);
+  color: #fff;
+  border: none;
+  border-radius: 30px;
+  padding: 12px 24px;
+  font-family: inherit;
+  font-size: 0.92rem;
+  font-weight: 800;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  box-shadow: 0 4px 14px rgba(255, 128, 93, 0.3);
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+.btn-track-submit:hover { transform: translateY(-1px); }
+
+/* نتیجه سفارش */
+.order-result-card {
+  background: #fff;
+  border: 1.5px solid rgba(255, 128, 93, 0.25);
+  border-radius: 20px;
+  padding: 28px 24px;
+  box-shadow: 0 8px 30px rgba(0,0,0,0.04);
+  margin-bottom: 24px;
+}
+.order-card-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid #faece1;
+  padding-bottom: 16px;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+.order-id-block { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.ord-lbl { font-size: 0.88rem; color: #7c6c5d; }
+.ord-num { font-size: 1.15rem; color: #2b1f15; font-weight: 900; }
+.ord-status-badge {
+  font-size: 0.78rem;
+  font-weight: 800;
+  padding: 3px 10px;
+  border-radius: 12px;
+}
+.status-paid, .status-processing { background: #e0f2fe; color: #0284c7; }
+.status-shipped { background: #fef3c7; color: #d97706; }
+.status-delivered { background: #dcfce7; color: #16a34a; }
+.status-cancelled { background: #fee2e2; color: #dc2626; }
+.ord-date { color: #8a7a6c; font-size: 0.84rem; display: flex; align-items: center; gap: 4px; }
+
+/* استپر پیگیری */
+.tracking-stepper {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: 30px 0;
+  padding: 0 10px;
+  position: relative;
+}
+.step-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  position: relative;
+  z-index: 2;
+}
+.step-circle {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: #f3f4f6;
+  color: #9ca3af;
+  border: 2px solid #e5e7eb;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.25rem;
+  transition: all 0.25s ease;
+}
+.step-label { font-size: 0.82rem; font-weight: 700; color: #7c6c5d; text-align: center; }
+.step-item.completed .step-circle {
+  background: var(--secondary-color, #ff805d);
+  color: #fff;
+  border-color: var(--secondary-color, #ff805d);
+  box-shadow: 0 4px 14px rgba(255, 128, 93, 0.35);
+}
+.step-item.completed .step-label { color: #2b1f15; font-weight: 800; }
+.step-line {
+  flex: 1;
+  height: 3px;
+  background: #e5e7eb;
+  margin: 0 -8px 26px;
+  z-index: 1;
+}
+.step-line.active { background: var(--secondary-color, #ff805d); }
+
+/* بنر رهگیری پستی */
+.postal-track-banner {
+  background: #fff8f4;
+  border: 1.5px solid #ffccba;
+  border-radius: 14px;
+  padding: 16px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin: 20px 0;
+  flex-wrap: wrap;
+}
+.pt-icon { font-size: 2rem; color: var(--secondary-color, #ff805d); }
+.pt-info { flex: 1; min-width: 220px; }
+.pt-title { font-size: 0.82rem; color: #7c6c5d; display: block; margin-bottom: 2px; }
+.pt-code { font-size: 1.1rem; color: #2b1f15; font-family: monospace; letter-spacing: 1px; }
+.pt-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+.btn-copy-code {
+  background: #fff;
+  border: 1px solid #ebd0bc;
+  border-radius: 8px;
+  padding: 8px 14px;
+  font-family: inherit;
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: #4a3b2c;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+.btn-post-link {
+  background: var(--secondary-color, #ff805d);
+  color: #fff;
+  text-decoration: none;
+  border-radius: 8px;
+  padding: 8px 14px;
+  font-size: 0.82rem;
+  font-weight: 800;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.order-details-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+  background: #fcfbfa;
+  border-radius: 14px;
+  padding: 18px;
+  margin-bottom: 20px;
+}
+.det-col h4 { font-size: 0.95rem; font-weight: 800; color: #2b1f15; margin-bottom: 10px; display: flex; align-items: center; gap: 6px; }
+.det-col p { font-size: 0.86rem; color: #554433; margin-bottom: 6px; }
+.grand-price { font-size: 0.98rem; margin-top: 10px; padding-top: 8px; border-top: 1px dashed #e5d7cc; }
+.grand-price span { color: var(--secondary-color, #ff805d); font-weight: 900; font-size: 1.1rem; }
+
+.order-items-table { border-top: 1px solid #faece1; padding-top: 16px; }
+.order-items-table h4 { font-size: 0.92rem; font-weight: 800; color: #2b1f15; margin-bottom: 10px; }
+.items-list { display: flex; flex-direction: column; gap: 6px; }
+.item-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 12px;
+  background: #fdfaf7;
+  border-radius: 8px;
+  font-size: 0.86rem;
+}
+.it-name strong { color: #3e2c1b; font-weight: 700; }
+.it-name small { color: #8a7a6c; margin-right: 4px; }
+.it-qty { color: #6b5a4a; font-weight: 600; }
+.it-price { color: var(--secondary-color, #ff805d); font-weight: 800; }
+
+.empty-track-result {
+  text-align: center;
+  background: #fff;
+  border: 1.5px solid rgba(255, 128, 93, 0.2);
+  border-radius: 20px;
+  padding: 40px 20px;
+}
+.empty-track-result i { font-size: 3.5rem; color: #d1d5db; margin-bottom: 12px; display: inline-block; }
+.empty-track-result h3 { font-size: 1.25rem; font-weight: 800; color: #2b1f15; margin-bottom: 8px; }
+.empty-track-result p { color: #7c6c5d; font-size: 0.9rem; max-width: 460px; margin: 0 auto 20px; }
+.btn-track-help {
+  background: #faece1;
+  color: var(--secondary-color, #ff805d);
+  text-decoration: none;
+  padding: 10px 24px;
+  border-radius: 25px;
+  font-weight: 800;
+  font-size: 0.88rem;
+  display: inline-block;
+}
+
+@media(max-width: 600px) {
+  .track-form { flex-direction: column; }
+  .order-details-grid { grid-template-columns: 1fr; }
+  .tracking-stepper { margin: 20px 0; }
+  .step-circle { width: 36px; height: 36px; font-size: 1rem; }
+  .step-label { font-size: 0.72rem; }
+  .step-line { margin: 0 -4px 22px; }
+}
+</style>
+{% endblock content %}

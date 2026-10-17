@@ -1,0 +1,174 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>محصولات خانگی عطارباشی</title>
+    
+    <!-- فایل‌های CSS با استفاده از تگ static -->
+    <link rel="stylesheet" href="{% static 'css/css.css' %}">
+    <link rel="stylesheet" href="{% static 'css/header.css' %}">
+    <link rel="stylesheet" href="{% static 'css/_main.css' %}">
+    <link rel="stylesheet" href="{% static 'css/_category.css' %}">
+    <link rel="stylesheet" href="{% static 'css/_ppr.css' %}">
+    
+    <!-- Remix Icon -->
+    <link href="https://cdn.jsdelivr.net/npm/remixicon@4.9.0/fonts/remixicon.css" rel="stylesheet" />
+</head>
+<body>
+    <!-- HEADER -->
+    <header>
+        <input type="checkbox" class="menu-btn" id="menu-btn">
+        <div class="header-top">
+            <label for="menu-btn" class="menu-icon">
+                <span class="nav-icon"></span>
+            </label>
+            <div class="nav-location">
+                <a href="{% url 'shop:contact' %}">
+                    <i class="ri-map-pin-line"></i>
+                    موقعیت فروشگاه
+                </a>
+            </div>
+            <a href="{% url 'shop:home' %}" class="logo">
+                <img src="{% static 'images/logo.jpg' %}" alt="logo">
+            </a>
+            <div class="nav-btns">
+                <a href="#" class="nav-search">
+                    <i class="ri-search-line"></i>
+                </a>
+                <a href="#" class="nav-user">
+                    <i class="ri-user-3-line"></i>
+                </a>
+                <a href="#" class="nav-cart">
+                    <i class="ri-shopping-cart-line"></i>
+                    <span>0</span>
+                </a>
+            </div>
+        </div>
+        <nav class="navigation">
+            <ul class="menu">
+                <li><a href="{% url 'shop:home' %}">خانه</a></li>
+                <li><a href="#category">دسته بندی</a></li>
+                <li><a href="#">فروشگاه</a></li>
+                <li><a href="#ppr">محبوب ها</a>
+                    <span class="nav-lable">پیشنهاد ویژه</span>
+                </li>
+                <li><a href="#">جدید ها</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <!-- HERO -->
+    <section id="main">
+        <div class="main-content">
+            <div class="main-content-text">
+                <strong>اینجا، عطاریِ ما، نه یک دکان که یک پاتوقِ جان‌آشناست؛</strong>
+                <h1>
+                    هر قفسه‌ی این دیرین‌کده، روایتی از <span> طبیعت بکر </span> و <span> کهن‌ </span> الگوی طب ایرانی را زمزمه می‌کند.
+                </h1>
+                <p>
+                    با ما، سفری به اعماق شفابخش زمین را آغاز کنید؛ سفری که مقصدش، سلامتیِ پایدار و زندگیِ متوازن شماست.
+                </p>
+                <div class="hero-buttons">
+                    <a href="#" class="hero-btn hero-btn-primarys">
+                        <span>خرید انلاین</span>
+                        <i class="ri-shopping-bag-4-line"></i>
+                    </a>
+                    <a href="#" class="hero-btn hero-btn-secondary">
+                        <span>مشاهده محصولات</span>
+                        <i class="ri-eye-line"></i>
+                    </a>
+                </div>
+                <div class="hero-state">
+                    <div class="state-item">
+                        <span class="state-number">+500</span>
+                        <span class="state-lable">محصولات متنوع</span>
+                    </div>
+                    <div class="state-item">
+                        <span class="state-number">98%</span>
+                        <span class="state-lable">رضایت مشتری</span>
+                    </div>
+                    <div class="state-item">
+                        <span class="state-number">24/7</span>
+                        <span class="state-lable">پشتیبانی</span>
+                    </div>
+                </div>
+                <div id="shamsi-date">
+                    <i class="ri-calendar-2-line"></i>
+                    <span>امروز؛ درحال بارگذاری...</span>
+                </div>
+            </div>
+            <div class="main-content-img">
+                <img src="{% static 'images/dam.jpg' %}" alt="img">
+                <div class="floating-element floating-1">
+                    <i class="ri-truck-line"></i>
+                    <span>ارسال رایگان</span>
+                </div>
+                <div class="floating-element floating-2">
+                    <i class="ri-vip-crown-2-line"></i>
+                    <span>گارانتی کیفیت</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CATEGORY -->
+    <section id="category">
+        <div class="category-header">
+            <h2>دسته‌بندی محصولات</h2>
+            <p>محصولات مورد علاقه خود را از میان دسته‌بندی‌های متنوع ما انتخاب کنید</p>
+        </div>
+        <div class="category-grid">
+            <a href="#" class="category-box">
+                <div class="category-box-img">
+                    <img src="{% static 'images/آرد_و_مواد_اولیه.png' %}" alt="category">
+                </div>
+                <strong class="category-name">آرد و مواد اولیه</strong>
+                <span class="category-count">15 محصول</span>
+            </a>
+            <!-- به همین ترتیب برای سایر آیتم‌های category -->
+        </div>
+    </section>
+
+    <!-- PPR -->
+    <section id="ppr">
+        <!-- ... -->
+        <div class="ppr-container">
+            <div class="ppr-pro-container">
+                <!-- نمونه یک محصول -->
+                <div class="pro-box">
+                    <div class="pro-box-img">
+                        <img src="{% static 'images/thing.jpg' %}" alt="mahsol">
+                        <span>جدید</span>
+                        <div class="quick-view-btn">
+                            <i class="ri-eye-line"></i>
+                        </div>
+                    </div>
+                    <div class="pro-box-text">
+                        <a href="#" class="pro-text-title">ادویه کاری</a>
+                        <!-- ... -->
+                    </div>
+                </div>
+                <!-- تکرار برای سایر محصولات -->
+            </div>
+            <div class="ppr-banner">
+                <div class="ppr-banner-text">
+                    <h3>فروش ویژه تابستان</h3>
+                    <p>تا 50% تخفیف برای خریدهای بالای 500 هزارتومان</p>
+                    <a href="#" class="banner-btn">
+                        <span>مشاهده پیشنهادات</span>
+                        <i class="ri-arrow-left-fill"></i>
+                    </a>
+                </div>
+                <div class="ppr-banner-img">
+                    <img src="{% static 'images/some.jpg' %}" alt="bannerimg">
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- فایل JS -->
+    <script src="{% static 'js/main.js' %}"></script>
+</body>
+</html>

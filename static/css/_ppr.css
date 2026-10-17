@@ -1,0 +1,560 @@
+:root{
+    --main-color:#faece1;
+    --main-light:#f3d6bf;
+    --secondary-color:#ff805d;
+    --product-bg-color:#f8f8f8;
+}
+
+/* ========================================================
+   بخش کاروسل محصولات پرفروش و پیشنهادی (Carousel / Slider)
+   ======================================================== */
+#ppr {
+    background: linear-gradient(135deg, #fff7f2 0%, #faece1 100%);
+    margin: 30px auto;
+    max-width: 1240px;
+    width: 98%;
+    padding: 20px 8px;
+    border-radius: 8px;
+    border: 1px solid rgba(255, 128, 93, 0.2);
+    box-shadow: 0 6px 24px rgba(255, 128, 93, 0.05);
+    box-sizing: border-box;
+    position: relative;
+}
+
+/* هدر کاروسل */
+.ppr-top-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 14px;
+    padding: 0 8px 10px;
+    border-bottom: 1px solid rgba(255, 128, 93, 0.15);
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.ppr-title-link {
+    text-decoration: none;
+    display: inline-block;
+}
+
+.ppr-title-link h2 {
+    font-size: 1.55rem;
+    font-weight: 900;
+    color: var(--secondary-color, #ff805d) !important;
+    margin: 0 0 4px 0;
+    transition: color 0.2s ease;
+}
+
+.ppr-title-link:hover h2 {
+    color: #ff6030 !important;
+}
+
+.section-header-title p {
+    color: #7c6c5d;
+    font-size: 0.88rem;
+    margin: 0;
+}
+
+/* دکمه مشاهده همه در هدر دسکتاپ */
+.ppr-header-more-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: #ffffff;
+    color: var(--secondary-color, #ff805d);
+    border: 1.5px solid rgba(255, 128, 93, 0.35);
+    padding: 6px 16px;
+    border-radius: 20px;
+    font-size: 0.86rem;
+    font-weight: 800;
+    text-decoration: none;
+    transition: all 0.25s ease;
+    box-shadow: 0 2px 8px rgba(255, 128, 93, 0.08);
+}
+
+.ppr-header-more-btn:hover {
+    background: var(--secondary-color, #ff805d);
+    color: #ffffff;
+    border-color: var(--secondary-color, #ff805d);
+    box-shadow: 0 4px 14px rgba(255, 128, 93, 0.3);
+}
+
+.ppr-header-more-btn:hover i {
+    transform: translateX(-3px);
+}
+
+/* محفظه کاروسل محصولات با دکمه‌های شناور کناری */
+.ppr-carousel-wrapper {
+    position: relative;
+    width: 100%;
+    display: flex;
+    align-items: center;
+}
+
+/* دکمه‌های کنترل کاروسل — کنار باکس‌ها با اوپاسیتی کم */
+.btn-carousel-side {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.92);
+    backdrop-filter: blur(8px);
+    border: 1.5px solid rgba(255, 128, 93, 0.35);
+    color: #3e2c1b;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.4rem;
+    cursor: pointer;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+    opacity: 0.55;
+    transition: all 0.25s ease;
+    z-index: 25;
+}
+
+.btn-carousel-side:hover {
+    opacity: 1;
+    background: #ffffff;
+    color: var(--secondary-color);
+    border-color: var(--secondary-color);
+    transform: translateY(-50%) scale(1.08);
+    box-shadow: 0 6px 20px rgba(255, 128, 93, 0.3);
+}
+
+.btn-carousel-side:active {
+    transform: translateY(-50%) scale(0.96);
+}
+
+.btn-carousel-side.btn-prev {
+    right: -10px;
+}
+
+.btn-carousel-side.btn-next {
+    left: -10px;
+}
+
+/* اسلایدر افقی کاروسل — باکس‌ها چسبیده با فاصله بهینه و حداکثر فضا */
+.ppr-pro-container {
+    display: flex !important;
+    flex-direction: row !important;
+    overflow-x: auto !important;
+    scroll-snap-type: x mandatory;
+    scroll-behavior: smooth;
+    -webkit-overflow-scrolling: touch;
+    gap: 8px;
+    padding: 4px 2px 10px;
+    box-sizing: border-box;
+    width: 100%;
+    scrollbar-width: none !important;
+    -ms-overflow-style: none !important;
+}
+
+.ppr-pro-container::-webkit-scrollbar {
+    display: none !important;
+    width: 0 !important;
+    height: 0 !important;
+}
+
+/* کارت محصول داخل کاروسل — گوشه‌های تمیز با کرو کم و فضای بهینه */
+.pro-box {
+    flex: 0 0 198px !important;
+    width: 198px !important;
+    min-width: 198px !important;
+    max-width: 198px !important;
+    scroll-snap-align: start;
+    display: flex;
+    flex-direction: column;
+    background: #ffffff;
+    border-radius: 6px;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.03);
+    transition: box-shadow 0.2s ease, border-color 0.2s ease;
+    position: relative;
+    border: 1px solid rgba(255, 128, 93, 0.22);
+    box-sizing: border-box;
+}
+
+.pro-box:hover {
+    transform: none;
+    box-shadow: 0 6px 18px rgba(255, 128, 93, 0.16);
+    border-color: var(--secondary-color);
+}
+
+/* کارت اختصاصی «مشاهده بیشتر» در انتهای کاروسل */
+.pro-box.pro-box-more {
+    flex: 0 0 185px !important;
+    width: 185px !important;
+    min-width: 185px !important;
+    max-width: 185px !important;
+    background: #ffffff !important;
+    border: 1.5px solid rgba(255, 128, 93, 0.35) !important;
+    border-radius: 6px !important;
+    overflow: hidden !important;
+    text-decoration: none;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    box-sizing: border-box;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
+    transition: all 0.25s ease;
+}
+
+.pro-box.pro-box-more:hover {
+    background: #fff8f5 !important;
+    border-color: var(--secondary-color, #ff805d) !important;
+    transform: none !important;
+    box-shadow: 0 6px 20px rgba(255, 128, 93, 0.2) !important;
+}
+
+.more-card-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 20px 14px;
+    gap: 8px;
+    width: 100%;
+    height: 100%;
+    box-sizing: border-box;
+    background: transparent;
+}
+
+.more-icon-circle {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--secondary-color, #ff805d) 0%, #ff6b4a 100%);
+    color: #ffffff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    box-shadow: 0 4px 12px rgba(255, 128, 93, 0.35);
+    transition: all 0.25s ease;
+    margin-bottom: 4px;
+}
+
+.pro-box.pro-box-more:hover .more-icon-circle {
+    transform: scale(1.08) translateX(-3px);
+    background: linear-gradient(135deg, #ff5722 0%, var(--secondary-color, #ff805d) 100%);
+    box-shadow: 0 6px 18px rgba(255, 128, 93, 0.45);
+}
+
+.more-card-content strong {
+    font-size: 1rem;
+    font-weight: 900;
+    color: #2b1f15;
+}
+
+.more-card-content span {
+    font-size: 0.8rem;
+    color: #7c6c5d;
+    font-weight: 600;
+}
+
+.more-badge {
+    margin-top: 6px;
+    background: #faece1;
+    color: var(--secondary-color, #ff805d) !important;
+    font-size: 0.74rem !important;
+    font-weight: 800 !important;
+    padding: 3px 10px;
+    border-radius: 6px;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    border: 1px solid rgba(255, 128, 93, 0.2);
+}
+
+/* تصویر محصول */
+.pro-box-img {
+    width: 100%;
+    height: 155px;
+    background: #fdfaf7;
+    padding: 10px;
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-sizing: border-box;
+}
+
+.pro-box-img img {
+    max-width: 100%;
+    max-height: 130px;
+    object-fit: contain;
+    transition: transform 0.3s ease;
+}
+
+.pro-box:hover .pro-box-img img {
+    transform: scale(1.05);
+}
+
+/* دکمه‌های پیش‌نمایش و قلب */
+.quick-view-btn,
+.fav-btn {
+    position: absolute;
+    top: 8px;
+    width: 32px;
+    height: 32px;
+    background: rgba(255, 255, 255, 0.95);
+    border: 1px solid rgba(255, 128, 93, 0.25);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1rem;
+    cursor: pointer;
+    z-index: 10;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    transition: all 0.2s ease;
+    text-decoration: none;
+    box-sizing: border-box;
+    color: #6b7280;
+}
+
+.quick-view-btn {
+    right: 8px;
+}
+
+.fav-btn {
+    left: 8px;
+}
+
+.fav-btn.active, .fav-btn:hover {
+    color: #e74c3c;
+    border-color: #fca5a5;
+    background: #fff;
+    transform: scale(1.08);
+}
+
+.quick-view-btn:hover {
+    color: var(--secondary-color);
+    border-color: var(--secondary-color);
+    background: #fff;
+    transform: scale(1.08);
+}
+
+/* مشخصات و قیمت */
+.pro-box-text {
+    padding: 10px 10px 12px;
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    box-sizing: border-box;
+}
+
+.pro-title-wrap {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 4px;
+    margin-bottom: 4px;
+}
+
+.pro-text-title {
+    font-size: 0.9rem;
+    font-weight: 800;
+    color: #2b1f15;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: block;
+}
+
+.pro-tag {
+    font-size: 0.68rem;
+    font-weight: 700;
+    padding: 2px 6px;
+    border-radius: 4px;
+    white-space: nowrap;
+}
+
+.out-tag {
+    background: #fee2e2;
+    color: #b91c1c;
+    border: 1px solid #fecaca;
+    font-weight: 800;
+}
+
+.discount-tag {
+    background: #fee2e2;
+    color: #b91c1c;
+    border: 1px solid #fecaca;
+}
+
+.new-tag {
+    background: #e0f2fe;
+    color: #0369a1;
+    border: 1px solid #bae6fd;
+}
+
+.pro-rating {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    margin: 2px 0 5px;
+}
+
+.rating-stars {
+    font-size: 0.78rem;
+}
+
+.rating-count {
+    font-size: 0.72rem;
+    color: #8c7b6c;
+}
+
+.price-continer {
+    margin-top: auto;
+    margin-bottom: 6px;
+}
+
+.current-prise {
+    display: flex;
+    align-items: baseline;
+    gap: 5px;
+}
+
+.price {
+    color: #0f172a;
+    font-size: 1.02rem;
+    font-weight: 900;
+    letter-spacing: -0.01em;
+}
+
+.price small {
+    color: #e11d48;
+    font-weight: 800;
+    font-size: 0.72rem;
+    margin-right: 2px;
+}
+
+.old-price {
+    color: #94a3b8;
+    text-decoration: line-through;
+    font-size: 0.76rem;
+    font-weight: 500;
+}
+
+/* دکمه افزودن به سبد */
+.pro-cart-btn {
+    background: linear-gradient(135deg, var(--secondary-color) 0%, #ff6b4a 100%);
+    color: #fff;
+    border: 0;
+    padding: 7px 10px;
+    border-radius: 6px;
+    font-size: 0.82rem;
+    font-weight: 700;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    transition: all 0.2s ease;
+    width: 100%;
+    font-family: inherit;
+    box-shadow: 0 2px 6px rgba(255, 128, 93, 0.22);
+}
+
+.pro-cart-btn:hover {
+    background: linear-gradient(135deg, #ff5722 0%, var(--secondary-color) 100%);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 10px rgba(255, 128, 93, 0.32);
+}
+
+.pro-cart-btn:disabled {
+    background: #e5e7eb;
+    color: #9ca3af;
+    cursor: not-allowed;
+    box-shadow: none;
+    transform: none;
+}
+
+/* RESPONSIVE */
+@media (max-width: 768px) {
+    #ppr {
+        margin: 16px auto;
+        padding: 14px 6px;
+        width: 100%;
+        border-radius: 0;
+        border-left: none;
+        border-right: none;
+    }
+    .ppr-top-header {
+        padding: 0 4px 8px;
+    }
+    .ppr-header-more-btn {
+        display: none !important; /* حذف دکمه اضافی مشاهده همه در هدر موبایل */
+    }
+    .section-header-title h2 {
+        font-size: 1.25rem;
+    }
+    .section-header-title p {
+        font-size: 0.8rem;
+    }
+    .ppr-pro-container {
+        gap: 6px;
+        padding: 2px 2px 6px;
+    }
+    .pro-box {
+        flex: 0 0 158px !important;
+        width: 158px !important;
+        min-width: 158px !important;
+        max-width: 158px !important;
+        border-radius: 6px;
+    }
+    .pro-box-img {
+        height: 120px;
+    }
+    .pro-box-img img {
+        max-height: 100px;
+    }
+    .pro-text-title {
+        font-size: 0.82rem;
+    }
+    .price {
+        font-size: 0.92rem;
+    }
+    .pro-cart-btn {
+        padding: 6px 8px;
+        font-size: 0.76rem;
+    }
+    .btn-carousel-side {
+        width: 32px;
+        height: 32px;
+        font-size: 1.1rem;
+        opacity: 0.65;
+    }
+    .btn-carousel-side.btn-prev {
+        right: 0px;
+    }
+    .btn-carousel-side.btn-next {
+        left: 0px;
+    }
+}
+
+@media (max-width: 480px) {
+    .pro-box {
+        flex: 0 0 146px !important;
+        width: 146px !important;
+        min-width: 146px !important;
+        max-width: 146px !important;
+    }
+    .pro-box-img {
+        height: 110px;
+    }
+    .pro-box-img img {
+        max-height: 90px;
+    }
+    .btn-carousel-side {
+        display: none; /* در موبایل‌های کوچک اسکرول لمسی مستقیم است */
+    }
+}

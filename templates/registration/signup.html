@@ -1,0 +1,229 @@
+{% extends "base.html" %}
+{% block title %}ثبت‌نام سریع | عطارباشی{% endblock title %}
+{% block content %}
+<div class="auth-page-container">
+  <div class="auth-card-clean">
+    <div class="auth-card-header">
+      <div class="auth-icon-badge"><i class="ri-user-add-line"></i></div>
+      <h2>ثبت‌نام سریع</h2>
+      {% if 'cart' in request.GET.next or 'checkout' in request.GET.next %}
+        <p class="auth-checkout-tip"><i class="ri-shopping-cart-line"></i> جهت تکمیل پرداخت و نهایی کردن خرید، در چند ثانیه ثبت‌نام کنید</p>
+      {% else %}
+        <p>تنها در چند ثانیه حساب خود را بسازید</p>
+      {% endif %}
+    </div>
+
+    {% if form.errors %}
+    <div class="auth-errors">
+      {% for field, errors in form.errors.items %}
+        {% for error in errors %}
+          <div class="auth-error-item"><i class="ri-error-warning-line"></i> {{ error }}</div>
+        {% endfor %}
+      {% endfor %}
+    </div>
+    {% endif %}
+
+    <form method="post" class="auth-form-clean">
+      {% csrf_token %}
+      {% if request.GET.next %}
+        <input type="hidden" name="next" value="{{ request.GET.next }}">
+      {% elif request.POST.next %}
+        <input type="hidden" name="next" value="{{ request.POST.next }}">
+      {% endif %}
+
+      <div class="auth-row-2col">
+        <div class="auth-field-group">
+          <label for="{{ form.first_name.id_for_label }}">{{ form.first_name.label }}</label>
+          {{ form.first_name }}
+        </div>
+        <div class="auth-field-group">
+          <label for="{{ form.last_name.id_for_label }}">{{ form.last_name.label }}</label>
+          {{ form.last_name }}
+        </div>
+      </div>
+
+      <div class="auth-field-group">
+        <label for="{{ form.phone_number.id_for_label }}">{{ form.phone_number.label }}</label>
+        {{ form.phone_number }}
+      </div>
+
+      <div class="auth-row-2col">
+        <div class="auth-field-group">
+          <label for="{{ form.password1.id_for_label }}">{{ form.password1.label }}</label>
+          {{ form.password1 }}
+        </div>
+        <div class="auth-field-group">
+          <label for="{{ form.password2.id_for_label }}">{{ form.password2.label }}</label>
+          {{ form.password2 }}
+        </div>
+      </div>
+
+      <button type="submit" class="auth-submit-btn">
+        <span>ثبت‌نام و ورود خودکار</span>
+        <i class="ri-arrow-left-line"></i>
+      </button>
+    </form>
+
+    <div class="auth-card-footer">
+      <span>قبلاً ثبت‌نام کرده‌اید؟</span>
+      <a href="{% url 'login' %}{% if request.GET.next %}?next={{ request.GET.next|urlencode }}{% elif request.POST.next %}?next={{ request.POST.next|urlencode }}{% endif %}">ورود به حساب</a>
+    </div>
+  </div>
+</div>
+
+<style>
+.auth-checkout-tip {
+  color: #c2410c !important;
+  font-weight: 600;
+  font-size: 0.88rem !important;
+  background: #fff7ed;
+  padding: 6px 12px;
+  border-radius: 8px;
+  border: 1px solid #ffedd5;
+  margin-top: 6px;
+  display: inline-block;
+}
+.auth-page-container {
+  min-height: calc(100vh - var(--site-header-height, 80px) - 100px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 30px 16px;
+  background: radial-gradient(circle at 50% 30%, #fff7f2 0%, #faece1 100%);
+}
+.auth-card-clean {
+  width: min(450px, 100%);
+  background: #ffffff;
+  border: 1px solid rgba(255, 128, 93, 0.2);
+  border-radius: 20px;
+  box-shadow: 0 12px 35px rgba(255, 128, 93, 0.08), 0 4px 12px rgba(0,0,0,0.03);
+  padding: 28px 24px;
+  box-sizing: border-box;
+}
+.auth-row-2col {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+@media (max-width: 480px) {
+  .auth-row-2col {
+    grid-template-columns: 1fr;
+    gap: 0;
+  }
+}
+.auth-card-header {
+  text-align: center;
+  margin-bottom: 20px;
+}
+.auth-icon-badge {
+  width: 50px;
+  height: 50px;
+  background: linear-gradient(135deg, rgba(255,128,93,0.15), rgba(255,128,93,0.05));
+  color: var(--secondary-color, #ff805d);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  margin: 0 auto 10px;
+  border: 1px solid rgba(255,128,93,0.25);
+}
+.auth-card-header h2 {
+  font-size: 1.35rem;
+  font-weight: 800;
+  color: #2b1f15;
+  margin-bottom: 4px;
+}
+.auth-card-header p {
+  color: #7c6c5d;
+  font-size: 0.86rem;
+}
+.auth-errors {
+  background: #fef2f2;
+  border: 1px solid #fee2e2;
+  border-radius: 12px;
+  padding: 10px 14px;
+  margin-bottom: 16px;
+}
+.auth-error-item {
+  color: #991b1b;
+  font-size: 0.82rem;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 4px;
+}
+.auth-error-item:last-child { margin-bottom: 0; }
+.auth-form-clean {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.auth-field-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.auth-field-group label {
+  font-size: 0.86rem;
+  font-weight: 700;
+  color: #3e2c1b;
+}
+.auth-input {
+  width: 100%;
+  padding: 11px 14px;
+  border: 1.5px solid #ebd0bc;
+  border-radius: 12px;
+  font-size: 0.95rem;
+  font-family: inherit;
+  background: #fdfcfb;
+  color: #222;
+  box-sizing: border-box;
+  outline: none;
+  transition: all 0.2s ease;
+}
+.auth-input:focus {
+  border-color: var(--secondary-color, #ff805d);
+  background: #fff;
+  box-shadow: 0 0 0 3px rgba(255, 128, 93, 0.15);
+}
+.auth-submit-btn {
+  margin-top: 8px;
+  background: linear-gradient(135deg, var(--secondary-color, #ff805d) 0%, #ff6b4a 100%);
+  color: #fff;
+  border: none;
+  border-radius: 30px;
+  padding: 12px;
+  font-weight: 800;
+  font-size: 1rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  box-shadow: 0 6px 18px rgba(255, 128, 93, 0.3);
+  transition: all 0.2s ease;
+}
+.auth-submit-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(255, 128, 93, 0.4);
+}
+.auth-card-footer {
+  text-align: center;
+  margin-top: 18px;
+  padding-top: 14px;
+  border-top: 1px solid #faece1;
+  font-size: 0.88rem;
+  color: #7c6c5d;
+}
+.auth-card-footer a {
+  color: var(--secondary-color, #ff805d);
+  font-weight: 800;
+  margin-right: 4px;
+  text-decoration: none;
+}
+.auth-card-footer a:hover {
+  text-decoration: underline;
+}
+</style>
+{% endblock content %}

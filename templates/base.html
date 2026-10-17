@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+{% load static %}
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}محصولات خانگی و گیاهی عطارباشی{% endblock title %}</title>
+    <link rel="stylesheet" href="{% static 'css/css.css' %}">
+    <link rel="stylesheet" href="{% static 'css/header.css' %}">
+    <link rel="stylesheet" href="{% static 'css/header-fix.css' %}">
+    <link rel="stylesheet" href="{% static 'css/_main.css' %}">
+    <link rel="stylesheet" href="{% static 'css/_category.css' %}">
+    <link rel="stylesheet" href="{% static 'css/_ppr.css' %}">
+    <link href="https://cdn.jsdelivr.net/npm/remixicon@4.9.0/fonts/remixicon.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
+    {% block extra_css %}{% endblock extra_css %}
+</head>
+<body class="{% block body_class %}{% endblock body_class %}">
+    
+    <!-- HEADER -->
+    <header class="site-header">
+        <input type="checkbox" class="menu-btn" id="menu-btn">
+        <div class="header-top">
+            <label for="menu-btn" class="menu-icon" aria-label="منو">
+                <span class="nav-icon"></span>
+            </label>
+            <div class="nav-location">
+                <a href="{% url 'shop:contact' %}">
+                    <i class="ri-map-pin-line"></i>
+                    موقعیت فروشگاه
+                </a>
+            </div>
+            <a href="{% url 'shop:home' %}" class="logo">
+                <img src="{% static 'images/logo.jpg' %}" alt="عطارباشی">
+            </a>
+
+            <div class="nav-btns">
+                <a href="{% url 'shop:search' %}" class="nav-search" title="جستجو">
+                    <i class="ri-search-line"></i>
+                </a>
+                <div class="nav-user-wrap">
+                    {% if user.is_authenticated %}
+                    <a href="{% url 'shop:user_orders' %}" class="nav-user" title="حساب کاربری ({{ user.username }})">
+                        <i class="ri-user-smile-line"></i>
+                    </a>
+                    <div class="user-dropdown" role="menu">
+                        <a href="{% url 'shop:user_orders' %}" role="menuitem"><i class="ri-shopping-bag-3-line"></i> سفارش‌های من</a>
+                        <a href="{% url 'shop:order_tracking' %}" role="menuitem"><i class="ri-radar-line"></i> پیگیری مرسوله</a>
+                        <a href="{% url 'shop:wishlist_list' %}" role="menuitem"><i class="ri-heart-3-line"></i> علاقه‌مندی‌ها</a>
+                        <form method="post" action="{% url 'logout' %}" style="margin:0; width:100%;">
+                            {% csrf_token %}
+                            <button type="submit" style="background:none; border:none; width:100%; padding:0; font-family:inherit; cursor:pointer;" role="menuitem">
+                                <span class="user-dropdown-logout-btn" style="display:flex; align-items:center; gap:10px; padding:10px 14px; border-radius:10px; font-size:0.9rem; font-weight:800; color:#dc2626; width:100%; box-sizing:border-box;"><i class="ri-logout-box-r-line"></i> خروج از حساب</span>
+                            </button>
+                        </form>
+                    </div>
+                    {% else %}
+                    <a href="{% url 'login' %}" class="nav-user" title="ورود / ثبت‌نام">
+                        <i class="ri-user-3-line"></i>
+                    </a>
+                    <div class="user-dropdown" role="menu">
+                        <a href="{% url 'login' %}" role="menuitem"><i class="ri-login-box-line"></i> ورود</a>
+                        <a href="{% url 'signup' %}" role="menuitem"><i class="ri-user-add-line"></i> ثبت‌نام سریع</a>
+                        <a href="{% url 'shop:order_tracking' %}" role="menuitem"><i class="ri-radar-line"></i> پیگیری سفارش</a>
+                    </div>
+                    {% endif %}
+                </div>
+                <a href="{% url 'shop:cart_detail' %}" class="nav-cart" title="سبد خرید">
+                    <i class="ri-shopping-cart-line"></i>
+                    <span>{{ cart_count|default:0 }}</span>
+                </a>
+                <a href="{% url 'shop:wishlist_list' %}" title="علاقه‌مندی‌ها" class="nav-cart nav-wish" style="color:#444; text-decoration:none;">
+                    <i class="ri-heart-3-line" style="{% if wishlist_count %}color:#e74c3c{% endif %}"></i>
+                    {% if wishlist_count %}<span>{{ wishlist_count }}</span>{% endif %}
+                </a>
+            </div>
+        </div>
+        <nav class="navigation">
+            <ul class="menu">
+                <li><a href="{% url 'shop:home' %}"><i class="ri-home-4-line"></i> صفحه اصلی</a></li>
+                <li><a href="{% url 'shop:home' %}#category"><i class="ri-apps-2-line"></i> دسته‌بندی محصولات</a></li>
+                <li><a href="{% url 'shop:search' %}"><i class="ri-store-2-line"></i> همه محصولات</a></li>
+                <li><a href="{% url 'shop:suggested' %}"><i class="ri-star-smile-line"></i> محصولات پیشنهادی</a><span class="nav-lable">ویژه</span></li>
+                <li><a href="{% url 'shop:article_list' %}"><i class="ri-article-line"></i> مقالات و وبلاگ</a></li>
+                <li><a href="{% url 'shop:search' %}?sort=newest"><i class="ri-fire-line"></i> جدیدترین‌ها</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <!-- CONTENT WRAPPER -->
+    <div class="all-content">
+        <!-- FLASH MESSAGES (Always visible below header) -->
+        {% if messages %}
+        <div class="flash-messages-container">
+            {% for message in messages %}
+            <div class="flash-msg-card {% if message.tags == 'success' %}msg-success{% elif message.tags == 'error' %}msg-error{% else %}msg-info{% endif %}">
+                <i class="{% if message.tags == 'success' %}ri-checkbox-circle-fill{% elif message.tags == 'error' %}ri-error-warning-fill{% else %}ri-information-fill{% endif %}"></i>
+                <span>{{ message }}</span>
+                <button type="button" onclick="this.parentElement.remove()" class="msg-close">✕</button>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        {% block content %}{% endblock content %}
+    </div>
+
+    <!-- FOOTER -->
+    <footer class="site-footer">
+        <div class="footer-top">
+            <div class="footer-container">
+                <div class="footer-col footer-about">
+                    <div class="footer-logo">
+                        <img src="{% static 'images/logo.jpg' %}" alt="عطارباشی">
+                        <span>عطارباشی</span>
+                    </div>
+                    <p>فروشگاه آنلاین محصولات طبیعی و سنتی عطارباشی؛ ارائه‌دهنده مرغوب‌ترین گیاهان دارویی، دمنوش‌ها، خشکبار اعلا و فرآورده‌های سنتی با تضمین کیفیت و اصالت.</p>
+                    <div class="footer-socials">
+                        <a href="#" title="اینستاگرام"><i class="ri-instagram-line"></i></a>
+                        <a href="#" title="تلگرام"><i class="ri-telegram-line"></i></a>
+                        <a href="#" title="واتساپ"><i class="ri-whatsapp-line"></i></a>
+                        <a href="#" title="تماس"><i class="ri-phone-line"></i></a>
+                    </div>
+                </div>
+
+                <div class="footer-col">
+                    <h4>دسترسی سریع</h4>
+                    <ul class="footer-links">
+                        <li><a href="{% url 'shop:home' %}"><i class="ri-arrow-left-s-line"></i> صفحه اصلی</a></li>
+                        <li><a href="{% url 'shop:search' %}"><i class="ri-arrow-left-s-line"></i> تمام محصولات</a></li>
+                        <li><a href="{% url 'shop:suggested' %}"><i class="ri-arrow-left-s-line"></i> محصولات پیشنهادی</a></li>
+                        <li><a href="{% url 'shop:article_list' %}"><i class="ri-arrow-left-s-line"></i> مقالات و دانستنی‌ها</a></li>
+                        <li><a href="{% url 'shop:wishlist_list' %}"><i class="ri-arrow-left-s-line"></i> لیست علاقه‌مندی‌ها</a></li>
+                    </ul>
+                </div>
+
+                <div class="footer-col">
+                    <h4>خدمات و راهنما</h4>
+                    <ul class="footer-links">
+                        <li><a href="{% url 'shop:order_tracking' %}"><i class="ri-arrow-left-s-line"></i> پیگیری سفارش و مرسوله</a></li>
+                        <li><a href="{% url 'shop:faq' %}"><i class="ri-arrow-left-s-line"></i> سوالات متداول (FAQ)</a></li>
+                        <li><a href="{% url 'shop:about' %}"><i class="ri-arrow-left-s-line"></i> درباره عطارباشی</a></li>
+                        <li><a href="{% url 'shop:contact' %}"><i class="ri-arrow-left-s-line"></i> تماس با پشتیبانی</a></li>
+                        <li><a href="{% url 'shop:terms' %}"><i class="ri-arrow-left-s-line"></i> قوانین و حریم خصوصی</a></li>
+                    </ul>
+                </div>
+
+                <div class="footer-col footer-contact">
+                    <h4>ارتباط با ما</h4>
+                    <div class="contact-item">
+                        <i class="ri-map-pin-line"></i>
+                        <span>تهران، بازار سنتی، راسته عطاران، پلاک ۱۲</span>
+                    </div>
+                    <div class="contact-item">
+                        <i class="ri-phone-line"></i>
+                        <span dir="ltr">021 - 8877 6655</span>
+                    </div>
+                    <div class="contact-item">
+                        <i class="ri-time-line"></i>
+                        <span>شنبه تا پنجشنبه: ۸:۳۰ الی ۲۱:۰۰</span>
+                    </div>
+                    <div class="contact-item">
+                        <i class="ri-mail-line"></i>
+                        <span>info@attarbashi.ir</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="footer-features">
+            <div class="footer-container features-grid">
+                <div class="feat-box"><i class="ri-truck-line"></i><div><strong>ارسال سریع و مطمئن</strong><span>به سراسر نقاط کشور</span></div></div>
+                <div class="feat-box"><i class="ri-shield-check-line"></i><div><strong>تضمین اصالت کالا</strong><span>۱۰۰٪ طبیعی و مرغوب</span></div></div>
+                <div class="feat-box"><i class="ri-customer-service-2-line"></i><div><strong>مشاوره تخصصی</strong><span>پاسخگویی و پشتیبانی</span></div></div>
+                <div class="feat-box"><i class="ri-secure-payment-line"></i><div><strong>پرداخت امن</strong><span>درگاه معتبر بانکی</span></div></div>
+            </div>
+        </div>
+
+        <div class="footer-bottom">
+            <div class="footer-container">
+                <p>© ۱۴۰۵ تمامی حقوق مادی و معنوی این سایت متعلق به فروشگاه آنلاین عطارباشی است.</p>
+            </div>
+        </div>
+    </footer>
+
+    <style>
+    .flash-messages-container {
+        max-width: 1140px;
+        margin: 10px auto 14px;
+        padding: 0 12px;
+        box-sizing: border-box;
+    }
+    .flash-msg-card {
+        padding: 10px 16px;
+        border-radius: 12px;
+        margin-bottom: 8px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-size: 0.88rem;
+        font-weight: 700;
+        box-shadow: 0 4px 14px rgba(0,0,0,0.04);
+    }
+    .msg-success { background: #dcfce7; color: #15803d; border: 1px solid #bbf7d0; }
+    .msg-error { background: #fee2e2; color: #b91c1c; border: 1px solid #fecaca; }
+    .msg-info { background: #fef3c7; color: #b45309; border: 1px solid #fde68a; }
+    .msg-close { margin-right: auto; border: none; background: transparent; cursor: pointer; color: inherit; font-size: 1rem; }
+
+    /* FOOTER STYLES */
+    .site-footer {
+        background: #23180f;
+        color: #e5ded7;
+        margin-top: 40px;
+        border-top: 3px solid var(--secondary-color, #ff805d);
+        font-size: 0.9rem;
+    }
+    .footer-container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 0 16px;
+        box-sizing: border-box;
+    }
+    .footer-top {
+        padding: 40px 0 30px;
+    }
+    .footer-top .footer-container {
+        display: grid;
+        grid-template-columns: 1.4fr 0.8fr 0.8fr 1fr;
+        gap: 30px;
+    }
+    .footer-logo {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 12px;
+    }
+    .footer-logo img {
+        width: 44px;
+        height: 44px;
+        border-radius: 50%;
+        border: 2px solid var(--secondary-color);
+    }
+    .footer-logo span {
+        font-size: 1.3rem;
+        font-weight: 900;
+        color: #fff;
+    }
+    .footer-about p {
+        color: #b5a89b;
+        line-height: 1.7;
+        font-size: 0.85rem;
+        margin-bottom: 16px;
+    }
+    .footer-socials {
+        display: flex;
+        gap: 10px;
+    }
+    .footer-socials a {
+        width: 36px;
+        height: 36px;
+        background: rgba(255, 255, 255, 0.08);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #fff;
+        font-size: 1.1rem;
+        transition: all 0.2s ease;
+    }
+    .footer-socials a:hover {
+        background: var(--secondary-color);
+        transform: translateY(-2px);
+    }
+    .footer-col h4 {
+        color: #fff;
+        font-size: 1.05rem;
+        font-weight: 800;
+        margin-bottom: 16px;
+        position: relative;
+        padding-bottom: 8px;
+    }
+    .footer-col h4::after {
+        content: '';
+        position: absolute;
+        bottom: 0;
+        right: 0;
+        width: 35px;
+        height: 2.5px;
+        background: var(--secondary-color);
+        border-radius: 2px;
+    }
+    .footer-links {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+    }
+    .footer-links a {
+        color: #b5a89b;
+        text-decoration: none;
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        transition: all 0.15s ease;
+        font-size: 0.86rem;
+    }
+    .footer-links a:hover {
+        color: var(--secondary-color);
+        transform: translateX(-4px);
+    }
+    .footer-contact .contact-item {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 10px;
+        color: #b5a89b;
+        font-size: 0.85rem;
+    }
+    .footer-contact .contact-item i {
+        color: var(--secondary-color);
+        font-size: 1.1rem;
+        flex-shrink: 0;
+    }
+
+    /* FEATURES BAR */
+    .footer-features {
+        background: #1a110a;
+        padding: 18px 0;
+        border-top: 1px solid rgba(255, 255, 255, 0.05);
+        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    }
+    .features-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 16px;
+    }
+    .feat-box {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+    .feat-box i {
+        font-size: 1.6rem;
+        color: var(--secondary-color);
+    }
+    .feat-box strong {
+        display: block;
+        color: #fff;
+        font-size: 0.85rem;
+        font-weight: 700;
+    }
+    .feat-box span {
+        font-size: 0.74rem;
+        color: #9c8e80;
+    }
+
+    /* FOOTER BOTTOM */
+    .footer-bottom {
+        padding: 16px 0;
+        text-align: center;
+        font-size: 0.8rem;
+        color: #8c7f73;
+    }
+
+    @media (max-width: 900px) {
+        .footer-top .footer-container {
+            grid-template-columns: 1fr 1fr;
+            gap: 24px;
+        }
+        .features-grid {
+            grid-template-columns: 1fr 1fr;
+            gap: 14px;
+        }
+    }
+    @media (max-width: 540px) {
+        .footer-top .footer-container {
+            grid-template-columns: 1fr;
+            gap: 20px;
+        }
+        .features-grid {
+            grid-template-columns: 1fr;
+            gap: 12px;
+        }
+    }
+    </style>
+
+    <script src="{% static 'js/main.js' %}"></script>
+    {% block extra_js %}{% endblock extra_js %}
+</body>
+</html>

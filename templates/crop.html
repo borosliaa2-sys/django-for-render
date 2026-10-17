@@ -1,0 +1,1063 @@
+{% extends 'base.html' %}
+{% load static humanize l10n shop_tags %}
+{% block title %}{{ product.name }} | عطارباشی{% endblock title %}
+{% block content %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
+
+<div class="product-detail-page">
+  <div class="detail-container">
+    
+    <!-- BREADCRUMB -->
+    <div class="breadcrumb">
+      <a href="{% url 'shop:home' %}"><i class="fas fa-home"></i> خانه</a>
+      <span>/</span>
+      <a href="{% url 'shop:category' product.category.slug %}">{{ product.category.name }}</a>
+      <span>/</span>
+      <span class="current">{{ product.name }}</span>
+    </div>
+
+    <!-- MAIN PRODUCT SECTION -->
+    <div class="product-main-grid">
+      
+      <!-- GALLERY -->
+      <div class="gallery-col">
+        <div class="gallery-main">
+          <img src="{{ product.image_url }}" alt="{{ product.name }}" id="mainImage">
+        </div>
+        <div class="gallery-thumbs" id="thumbs">
+          <img src="{{ product.image_url }}" alt="{{ product.name }}" class="thumb-item active" data-main="{{ product.image_url }}">
+          {% for v in variants %}
+            {% if forloop.counter <= 4 %}
+              <img src="{{ product.image_url }}" alt="{{ v.display_weight }}" class="thumb-item" data-main="{{ product.image_url }}">
+            {% endif %}
+          {% endfor %}
+        </div>
+      </div>
+
+      <!-- PRODUCT INFO -->
+      <div class="info-col">
+        <div class="title-wrap">
+          <h1>{{ product.name }}</h1>
+          {% if product.best_discount_percent %}
+            <span class="detail-discount-tag">%{{ product.best_discount_percent }} تخفیف</span>
+          {% endif %}
+        </div>
+
+        <div class="subtitle">
+          <span class="category-badge"><i class="fas fa-leaf"></i> {{ product.category.name }}</span>
+          {% if product.temperament %}
+            <span class="temperament-badge">طبع: {{ product.get_temperament_display }}</span>
+          {% endif %}
+          {% if avg_rating %}
+            <span class="rating-badge">★ {{ avg_rating }} <small>({{ review_count }} نظر)</small></span>
+          {% endif %}
+        </div>
+
+        {% if product.short_description %}
+          <p class="short-desc">{{ product.short_description }}</p>
+        {% endif %}
+
+        <!-- PRICE BOX -->
+        <div class="price-box" id="priceBox">
+          {% with product.primary_variant as primary %}
+            {% if primary and primary.price > 0 %}
+              <div class="price-values">
+                <span class="main-price" id="displayPrice">{{ primary.price|format_price }}</span>
+                <span class="toman">تومان</span>
+                {% if primary.compare_price and primary.compare_price > primary.price %}
+                  <span class="old-price" id="displayOldPrice">{{ primary.compare_price|format_price }}</span>
+                {% else %}
+                  <span class="old-price" id="displayOldPrice" style="display:none;"></span>
+                {% endif %}
+              </div>
+
+              <div class="stock-status">
+                {% if primary.stock > 0 %}
+                  <span class="stock ok" id="stockStatus"><i class="fas fa-check-circle"></i> موجود در انبار ({{ primary.stock }} عدد)</span>
+                {% else %}
+                  <span class="stock out" id="stockStatus"><i class="fas fa-times-circle"></i> ناموجود</span>
+                {% endif %}
+              </div>
+            {% else %}
+              <div class="price-values">
+                <span class="main-price">تماس بگیرید</span>
+              </div>
+              <div class="stock-status">
+                <span class="stock out"><i class="fas fa-times-circle"></i> ناموجود</span>
+              </div>
+            {% endif %}
+          {% endwith %}
+        </div>
+
+        <!-- VARIANT / WEIGHT SELECTOR -->
+        {% if variants|length > 0 %}
+        <div class="variant-section">
+          <div class="variant-label"><i class="fas fa-layer-group" style="color:var(--secondary-color);"></i> <span>انتخاب وزن / بسته‌بندی:</span></div>
+          <div class="weight-selector" id="variantSelector">
+            {% for v in variants %}
+              <label class="variant-pill {% if forloop.first %}active{% endif %} {% if v.stock == 0 %}disabled{% endif %}">
+                <input type="radio" name="variant" value="{{ v.id }}" {% if forloop.first %}checked{% endif %} {% if v.stock == 0 %}disabled{% endif %} data-price="{{ v.price|unlocalize }}" data-compare="{{ v.compare_price|default:''|unlocalize }}" data-disc="{{ v.discount_percent|default:'' }}" data-stock="{{ v.stock|unlocalize }}">
+                <span class="pill-weight">{{ v.display_weight }}</span>
+                <span class="pill-divider">•</span>
+                <span class="pill-price">{{ v.price|format_price }} تومان</span>
+                {% if v.discount_percent %}
+                  <span class="pill-disc">%{{ v.discount_percent }} تخفیف</span>
+                {% endif %}
+              </label>
+            {% endfor %}
+          </div>
+        </div>
+        {% endif %}
+
+        <!-- ACTIONS: ADD TO CART & WISHLIST -->
+        <div class="action-section">
+          <form method="post" action="{% with product.primary_variant as pv %}{% if pv %}{% url 'shop:cart_add' pv.id %}{% else %}#{% endif %}{% endwith %}" class="add-to-cart-form cart-add-form" id="addToCartForm">
+            {% csrf_token %}
+            <div class="qty-control">
+              <button type="button" id="dec" class="qty-btn" aria-label="کاهش">−</button>
+              <span id="qtyDisplay">1</span>
+              <input type="hidden" name="qty" id="qtyInput" value="1">
+              <button type="button" id="inc" class="qty-btn" aria-label="افزایش">+</button>
+            </div>
+            <input type="hidden" name="next" value="{{ request.get_full_path }}">
+            {% with product.primary_variant as pv %}
+            {% if pv and pv.stock > 0 %}
+            <button type="submit" class="btn-add-cart" id="addToCartBtn">
+              <i class="ri-shopping-bag-4-line"></i>
+              <span>افزودن به سبد خرید</span>
+            </button>
+            {% else %}
+            <button type="button" class="btn-add-cart" id="addToCartBtn" disabled style="opacity:0.5; cursor:not-allowed;">
+              <i class="ri-close-circle-line"></i>
+              <span>ناموجود در انبار</span>
+            </button>
+            {% endif %}
+            {% endwith %}
+          </form>
+
+          <button type="button" class="btn-wishlist-detail fav-btn {% if product.id in wishlist_ids %}active{% endif %}" data-url="{% url 'shop:wishlist_toggle' product.id %}" data-product-id="{{ product.id }}" onclick="toggleWishlistAjax(event, this)" title="افزودن به علاقه‌مندی">
+            <i class="{% if product.id in wishlist_ids %}fas fa-heart{% else %}far fa-heart{% endif %}"></i>
+            <span>{% if product.id in wishlist_ids %}در علاقه‌مندی‌ها{% else %}علاقه‌مندی{% endif %}</span>
+          </button>
+        </div>
+
+        <!-- TRUST BADGES -->
+        <div class="trust-grid">
+          <div class="trust-item"><i class="fas fa-shipping-fast"></i><span>ارسال سریع سراسر کشور</span></div>
+          <div class="trust-item"><i class="fas fa-award"></i><span>ضمانت کیفیت و اصالت</span></div>
+          <div class="trust-item"><i class="fas fa-lock"></i><span>پرداخت امن و مطمئن</span></div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- PRODUCT TABS / DETAILS -->
+    <div class="product-extra-details">
+      
+      <!-- SPECS -->
+      <div class="detail-block">
+        <h2 class="section-title"><i class="fas fa-list-ul"></i> مشخصات محصول</h2>
+        <div class="specs-grid">
+          <div class="spec-row"><span class="spec-name">نام محصول:</span><span class="spec-val">{{ product.name }}</span></div>
+          <div class="spec-row"><span class="spec-name">دسته‌بندی:</span><span class="spec-val">{{ product.category.name }}</span></div>
+          {% if product.temperament %}
+            <div class="spec-row"><span class="spec-name">طبع و مزاج:</span><span class="spec-val">{{ product.get_temperament_display }}</span></div>
+          {% endif %}
+          {% with product.primary_variant as primary %}
+            {% if primary %}
+              <div class="spec-row"><span class="spec-name">واحد و وزن:</span><span class="spec-val">{{ primary.display_weight }}</span></div>
+              <div class="spec-row"><span class="spec-name">تعداد بسته:</span><span class="spec-val">{{ primary.pack_count }} عدد</span></div>
+            {% endif %}
+          {% endwith %}
+          {% if avg_rating %}
+            <div class="spec-row"><span class="spec-name">امتیاز خریداران:</span><span class="spec-val">★ {{ avg_rating }} از ۵</span></div>
+          {% endif %}
+        </div>
+      </div>
+
+      <!-- DESCRIPTION -->
+      <div class="detail-block">
+        <h2 class="section-title"><i class="fas fa-align-right"></i> توضیحات و خواص</h2>
+        <div class="desc-content">
+          {% if product.description %}
+            {{ product.description|linebreaks }}
+          {% else %}
+            <p>{{ product.name }} از مرغوب‌ترین و تازه‌ترین محصولات عطاری عطارباشی، تهیه شده با بالاترین استانداردهای بهداشتی و حفظ خواص درمانی و طبیعی.</p>
+          {% endif %}
+        </div>
+        <div class="caution-box">
+          <i class="fas fa-info-circle"></i>
+          <span><strong>نکته مصرف:</strong> در صورت داشتن بیماری‌های خاص یا مصرف همزمان داروهای دیگر، پیش از مصرف منظم با پزشک متخصص طب سنتی مشورت نمایید.</span>
+        </div>
+      </div>
+
+      <!-- REVIEWS -->
+      <div class="detail-block">
+        <h2 class="section-title"><i class="fas fa-comments"></i> نظرات خریداران {% if avg_rating %}<small>(★ {{ avg_rating }})</small>{% endif %}</h2>
+        
+        <form method="post" class="review-form">
+          {% csrf_token %}
+          <div class="form-title">ثبت تجربه یا نظر شما</div>
+          {% if review_form.errors %}
+            <div class="form-errors">{{ review_form.errors }}</div>
+          {% endif %}
+          <div class="form-row">
+            <div class="form-group">
+              <label>{{ review_form.guest_name.label }}</label>
+              {{ review_form.guest_name }}
+            </div>
+            <div class="form-group">
+              <label>{{ review_form.rating.label }}</label>
+              {{ review_form.rating }}
+            </div>
+          </div>
+          <div class="form-group" style="margin-top:10px;">
+            <label>{{ review_form.comment.label }}</label>
+            {{ review_form.comment }}
+          </div>
+          <button type="submit" class="btn-submit-review">ارسال نظر</button>
+        </form>
+
+        <div class="reviews-list">
+          {% for r in reviews %}
+            <div class="review-item">
+              <div class="review-header">
+                <span class="reviewer-name">{{ r.display_name }}</span>
+                <span class="reviewer-stars">{{ r.stars_html }}</span>
+              </div>
+              <p class="review-body">{{ r.comment }}</p>
+              <span class="review-date">{{ r.created_at|date:"Y/m/d" }}</span>
+            </div>
+          {% empty %}
+            <p class="no-reviews">هنوز نظری برای این محصول ثبت نشده است. اولین نظر را شما بنویسید!</p>
+          {% endfor %}
+        </div>
+      </div>
+
+      <!-- RELATED PRODUCTS -->
+      {% if related %}
+      <div class="detail-block">
+        <h2 class="section-title"><i class="fas fa-th-large"></i> محصولات مرتبط</h2>
+        <div class="related-grid">
+          {% for rel in related %}
+            {% with rel.primary_variant as rv %}
+            <a href="{{ rel.get_absolute_url }}" class="related-card">
+              <div class="related-img"><img src="{{ rel.image_url }}" alt="{{ rel.name }}" loading="lazy"></div>
+              <div class="related-title">{{ rel.name }}</div>
+              {% if rv and rv.price %}
+                <div class="related-price">{{ rv.price|format_price }} تومان</div>
+              {% endif %}
+            </a>
+            {% endwith %}
+          {% endfor %}
+        </div>
+      </div>
+      {% endif %}
+
+      <!-- مقالات و دانستنی‌های مرتبط با محصول -->
+      {% if related_articles %}
+      <div class="related-section product-related-articles-box">
+        <div class="pra-section-header">
+          <h2 class="section-title"><i class="ri-article-line"></i> مقالات و خواص دارویی مرتبط</h2>
+          <a href="{% url 'shop:article_list' %}" class="pra-more-link">همه مقالات <i class="ri-arrow-left-s-line"></i></a>
+        </div>
+        <div class="pra-grid">
+          {% for art in related_articles %}
+          <a href="{{ art.get_absolute_url }}" class="pra-card">
+            <div class="pra-img">
+              <img src="{{ art.image_url }}" alt="{{ art.title }}" loading="lazy">
+              <span class="pra-badge">{{ art.category_name }}</span>
+            </div>
+            <div class="pra-content">
+              <h4>{{ art.title }}</h4>
+              <p>{{ art.summary|truncatechars:65 }}</p>
+              <div class="pra-footer">
+                <span><i class="ri-time-line"></i> {{ art.reading_time }} دقیقه مطالعه</span>
+                <span class="pra-read-btn">مطالعه <i class="ri-arrow-left-line"></i></span>
+              </div>
+            </div>
+          </a>
+          {% endfor %}
+        </div>
+      </div>
+      {% endif %}
+
+    </div>
+  </div>
+</div>
+
+<style>
+  /* استایل مقالات مرتبط در صفحه محصول */
+  .product-related-articles-box {
+    margin-top: 36px;
+    padding-top: 24px;
+    border-top: 1.5px solid #faece1;
+  }
+  .pra-section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+  }
+  .pra-more-link {
+    font-size: 0.84rem;
+    font-weight: 800;
+    color: var(--secondary-color);
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+  }
+  .pra-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 16px;
+  }
+  .pra-card {
+    background: #ffffff;
+    border: 1px solid rgba(255, 128, 93, 0.2);
+    border-radius: 14px;
+    overflow: hidden;
+    text-decoration: none;
+    display: flex;
+    flex-direction: column;
+    transition: all 0.2s ease;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.02);
+  }
+  .pra-card:hover {
+    transform: translateY(-3px);
+    border-color: var(--secondary-color);
+    box-shadow: 0 6px 20px rgba(255, 128, 93, 0.12);
+  }
+  .pra-img {
+    height: 140px;
+    position: relative;
+    overflow: hidden;
+    background: #fbf9f7;
+  }
+  .pra-img img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  .pra-badge {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    background: rgba(255, 255, 255, 0.95);
+    color: var(--secondary-color);
+    font-size: 0.72rem;
+    font-weight: 800;
+    padding: 2px 8px;
+    border-radius: 10px;
+  }
+  .pra-content {
+    padding: 12px;
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+  }
+  .pra-content h4 {
+    font-size: 0.95rem;
+    font-weight: 800;
+    color: #2b1f15;
+    margin: 0 0 6px 0;
+    line-height: 1.4;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .pra-content p {
+    font-size: 0.82rem;
+    color: #7c6c5d;
+    line-height: 1.5;
+    margin: 0 0 10px 0;
+    flex: 1;
+  }
+  .pra-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-top: 1px solid #f5ebe1;
+    padding-top: 8px;
+    font-size: 0.78rem;
+    color: #8c7b6c;
+  }
+  .pra-read-btn {
+    color: var(--secondary-color);
+    font-weight: 800;
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
+  }
+  @media(max-width: 600px) {
+    .pra-grid { grid-template-columns: 1fr; }
+  }
+
+<style>
+  :root {
+    --main-color:#faece1;
+    --main-light:#f3d6bf;
+    --secondary-color:#ff805d;
+    --product-bg-color:#f8f8f8;
+    --text-dark:#2b1f15;
+    --text-muted:#6b5a4a;
+    --white:#fff;
+    --shadow:0 8px 30px rgba(255, 128, 93, 0.08);
+    --radius:18px;
+  }
+  
+  .product-detail-page {
+    background: #fdfcfb;
+    padding: 16px 12px 36px;
+    box-sizing: border-box;
+    width: 100%;
+  }
+  .detail-container {
+    max-width: 1140px;
+    margin: 0 auto;
+    background: var(--white);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    padding: 24px;
+    border: 1px solid rgba(255, 128, 93, 0.2);
+    box-sizing: border-box;
+    width: 100%;
+    overflow-x: hidden;
+  }
+
+  .breadcrumb {
+    font-size: 0.86rem;
+    color: var(--text-muted);
+    margin-bottom: 20px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid rgba(255, 128, 93, 0.15);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  .breadcrumb a { color: var(--secondary-color); text-decoration: none; font-weight: 600; }
+  .breadcrumb .current { color: var(--text-dark); font-weight: 700; }
+
+  /* PRODUCT MAIN GRID */
+  .product-main-grid {
+    display: grid;
+    grid-template-columns: 1fr 1.15fr;
+    gap: 32px;
+    align-items: start;
+    margin-bottom: 36px;
+  }
+
+  /* GALLERY */
+  .gallery-col {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .gallery-main {
+    background: #fbf9f7;
+    border-radius: 16px;
+    padding: 18px;
+    min-height: 300px;
+    max-height: 380px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid rgba(255, 128, 93, 0.2);
+    box-sizing: border-box;
+  }
+  .gallery-main img {
+    max-width: 100%;
+    max-height: 290px;
+    object-fit: contain;
+    transition: transform 0.3s ease;
+  }
+  .gallery-thumbs {
+    display: flex;
+    gap: 8px;
+    overflow-x: auto;
+    padding-bottom: 4px;
+  }
+  .thumb-item {
+    width: 60px;
+    height: 60px;
+    object-fit: cover;
+    border-radius: 10px;
+    border: 2px solid transparent;
+    cursor: pointer;
+    background: #fbf9f7;
+    padding: 4px;
+    box-sizing: border-box;
+    transition: all 0.2s ease;
+    flex-shrink: 0;
+  }
+  .thumb-item.active, .thumb-item:hover {
+    border-color: var(--secondary-color);
+  }
+
+  /* INFO COL */
+  .info-col {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .title-wrap {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+  .title-wrap h1 {
+    font-size: 1.6rem;
+    font-weight: 900;
+    color: var(--text-dark);
+    margin: 0;
+  }
+  .detail-discount-tag {
+    background: #fee2e2;
+    color: #b91c1c;
+    border: 1px solid #fecaca;
+    padding: 3px 10px;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 800;
+  }
+
+  .subtitle {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+    font-size: 0.84rem;
+    color: var(--text-muted);
+  }
+  .category-badge, .temperament-badge, .rating-badge {
+    background: #faece1;
+    padding: 3px 10px;
+    border-radius: 15px;
+    font-weight: 700;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    color: var(--text-dark);
+  }
+  .rating-badge { color: #b45309; }
+
+  .short-desc {
+    font-size: 0.92rem;
+    line-height: 1.6;
+    color: var(--text-muted);
+    margin: 4px 0;
+  }
+
+  /* PRICE BOX */
+  .price-box {
+    background: linear-gradient(135deg, #fff9f5 0%, #faece1 100%);
+    border: 1.5px solid rgba(255, 128, 93, 0.25);
+    border-radius: 14px;
+    padding: 14px 18px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
+    box-sizing: border-box;
+  }
+  .price-values {
+    display: flex;
+    align-items: baseline;
+    gap: 6px;
+  }
+  .main-price {
+    font-size: 1.55rem;
+    font-weight: 900;
+    color: #0f172a;
+    letter-spacing: -0.02em;
+  }
+  .toman { font-size: 0.88rem; font-weight: 800; color: #e11d48; margin-right: 2px; }
+  .price-box .old-price {
+    text-decoration: line-through;
+    color: #94a3b8;
+    font-size: 0.92rem;
+    margin-right: 6px;
+    font-weight: 500;
+  }
+  .stock-status .stock {
+    font-size: 0.8rem;
+    font-weight: 700;
+    padding: 4px 12px;
+    border-radius: 20px;
+  }
+  .stock.ok { background: #dcfce7; color: #15803d; }
+  .stock.out { background: #fee2e2; color: #b91c1c; }
+
+  /* VARIANT SELECTOR */
+  .variant-section {
+    margin: 14px 0 18px 0;
+    padding: 12px 14px;
+    background: #fdfaf7;
+    border: 1.5px solid #fae6d9;
+    border-radius: 16px;
+  }
+  .variant-label {
+    font-size: 0.9rem;
+    font-weight: 800;
+    color: var(--text-dark, #2b1f15);
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .weight-selector {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+  .variant-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: #ffffff;
+    border: 1.5px solid #ebd0bc;
+    border-radius: 30px;
+    padding: 8px 16px;
+    cursor: pointer;
+    font-size: 0.86rem;
+    font-weight: 700;
+    color: #4a3b32;
+    box-shadow: 0 2px 5px rgba(255, 128, 93, 0.05);
+    transition: all 0.2s ease;
+    user-select: none;
+  }
+  .variant-pill:hover:not(.disabled) {
+    border-color: var(--secondary-color, #ff805d);
+    background: #fff8f5;
+  }
+  .variant-pill input { display: none; }
+  .variant-pill.active {
+    background: #fff4ed;
+    border-color: var(--secondary-color, #ff805d);
+    border-width: 2px;
+    color: #2b1f15;
+    font-weight: 800;
+    box-shadow: 0 3px 10px rgba(255, 128, 93, 0.15);
+  }
+  .variant-pill.disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+    background: #f3f4f6;
+    border-color: #e5e7eb;
+    color: #9ca3af;
+  }
+  .pill-weight {
+    font-weight: 800;
+  }
+  .pill-divider {
+    color: #cbd5e1;
+    font-size: 0.75rem;
+  }
+  .pill-price {
+    color: var(--secondary-color, #ff805d);
+    font-weight: 800;
+  }
+  .pill-disc {
+    background: #fee2e2;
+    color: #b91c1c;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: 800;
+  }
+
+  /* ACTIONS */
+  .action-section {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    flex-wrap: wrap;
+    margin-top: 8px;
+  }
+  .add-to-cart-form {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    flex: 1;
+    min-width: 220px;
+  }
+  .qty-control {
+    display: inline-flex;
+    align-items: center;
+    background: #f0ece8;
+    border-radius: 30px;
+    overflow: hidden;
+    padding: 2px;
+  }
+  .qty-btn {
+    border: none;
+    background: transparent;
+    padding: 8px 14px;
+    font-size: 1.1rem;
+    font-weight: 800;
+    cursor: pointer;
+    color: #3e2c1b;
+  }
+  .qty-control span {
+    min-width: 32px;
+    text-align: center;
+    font-weight: 800;
+    font-size: 0.95rem;
+  }
+  .btn-add-cart {
+    flex: 1;
+    background: linear-gradient(135deg, var(--secondary-color) 0%, #ff6b4a 100%);
+    color: #fff;
+    border: none;
+    padding: 12px 20px;
+    border-radius: 30px;
+    font-weight: 800;
+    font-size: 0.95rem;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    font-family: inherit;
+    box-shadow: 0 4px 16px rgba(255, 128, 93, 0.35);
+    transition: all 0.2s ease;
+  }
+  .btn-add-cart:hover {
+    background: linear-gradient(135deg, #ff6b4a 0%, var(--secondary-color) 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(255, 128, 93, 0.45);
+  }
+
+  .btn-wishlist-detail {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    border: 1.5px solid #ebd0bc;
+    background: #fff;
+    border-radius: 30px;
+    padding: 10px 16px;
+    text-decoration: none;
+    color: var(--text-dark);
+    font-weight: 700;
+    font-size: 0.88rem;
+    transition: all 0.2s ease;
+    cursor: pointer;
+  }
+  .btn-wishlist-detail:hover, .btn-wishlist-detail.active {
+    border-color: #fca5a5;
+    color: #e74c3c;
+    background: #fff5f5;
+  }
+  .btn-wishlist-detail i { font-size: 1rem; }
+
+  /* TRUST BADGES */
+  .trust-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+    margin-top: 14px;
+    padding-top: 14px;
+    border-top: 1px solid rgba(255, 128, 93, 0.15);
+  }
+  .trust-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.76rem;
+    color: var(--text-muted);
+    font-weight: 600;
+  }
+  .trust-item i { color: var(--secondary-color); font-size: 0.95rem; }
+
+  /* DETAIL BLOCKS */
+  .product-extra-details {
+    margin-top: 24px;
+    border-top: 1.5px solid rgba(255, 128, 93, 0.15);
+    padding-top: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 28px;
+  }
+  .section-title {
+    font-size: 1.15rem;
+    font-weight: 900;
+    color: var(--text-dark);
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .section-title i { color: var(--secondary-color); font-size: 1rem; }
+
+  /* SPECS */
+  .specs-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 8px 16px;
+    background: #fbf9f7;
+    padding: 14px 18px;
+    border-radius: 12px;
+    border: 1px solid rgba(255, 128, 93, 0.15);
+  }
+  .spec-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 6px 0;
+    border-bottom: 1px dashed #ebd0bc;
+    font-size: 0.86rem;
+  }
+  .spec-name { color: var(--text-muted); }
+  .spec-val { font-weight: 800; color: var(--text-dark); }
+
+  /* DESC */
+  .desc-content {
+    font-size: 0.92rem;
+    line-height: 1.7;
+    color: var(--text-dark);
+    margin-bottom: 12px;
+  }
+  .caution-box {
+    background: #fff7ed;
+    border: 1px solid #fed7aa;
+    border-right: 4px solid var(--secondary-color);
+    padding: 10px 14px;
+    border-radius: 10px;
+    font-size: 0.84rem;
+    color: #9a3412;
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  /* REVIEWS */
+  .review-form {
+    background: #fbf9f7;
+    border: 1px solid rgba(255, 128, 93, 0.2);
+    border-radius: 14px;
+    padding: 16px;
+    margin-bottom: 16px;
+  }
+  .form-title { font-weight: 800; font-size: 0.95rem; margin-bottom: 10px; color: var(--text-dark); }
+  .form-row { display: grid; grid-template-columns: 1fr 140px; gap: 10px; }
+  .form-group { display: flex; flex-direction: column; gap: 4px; }
+  .form-group label { font-size: 0.8rem; font-weight: 700; color: var(--text-muted); }
+  .review-form input, .review-form select, .review-form textarea {
+    padding: 8px 12px;
+    border: 1px solid #ebd0bc;
+    border-radius: 8px;
+    font-family: inherit;
+    font-size: 0.88rem;
+    background: #fff;
+    outline: none;
+    box-sizing: border-box;
+    width: 100%;
+  }
+  .btn-submit-review {
+    margin-top: 10px;
+    background: var(--secondary-color);
+    color: #fff;
+    border: none;
+    padding: 8px 20px;
+    border-radius: 20px;
+    font-weight: 700;
+    cursor: pointer;
+    font-family: inherit;
+  }
+
+  .reviews-list { display: flex; flex-direction: column; gap: 10px; }
+  .review-item {
+    background: #fff;
+    border: 1px solid #ebd0bc;
+    border-radius: 12px;
+    padding: 12px 16px;
+  }
+  .review-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
+  .reviewer-name { font-weight: 800; font-size: 0.88rem; }
+  .reviewer-stars { color: #f59e0b; font-size: 0.9rem; }
+  .review-body { font-size: 0.86rem; color: var(--text-muted); line-height: 1.5; }
+  .review-date { font-size: 0.75rem; color: #a39281; margin-top: 4px; display: block; }
+  .no-reviews { color: var(--text-muted); font-size: 0.86rem; text-align: center; padding: 16px; background: #fbf9f7; border-radius: 10px; }
+
+  /* RELATED */
+  .related-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 12px;
+  }
+  .related-card {
+    background: #fbf9f7;
+    border: 1px solid rgba(255, 128, 93, 0.2);
+    border-radius: 12px;
+    padding: 10px;
+    text-align: center;
+    text-decoration: none;
+    color: inherit;
+    transition: all 0.2s ease;
+  }
+  .related-card:hover { transform: translateY(-2px); border-color: var(--secondary-color); }
+  .related-img img { width: 100%; height: 95px; object-fit: contain; background: #fff; border-radius: 8px; margin-bottom: 6px; }
+  .related-title { font-weight: 800; font-size: 0.84rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .related-price { color: var(--secondary-color); font-weight: 800; font-size: 0.88rem; margin-top: 2px; }
+
+  /* RESPONSIVE PRODUCT DETAIL */
+  @media (max-width: 850px) {
+    .product-main-grid {
+      grid-template-columns: 1fr;
+      gap: 20px;
+    }
+    .gallery-main {
+      min-height: 220px;
+      max-height: 280px;
+    }
+    .gallery-main img {
+      max-height: 220px;
+    }
+    .title-wrap h1 {
+      font-size: 1.35rem;
+    }
+    .main-price {
+      font-size: 1.3rem;
+    }
+    .trust-grid {
+      grid-template-columns: 1fr;
+      gap: 6px;
+    }
+    .action-section {
+      flex-direction: column;
+      align-items: stretch;
+    }
+    .add-to-cart-form {
+      width: 100%;
+    }
+    .btn-wishlist-detail {
+      justify-content: center;
+    }
+  }
+
+  @media (max-width: 480px) {
+    .product-detail-page { padding: 6px; }
+    .detail-container { padding: 14px 12px; }
+    .price-box { padding: 10px 12px; }
+    .form-row { grid-template-columns: 1fr; }
+    .related-grid { grid-template-columns: repeat(2, 1fr); }
+  }
+</style>
+
+<script>
+  // Thumbs gallery
+  const mainImage = document.getElementById('mainImage');
+  document.querySelectorAll('#thumbs .thumb-item').forEach(t => {
+    t.addEventListener('click', function(){
+      mainImage.src = this.dataset.main;
+      document.querySelectorAll('#thumbs .thumb-item').forEach(x => x.classList.remove('active'));
+      this.classList.add('active');
+    });
+  });
+
+  // Quantity Counter
+  const qtySpan = document.getElementById('qtyDisplay');
+  const qtyInput = document.getElementById('qtyInput');
+  const decBtn = document.getElementById('dec');
+  const incBtn = document.getElementById('inc');
+  if (decBtn && incBtn) {
+    decBtn.addEventListener('click', () => {
+      let v = parseInt(qtyInput.value) || 1;
+      if (v > 1) { v--; qtyInput.value = v; qtySpan.textContent = v; }
+    });
+    incBtn.addEventListener('click', () => {
+      let v = parseInt(qtyInput.value) || 1;
+      v++; qtyInput.value = v; qtySpan.textContent = v;
+    });
+  }
+
+  // Variant selector change
+  const variantPills = document.querySelectorAll('#variantSelector .variant-pill');
+  const addForm = document.getElementById('addToCartForm');
+  const addToCartBtn = document.getElementById('addToCartBtn');
+  const displayPrice = document.getElementById('displayPrice');
+  const displayOldPrice = document.getElementById('displayOldPrice');
+  const stockStatus = document.getElementById('stockStatus');
+
+  function parseSafeInt(val, defaultVal) {
+    if (val === null || val === undefined || val === '') return defaultVal || 0;
+    const clean = String(val).replace(/[^\d]/g, '');
+    const num = parseInt(clean, 10);
+    return isNaN(num) ? (defaultVal || 0) : num;
+  }
+
+  function formatFaNumber(num) {
+    if (isNaN(num) || num === null || num === undefined) return '۰';
+    return Number(num).toLocaleString('fa-IR');
+  }
+
+  variantPills.forEach(pill => {
+    const radio = pill.querySelector('input[type="radio"]');
+    if (radio) {
+      radio.addEventListener('change', function() {
+        variantPills.forEach(p => p.classList.remove('active'));
+        pill.classList.add('active');
+
+        const vid = this.value;
+        const numPrice = parseSafeInt(this.dataset.price, 0);
+        const numCompare = parseSafeInt(this.dataset.compare, 0);
+        const stock = parseSafeInt(this.dataset.stock, 0);
+
+        // update action
+        if (addForm) {
+          addForm.action = '/cart/add/' + vid + '/';
+        }
+
+        // update price
+        if (displayPrice) {
+          if (numPrice > 0) {
+            displayPrice.textContent = formatFaNumber(numPrice);
+          } else {
+            displayPrice.textContent = 'تماس بگیرید';
+          }
+        }
+        if (displayOldPrice) {
+          if (numCompare > numPrice) {
+            displayOldPrice.textContent = formatFaNumber(numCompare);
+            displayOldPrice.style.display = 'inline';
+          } else {
+            displayOldPrice.style.display = 'none';
+          }
+        }
+
+        // update stock & button state
+        if (stockStatus) {
+          if (stock > 0) {
+            stockStatus.className = 'stock ok';
+            stockStatus.innerHTML = '<i class="fas fa-check-circle"></i> موجود در انبار (' + formatFaNumber(stock) + ' عدد)';
+          } else {
+            stockStatus.className = 'stock out';
+            stockStatus.innerHTML = '<i class="fas fa-times-circle"></i> ناموجود در انبار';
+          }
+        }
+
+        if (addToCartBtn) {
+          const btnSpan = addToCartBtn.querySelector('span');
+          if (stock > 0) {
+            addToCartBtn.disabled = false;
+            addToCartBtn.style.opacity = '1';
+            addToCartBtn.style.cursor = 'pointer';
+            if (btnSpan) btnSpan.textContent = 'افزودن به سبد خرید';
+          } else {
+            addToCartBtn.disabled = true;
+            addToCartBtn.style.opacity = '0.5';
+            addToCartBtn.style.cursor = 'not-allowed';
+            if (btnSpan) btnSpan.textContent = 'ناموجود در انبار';
+          }
+        }
+      });
+    }
+  });
+</script>
+{% endblock content %}

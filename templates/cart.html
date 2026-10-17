@@ -1,0 +1,647 @@
+{% extends 'base.html' %}
+{% load static humanize %}
+{% block title %}سبد خرید | عطارباشی{% endblock title %}
+{% block content %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
+
+<div class="cart-page-wrap">
+  <div class="cart-main-container">
+    
+    <div class="cart-header-title">
+      <h1><i class="ri-shopping-cart-2-line"></i> سبد خرید شما</h1>
+      {% if items %}
+        <span class="cart-badge-count">{{ items|length }} قلم کالا</span>
+      {% endif %}
+    </div>
+
+    {% if not items %}
+      <div class="empty-cart-card">
+        <div class="empty-icon-wrap">
+          <i class="ri-shopping-bag-3-line"></i>
+        </div>
+        <h2>سبد خرید شما خالی است!</h2>
+        <p>می‌توانید برای مشاهده محصولات گیاهی و سفارش آنلاین به صفحه فروشگاه سر بزنید.</p>
+        <a href="{% url 'shop:search' %}" class="btn-goto-shop">
+          <i class="ri-store-2-line"></i>
+          <span>مشاهده محصولات فروشگاه</span>
+        </a>
+      </div>
+    {% else %}
+      <div class="cart-layout-grid">
+        
+        <!-- CART ITEMS LIST -->
+        <div class="cart-items-section">
+          {% for row in items %}
+          <div class="cart-product-card" id="cart-item-{{ row.variant.id }}">
+            
+            <div class="cart-prod-image">
+              <a href="{{ row.product.get_absolute_url }}">
+                <img src="{{ row.product.image_url }}" alt="{{ row.product.name }}">
+              </a>
+            </div>
+
+            <div class="cart-prod-details">
+              <h3 class="prod-name">
+                <a href="{{ row.product.get_absolute_url }}">{{ row.product.name }}</a>
+              </h3>
+              <div class="prod-meta">
+                <span>{{ row.variant.display_weight }}</span>
+                <span>· دسته: {{ row.product.category.name }}</span>
+              </div>
+              <div class="prod-unit-price">
+                قیمت واحد: <strong>{{ row.variant.price|intcomma }}</strong> تومان
+              </div>
+            </div>
+
+            <div class="cart-prod-actions">
+              <!-- QTY UPDATE FORM -->
+              <form method="post" action="{% url 'shop:cart_update' row.variant.id %}" class="qty-form">
+                {% csrf_token %}
+                <div class="cart-qty-ctrl">
+                  <button type="submit" name="qty" value="{{ row.qty|add:'-1' }}" class="qty-step-btn" title="کاهش">−</button>
+                  <span class="qty-num">{{ row.qty }}</span>
+                  <button type="submit" name="qty" value="{{ row.qty|add:'1' }}" class="qty-step-btn" title="افزایش">+</button>
+                </div>
+              </form>
+
+              <!-- LINE TOTAL -->
+              <div class="prod-subtotal">
+                <span class="subtotal-label">مجموع:</span>
+                <span class="subtotal-val">{{ row.subtotal|intcomma }} تومان</span>
+              </div>
+
+              <!-- REMOVE BUTTON -->
+              <form method="post" action="{% url 'shop:cart_remove' row.variant.id %}" class="remove-form">
+                {% csrf_token %}
+                <button type="submit" class="btn-remove-item" title="حذف این مورد">
+                  <i class="ri-delete-bin-line"></i>
+                  <span>حذف</span>
+                </button>
+              </form>
+            </div>
+
+          </div>
+          {% endfor %}
+
+          <div class="cart-list-footer">
+            <form method="post" action="{% url 'shop:cart_clear' %}" onsubmit="return confirm('آیا از خالی کردن کل سبد خرید اطمینان دارید؟');">
+              {% csrf_token %}
+              <button type="submit" class="btn-clear-cart">
+                <i class="ri-delete-bin-5-line"></i>
+                <span>خالی کردن سبد خرید</span>
+              </button>
+            </form>
+            <a href="{% url 'shop:search' %}" class="btn-continue-shop">
+              <i class="ri-arrow-right-line"></i>
+              <span>ادامه خرید از فروشگاه</span>
+            </a>
+          </div>
+        </div>
+
+        <!-- ORDER SUMMARY SIDEBAR -->
+        <div class="cart-summary-section">
+          <div class="summary-card">
+            <h3>خلاصه فاکتور سفارش</h3>
+            
+            <div class="summary-row">
+              <span>تعداد اقلام:</span>
+              <span>{{ cart|length }} عدد</span>
+            </div>
+            
+            <div class="summary-row">
+              <span>جمع مبلغ کالاها:</span>
+              <span class="sum-price">{{ cart.total_price|intcomma }} تومان</span>
+            </div>
+
+            <div class="summary-row shipping-row">
+              <span>هزینه ارسال:</span>
+              <span class="free-shipping"><i class="ri-truck-line"></i> محاسبه در مرحله بعد</span>
+            </div>
+
+            <div class="summary-divider"></div>
+
+            <div class="summary-row total-row">
+              <span>مبلغ قابل پرداخت:</span>
+              <span class="final-price">{{ cart.total_price|intcomma }} <strong>تومان</strong></span>
+            </div>
+
+            {% if user.is_authenticated %}
+            <button type="button" class="btn-checkout" onclick="openCheckoutModal()">
+              <span>تکمیل پرداخت و نهایی کردن خرید</span>
+              <i class="ri-secure-payment-line"></i>
+            </button>
+            {% else %}
+            <a href="{% url 'signup' %}?next={% url 'shop:cart_detail' %}?open_checkout=1" class="btn-checkout" style="display:flex; align-items:center; justify-content:center; text-decoration:none;">
+              <span>تکمیل پرداخت و نهایی کردن خرید</span>
+              <i class="ri-secure-payment-line"></i>
+            </a>
+            {% endif %}
+
+            <div class="summary-guarantee">
+              <i class="ri-shield-check-line"></i>
+              <span>ضمانت اصالت و بازگشت وجه تا ۷ روز</span>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- مودال اطلاعات ارسال و تسویه حساب -->
+      <div id="checkoutModal" class="checkout-modal-overlay" style="display:none;">
+        <div class="checkout-modal-card">
+          <div class="cm-header">
+            <h3><i class="ri-map-pin-user-line"></i> اطلاعات تحویل‌گیرنده و پرداخت</h3>
+            <button type="button" class="cm-close" onclick="closeCheckoutModal()">✕</button>
+          </div>
+          <form method="post" action="{% url 'shop:checkout' %}" class="cm-form">
+            {% csrf_token %}
+            <div class="cm-grid">
+              <div class="cm-field">
+                <label>نام و نام خانوادگی تحویل‌گیرنده:</label>
+                <input type="text" name="full_name" value="{% if user.is_authenticated %}{{ user.get_full_name|default:user.username }}{% endif %}" placeholder="مثال: علی احمدی" required>
+              </div>
+              <div class="cm-field">
+                <label>شماره همراه (جهت پیامک رهگیری پستی):</label>
+                <input type="tel" name="phone_number" value="{% if user.is_authenticated %}{{ user.phone_number|default:'' }}{% endif %}" placeholder="0912..." required>
+              </div>
+              <div class="cm-field">
+                <label>استان:</label>
+                <input type="text" name="province" value="تهران" required>
+              </div>
+              <div class="cm-field">
+                <label>شهر:</label>
+                <input type="text" name="city" value="تهران" required>
+              </div>
+            </div>
+            <div class="cm-field cm-full">
+              <label>آدرس پستی دقیق:</label>
+              <textarea name="address" rows="2" placeholder="خیابان، کوچه، پلاک، زنگ..." required></textarea>
+            </div>
+            <div class="cm-field cm-full">
+              <label>توضیحات اختیاری (مثلاً تحویل عصرها):</label>
+              <input type="text" name="notes" placeholder="یادداشت برای پیک یا انبار">
+            </div>
+
+            <div class="cm-summary-bar">
+              <span>مبلغ نهایی قابل پرداخت: <strong>{{ cart.total_price|intcomma }} تومان</strong></span>
+              <button type="submit" class="btn-cm-submit">
+                <span>تایید نهایی و پرداخت</span>
+                <i class="ri-bank-card-line"></i>
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    {% endif %}
+
+  </div>
+</div>
+
+<style>
+  /* استایل مودال پرداخت و تسویه حساب */
+  .checkout-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.55);
+    backdrop-filter: blur(4px);
+    z-index: 2000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+    box-sizing: border-box;
+  }
+  .checkout-modal-card {
+    background: #ffffff;
+    border-radius: 20px;
+    border: 1.5px solid rgba(255, 128, 93, 0.3);
+    box-shadow: 0 16px 45px rgba(0,0,0,0.2);
+    width: min(560px, 100%);
+    padding: 24px 20px;
+    box-sizing: border-box;
+    animation: modalPop 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  @keyframes modalPop {
+    from { opacity: 0; transform: scale(0.92); }
+    to { opacity: 1; transform: scale(1); }
+  }
+  .cm-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid #faece1;
+    padding-bottom: 12px;
+    margin-bottom: 16px;
+  }
+  .cm-header h3 { font-size: 1.1rem; font-weight: 900; color: #2b1f15; display: flex; align-items: center; gap: 6px; margin: 0; }
+  .cm-close { background: #f3f4f6; border: none; width: 30px; height: 30px; border-radius: 50%; font-size: 0.9rem; cursor: pointer; color: #6b7280; }
+  .cm-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .cm-field { display: flex; flex-direction: column; gap: 4px; margin-bottom: 10px; }
+  .cm-full { grid-column: 1 / -1; }
+  .cm-field label { font-size: 0.8rem; font-weight: 700; color: #4a3b2c; }
+  .cm-field input, .cm-field textarea {
+    padding: 9px 12px;
+    border: 1.2px solid #ebd0bc;
+    border-radius: 10px;
+    font-family: inherit;
+    font-size: 0.88rem;
+    outline: none;
+    background: #fdfaf7;
+  }
+  .cm-field input:focus, .cm-field textarea:focus { border-color: var(--secondary-color); background: #fff; }
+  .cm-summary-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-top: 1px solid #faece1;
+    padding-top: 16px;
+    margin-top: 14px;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+  .cm-summary-bar span { font-size: 0.88rem; color: #554433; }
+  .cm-summary-bar strong { color: var(--secondary-color); font-size: 1.05rem; }
+  .btn-cm-submit {
+    background: linear-gradient(135deg, var(--secondary-color) 0%, #ff6b4a 100%);
+    color: #fff;
+    border: none;
+    padding: 10px 22px;
+    border-radius: 25px;
+    font-weight: 800;
+    font-size: 0.9rem;
+    cursor: pointer;
+    font-family: inherit;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+  @media(max-width: 500px) {
+    .cm-grid { grid-template-columns: 1fr; }
+  }
+</style>
+
+<script>
+function openCheckoutModal() {
+  {% if not user.is_authenticated %}
+    window.location.href = "{% url 'signup' %}?next={% url 'shop:cart_detail' %}?open_checkout=1";
+    return;
+  {% endif %}
+  const modal = document.getElementById('checkoutModal');
+  if (modal) {
+    modal.style.display = 'flex';
+    document.body.style.overflow = 'hidden';
+  }
+}
+function closeCheckoutModal() {
+  const modal = document.getElementById('checkoutModal');
+  if (modal) {
+    modal.style.display = 'none';
+    document.body.style.overflow = '';
+  }
+}
+
+document.addEventListener("DOMContentLoaded", function() {
+  const params = new URLSearchParams(window.location.search);
+  if (params.get("open_checkout") === "1" || params.get("checkout") === "1") {
+    {% if user.is_authenticated %}
+      setTimeout(openCheckoutModal, 150);
+    {% endif %}
+  }
+});
+</script>
+
+<style>
+  :root {
+    --main-color:#faece1;
+    --main-light:#f3d6bf;
+    --secondary-color:#ff805d;
+    --text-dark:#2b1f15;
+    --text-muted:#6b5a4a;
+    --white:#fff;
+    --radius:16px;
+  }
+  .cart-page-wrap {
+    background: #fdfcfb;
+    padding: 16px 12px 40px;
+    box-sizing: border-box;
+    width: 100%;
+  }
+  .cart-main-container {
+    max-width: 1140px;
+    margin: 0 auto;
+    box-sizing: border-box;
+  }
+
+  .cart-header-title {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+  .cart-header-title h1 {
+    font-size: 1.5rem;
+    font-weight: 900;
+    color: var(--text-dark);
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .cart-header-title h1 i { color: var(--secondary-color); font-size: 1.6rem; }
+  .cart-badge-count {
+    background: #faece1;
+    color: var(--secondary-color);
+    font-size: 0.82rem;
+    font-weight: 800;
+    padding: 3px 10px;
+    border-radius: 20px;
+    border: 1px solid rgba(255, 128, 93, 0.25);
+  }
+
+  /* EMPTY CART */
+  .empty-cart-card {
+    background: #ffffff;
+    border: 1.5px dashed rgba(255, 128, 93, 0.3);
+    border-radius: var(--radius);
+    padding: 50px 20px;
+    text-align: center;
+    max-width: 550px;
+    margin: 30px auto;
+  }
+  .empty-icon-wrap {
+    width: 80px;
+    height: 80px;
+    background: #faece1;
+    color: var(--secondary-color);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2.5rem;
+    margin: 0 auto 16px;
+  }
+  .empty-cart-card h2 { font-size: 1.35rem; font-weight: 900; margin-bottom: 8px; }
+  .empty-cart-card p { color: var(--text-muted); font-size: 0.92rem; margin-bottom: 22px; }
+  .btn-goto-shop {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: linear-gradient(135deg, var(--secondary-color) 0%, #ff6b4a 100%);
+    color: #fff;
+    padding: 12px 28px;
+    border-radius: 30px;
+    text-decoration: none;
+    font-weight: 800;
+    font-size: 0.95rem;
+    box-shadow: 0 4px 16px rgba(255, 128, 93, 0.35);
+  }
+
+  /* CART LAYOUT */
+  .cart-layout-grid {
+    display: grid;
+    grid-template-columns: 1fr 340px;
+    gap: 24px;
+    align-items: start;
+  }
+
+  /* CART PRODUCT CARDS */
+  .cart-items-section {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .cart-product-card {
+    background: #ffffff;
+    border: 1px solid rgba(255, 128, 93, 0.2);
+    border-radius: 14px;
+    padding: 14px;
+    display: grid;
+    grid-template-columns: 80px 1fr auto;
+    align-items: center;
+    gap: 16px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.02);
+    box-sizing: border-box;
+  }
+
+  .cart-prod-image {
+    width: 80px;
+    height: 80px;
+    background: #fbf9f7;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 6px;
+    box-sizing: border-box;
+    flex-shrink: 0;
+  }
+  .cart-prod-image img { max-width: 100%; max-height: 100%; object-fit: contain; }
+
+  .cart-prod-details {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .prod-name { font-size: 1rem; font-weight: 800; margin: 0; }
+  .prod-name a { color: var(--text-dark); text-decoration: none; }
+  .prod-name a:hover { color: var(--secondary-color); }
+  .prod-meta { font-size: 0.8rem; color: var(--text-muted); }
+  .prod-unit-price { font-size: 0.84rem; color: #4a3b2c; margin-top: 2px; }
+  .prod-unit-price strong { color: var(--secondary-color); font-weight: 800; }
+
+  .cart-prod-actions {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+
+  .cart-qty-ctrl {
+    display: inline-flex;
+    align-items: center;
+    background: #f0ece8;
+    border-radius: 20px;
+    overflow: hidden;
+  }
+  .qty-step-btn {
+    border: none;
+    background: transparent;
+    padding: 4px 10px;
+    font-size: 1rem;
+    font-weight: 800;
+    cursor: pointer;
+    color: #2b1f15;
+    transition: background 0.15s;
+  }
+  .qty-step-btn:hover { background: #e5ded7; }
+  .qty-num {
+    min-width: 26px;
+    text-align: center;
+    font-weight: 800;
+    font-size: 0.9rem;
+  }
+
+  .prod-subtotal {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    min-width: 90px;
+  }
+  .subtotal-label { font-size: 0.72rem; color: var(--text-muted); }
+  .subtotal-val { font-size: 0.95rem; font-weight: 900; color: var(--secondary-color); }
+
+  .btn-remove-item {
+    background: #fee2e2;
+    color: #b91c1c;
+    border: 1px solid #fecaca;
+    border-radius: 8px;
+    padding: 6px 10px;
+    font-size: 0.8rem;
+    font-weight: 700;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-family: inherit;
+    transition: all 0.2s ease;
+  }
+  .btn-remove-item:hover { background: #fca5a5; }
+
+  .cart-list-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 8px;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+  .btn-clear-cart {
+    background: transparent;
+    border: 1px solid #ebd0bc;
+    color: #991b1b;
+    border-radius: 20px;
+    padding: 6px 14px;
+    font-size: 0.82rem;
+    font-weight: 700;
+    cursor: pointer;
+    font-family: inherit;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+  }
+  .btn-continue-shop {
+    color: var(--secondary-color);
+    text-decoration: none;
+    font-size: 0.88rem;
+    font-weight: 800;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  /* SUMMARY CARD */
+  .summary-card {
+    background: #ffffff;
+    border: 1.5px solid rgba(255, 128, 93, 0.25);
+    border-radius: var(--radius);
+    padding: 20px;
+    box-shadow: 0 4px 18px rgba(255, 128, 93, 0.08);
+    position: sticky;
+    top: 90px;
+  }
+  .summary-card h3 {
+    font-size: 1.1rem;
+    font-weight: 900;
+    color: var(--text-dark);
+    margin-bottom: 16px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #f5ebe1;
+  }
+  .summary-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+    font-size: 0.88rem;
+    color: var(--text-muted);
+  }
+  .sum-price { font-weight: 800; color: var(--text-dark); }
+  .shipping-row .free-shipping { color: #15803d; font-weight: 700; font-size: 0.82rem; }
+  .summary-divider { height: 1px; background: #f5ebe1; margin: 14px 0; }
+  .total-row { font-size: 1rem; color: var(--text-dark); font-weight: 800; }
+  .final-price { font-size: 1.35rem; font-weight: 900; color: var(--secondary-color); }
+  .final-price strong { font-size: 0.85rem; color: var(--text-muted); font-weight: 700; }
+
+  .btn-checkout {
+    width: 100%;
+    margin-top: 16px;
+    background: linear-gradient(135deg, var(--secondary-color) 0%, #ff6b4a 100%);
+    color: #fff;
+    border: none;
+    border-radius: 30px;
+    padding: 12px;
+    font-size: 0.98rem;
+    font-weight: 800;
+    cursor: pointer;
+    font-family: inherit;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    box-shadow: 0 4px 16px rgba(255, 128, 93, 0.35);
+    transition: all 0.2s ease;
+  }
+  .btn-checkout:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(255, 128, 93, 0.45); }
+
+  .summary-guarantee {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    font-size: 0.78rem;
+    color: #8c7b6c;
+    margin-top: 14px;
+    text-align: center;
+  }
+  .summary-guarantee i { color: #15803d; font-size: 1rem; }
+
+  /* RESPONSIVE MOBILE CART */
+  @media (max-width: 800px) {
+    .cart-layout-grid {
+      grid-template-columns: 1fr;
+    }
+    .summary-card {
+      position: static;
+    }
+  }
+
+  @media (max-width: 580px) {
+    .cart-page-wrap { padding: 8px; }
+    .cart-product-card {
+      grid-template-columns: 70px 1fr;
+      gap: 10px;
+      padding: 10px;
+    }
+    .cart-prod-image { width: 70px; height: 70px; }
+    .prod-name { font-size: 0.92rem; }
+    
+    .cart-prod-actions {
+      grid-column: 1 / -1;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-top: 1px dashed #f5ebe1;
+      padding-top: 10px;
+      margin-top: 4px;
+      width: 100%;
+    }
+    .prod-subtotal {
+      align-items: center;
+      min-width: auto;
+    }
+    .subtotal-val { font-size: 0.88rem; }
+  }
+</style>
+{% endblock content %}

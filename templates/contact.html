@@ -1,0 +1,72 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}تماس با ما | عطارباشی{% endblock title %}
+{% block content %}
+<div class="static-page-wrap">
+  <div class="static-card">
+    <div class="page-badge"><i class="ri-customer-service-2-line"></i> پشتیبانی و ارتباط</div>
+    <h1>تماس با فروشگاه عطارباشی</h1>
+    <p style="color:#6b5a4a; margin-bottom:24px;">خوشحال می‌شویم سوالات، پیشنهادات و نظرات شما را بشنویم. از طریق راه‌های زیر با ما در ارتباط باشید:</p>
+    
+    <div class="contact-grid">
+      <div class="contact-info-card">
+        <div class="c-item">
+          <i class="ri-map-pin-line"></i>
+          <div><strong>آدرس فروشگاه حضوری:</strong><span>تهران، بازار سنتی، راسته عطاران، پلاک ۱۲</span></div>
+        </div>
+        <div class="c-item">
+          <i class="ri-phone-line"></i>
+          <div><strong>تلفن پشتیبانی و سفارش:</strong><span dir="ltr">021 - 8877 6655</span></div>
+        </div>
+        <div class="c-item">
+          <i class="ri-time-line"></i>
+          <div><strong>ساعات پاسخگویی:</strong><span>شنبه تا پنجشنبه: ۸:۳۰ صبح الی ۲۱:۰۰ شب</span></div>
+        </div>
+        <div class="c-item">
+          <i class="ri-mail-line"></i>
+          <div><strong>پست الکترونیک:</strong><span>support@attarbashi.ir</span></div>
+        </div>
+      </div>
+
+      <div class="contact-form-card">
+        <h3>ارسال پیام مستقیم</h3>
+        <form onsubmit="event.preventDefault(); alert('پیام شما با موفقیت ثبت شد و به زودی با شما تماس خواهیم گرفت.'); this.reset();">
+          <div class="form-group">
+            <label>نام و نام خانوادگی:</label>
+            <input type="text" required placeholder="نام شما">
+          </div>
+          <div class="form-group">
+            <label>شماره تماس:</label>
+            <input type="tel" required placeholder="0912...">
+          </div>
+          <div class="form-group">
+            <label>متن پیام یا سوال شما:</label>
+            <textarea rows="4" required placeholder="متن پیام خود را بنویسید..."></textarea>
+          </div>
+          <button type="submit" class="btn-send-msg">ارسال پیام</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+  .static-page-wrap { padding: 20px 14px 40px; background: #fdfcfb; }
+  .static-card { max-width: 960px; margin: 0 auto; background: #fff; border: 1.5px solid rgba(255, 128, 93, 0.2); border-radius: 20px; padding: 36px 28px; box-shadow: 0 8px 30px rgba(0,0,0,0.03); }
+  .page-badge { display: inline-flex; align-items: center; gap: 6px; background: #faece1; color: var(--secondary-color, #ff805d); font-size: 0.82rem; font-weight: 800; padding: 4px 14px; border-radius: 20px; margin-bottom: 12px; }
+  .static-card h1 { font-size: 1.5rem; font-weight: 900; color: #2b1f15; margin-bottom: 8px; }
+  .contact-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+  .contact-info-card { background: #fbf9f7; border: 1px solid #ebd0bc; border-radius: 16px; padding: 20px; display: flex; flex-direction: column; gap: 16px; }
+  .c-item { display: flex; gap: 12px; align-items: flex-start; }
+  .c-item i { font-size: 1.3rem; color: var(--secondary-color, #ff805d); flex-shrink: 0; margin-top: 2px; }
+  .c-item strong { display: block; font-size: 0.88rem; color: #2b1f15; margin-bottom: 2px; }
+  .c-item span { font-size: 0.84rem; color: #6b5a4a; }
+  .contact-form-card { background: #fff; border: 1px solid #ebd0bc; border-radius: 16px; padding: 20px; }
+  .contact-form-card h3 { font-size: 1.05rem; font-weight: 800; margin-bottom: 14px; color: #2b1f15; }
+  .form-group { display: flex; flex-direction: column; gap: 4px; margin-bottom: 10px; }
+  .form-group label { font-size: 0.82rem; font-weight: 700; color: #4a3b2c; }
+  .form-group input, .form-group textarea { padding: 9px 12px; border: 1px solid #ebd0bc; border-radius: 10px; font-family: inherit; font-size: 0.88rem; outline: none; }
+  .btn-send-msg { background: linear-gradient(135deg, var(--secondary-color, #ff805d) 0%, #ff6b4a 100%); color: #fff; border: none; padding: 10px 24px; border-radius: 30px; font-weight: 800; cursor: pointer; font-family: inherit; width: 100%; margin-top: 8px; }
+  @media(max-width:700px){ .contact-grid{ grid-template-columns:1fr; } }
+</style>
+{% endblock content %}

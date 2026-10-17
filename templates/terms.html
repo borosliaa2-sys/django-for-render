@@ -1,0 +1,47 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}قوانین و مقررات | عطارباشی{% endblock title %}
+{% block content %}
+<div class="static-page-wrap">
+  <div class="static-card">
+    <div class="page-badge"><i class="ri-file-shield-line"></i> تعهدات و شفافیت</div>
+    <h1>قوانین، مقررات و حریم خصوصی</h1>
+    
+    <div class="static-content">
+      <p class="lead-text">
+        خرید و استفاده از خدمات عطارباشی به معنی آگاهی و پذیرش قوانین و مقررات زیر می‌باشد.
+      </p>
+
+      <h2>۱. اصالت و سلامت کالاها</h2>
+      <p>
+        تمامی محصولات عطارباشی از مراجع معتبر، بهداشتی و با تاریخ تولید و انقضای معتبر تهیه می‌گردند. بسته‌بندی‌ها با متریال ضد رطوبت انجام می‌شود تا سلامت گیاهان حفظ شود.
+      </p>
+
+      <h2>۲. ارسال و تحویل سفارشات</h2>
+      <p>
+        سفارشات شهر تهران ظرف مدت ۲۴ ساعت کاری و سفارشات سایر شهرها از طریق پست پیشتاز ظرف مدت ۲ الی ۴ روز کاری ارسال و تحویل می‌گردند. کد رهگیری پستی از طریق پیامک برای خریدار ارسال می‌شود.
+      </p>
+
+      <h2>۳. بازگشت وجه و تعویض (ضمانت ۷ روزه)</h2>
+      <p>
+        در صورت وجود هرگونه مغایرت، نقص یا نارضایتی از کیفیت بسته، تا ۷ روز پس از دریافت، امکان عودت کالا و بازپرداخت کامل وجه بدون هیچ‌گونه قید و شرطی فراهم است.
+      </p>
+
+      <h2>۴. حفظ حریم خصوصی</h2>
+      <p>
+        اطلاعات شخصی، شماره همراه و آدرس کاربران صرفاً جهت ارسال سفارش استفاده شده و نزد عطارباشی کاملاً محرمانه و محفوظ است.
+      </p>
+    </div>
+  </div>
+</div>
+
+<style>
+  .static-page-wrap { padding: 20px 14px 40px; background: #fdfcfb; }
+  .static-card { max-width: 900px; margin: 0 auto; background: #fff; border: 1.5px solid rgba(255, 128, 93, 0.2); border-radius: 20px; padding: 36px 28px; box-shadow: 0 8px 30px rgba(0,0,0,0.03); }
+  .page-badge { display: inline-flex; align-items: center; gap: 6px; background: #faece1; color: var(--secondary-color, #ff805d); font-size: 0.82rem; font-weight: 800; padding: 4px 14px; border-radius: 20px; margin-bottom: 12px; }
+  .static-card h1 { font-size: 1.5rem; font-weight: 900; color: #2b1f15; margin-bottom: 18px; }
+  .lead-text { font-size: 1.05rem; font-weight: 700; color: #4a3b2c; line-height: 1.8; background: #fff8f4; border-right: 4px solid var(--secondary-color, #ff805d); padding: 14px 18px; border-radius: 10px; margin-bottom: 24px; }
+  .static-content p { font-size: 0.95rem; line-height: 1.8; color: #554433; margin-bottom: 20px; text-align: justify; }
+  .static-content h2 { font-size: 1.15rem; font-weight: 800; color: #2b1f15; margin: 24px 0 8px; }
+</style>
+{% endblock content %}

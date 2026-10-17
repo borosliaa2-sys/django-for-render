@@ -1,0 +1,205 @@
+/* ========================================================
+   _category.css — بخش دسته‌بندی محصولات (باکس‌های شیک با تصویر دایره‌ای)
+   ======================================================== */
+
+#category {
+    max-width: 1200px;
+    width: 94%;
+    margin: 45px auto 25px;
+    padding: 0 8px;
+    box-sizing: border-box;
+}
+
+.category-header {
+    text-align: center;
+    margin-bottom: 24px;
+}
+
+.category-header h2 {
+    font-size: 1.55rem;
+    font-weight: 900;
+    color: #2b1f15;
+    margin-bottom: 6px;
+    position: relative;
+    display: inline-block;
+}
+
+.category-header h2::after {
+    content: '';
+    position: absolute;
+    bottom: -6px;
+    right: 50%;
+    transform: translateX(50%);
+    width: 50px;
+    height: 3px;
+    background: linear-gradient(90deg, var(--secondary-color, #ff805d), #ffab91);
+    border-radius: 2px;
+}
+
+.category-header p {
+    color: #7c6c5d;
+    font-size: 0.88rem;
+    margin: 8px auto 0;
+    line-height: 1.5;
+}
+
+/* شبکه کارت‌های دسته‌بندی */
+.category-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+    gap: 14px;
+    padding: 2px;
+    box-sizing: border-box;
+}
+
+/* باکس هر دسته‌بندی — کارت تمیز و مرتب با لبه‌های گرد */
+.category-box {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    background: #ffffff;
+    border: 1px solid rgba(255, 128, 93, 0.2);
+    border-radius: 16px;
+    padding: 14px 8px 12px;
+    text-decoration: none;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02);
+    transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+    box-sizing: border-box;
+    min-height: 135px;
+}
+
+.category-box:hover {
+    transform: translateY(-3px);
+    border-color: var(--secondary-color, #ff805d);
+    box-shadow: 0 6px 18px rgba(255, 128, 93, 0.12);
+}
+
+/* تصویر دایره‌ای دسته‌بندی */
+.category-box-img {
+    width: 66px;
+    height: 66px;
+    background: #fff8f4;
+    border-radius: 50% !important;
+    overflow: hidden !important;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 8px;
+    flex-shrink: 0;
+    border: 1.5px solid #f3d6bf;
+    box-shadow: 0 2px 8px rgba(255, 128, 93, 0.08);
+    transition: transform 0.2s ease, border-color 0.2s ease;
+}
+
+.category-box:hover .category-box-img {
+    transform: scale(1.06);
+    border-color: var(--secondary-color, #ff805d);
+    background: #faece1;
+}
+
+.category-box-img img {
+    width: 100%;
+    height: 100%;
+    border-radius: 50% !important;
+    object-fit: cover;
+}
+
+/* نام دسته‌بندی */
+.category-name,
+.category-box strong {
+    font-size: 0.95rem !important;
+    font-weight: 800 !important;
+    color: #2b1f15 !important;
+    margin: 0 0 2px 0;
+    line-height: 1.35;
+    text-align: center;
+    transition: color 0.2s ease;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.category-box:hover .category-name,
+.category-box:hover strong {
+    color: var(--secondary-color, #ff805d) !important;
+}
+
+/* تعداد محصولات دسته‌بندی */
+.category-count {
+    font-size: 0.76rem !important;
+    color: #7c6c5d !important;
+    font-weight: 600 !important;
+    margin-top: 1px;
+    display: inline-block;
+    transition: color 0.2s ease;
+    position: static !important;
+}
+
+.category-box:hover .category-count {
+    color: var(--secondary-color, #ff805d) !important;
+}
+
+/* فلش کاملاً غیرفعال */
+.category-arrow {
+    display: none !important;
+}
+
+/* واکنش‌گرایی در تبلت و موبایل */
+@media (max-width: 768px) {
+    #category {
+        margin: 28px auto 18px;
+    }
+    .category-header h2 {
+        font-size: 1.25rem;
+    }
+    .category-header p {
+        font-size: 0.8rem;
+    }
+    .category-grid {
+        grid-template-columns: repeat(auto-fill, minmax(105px, 1fr));
+        gap: 10px;
+    }
+    .category-box {
+        padding: 10px 6px 10px;
+        min-height: 120px;
+        border-radius: 12px;
+    }
+    .category-box-img {
+        width: 54px;
+        height: 54px;
+        margin-bottom: 6px;
+    }
+    .category-name,
+    .category-box strong {
+        font-size: 0.85rem !important;
+    }
+    .category-count {
+        font-size: 0.7rem !important;
+    }
+}
+
+@media (max-width: 420px) {
+    .category-grid {
+        grid-template-columns: repeat(3, 1fr);
+        gap: 8px;
+    }
+    .category-box {
+        padding: 8px 4px 8px;
+        min-height: 110px;
+    }
+    .category-box-img {
+        width: 46px;
+        height: 46px;
+        margin-bottom: 4px;
+    }
+    .category-name,
+    .category-box strong {
+        font-size: 0.8rem !important;
+    }
+    .category-count {
+        font-size: 0.68rem !important;
+    }
+}

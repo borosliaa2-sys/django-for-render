@@ -1,0 +1,333 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}پروفایل کاربری و سفارش‌ها | عطارباشی{% endblock title %}
+{% block content %}
+<div class="profile-page-wrap">
+  <div class="profile-container">
+    
+    <!-- سایدبار پروفایل کاربر -->
+    <div class="profile-sidebar">
+      <div class="profile-user-card">
+        <div class="user-avatar-circle">
+          <i class="ri-user-smile-line"></i>
+        </div>
+        <h3>{{ user.get_full_name|default:user.username }}</h3>
+        <span class="user-sub">{{ user.phone_number|default:user.username }}</span>
+      </div>
+
+      <nav class="profile-nav-links">
+        <a href="{% url 'shop:user_orders' %}" class="p-nav-item active">
+          <i class="ri-shopping-bag-3-line"></i>
+          <span>سفارش‌های من</span>
+          <span class="p-count">{{ orders.count|default:0 }}</span>
+        </a>
+        <a href="{% url 'shop:wishlist_list' %}" class="p-nav-item">
+          <i class="ri-heart-3-line"></i>
+          <span>علاقه‌مندی‌ها</span>
+        </a>
+        <a href="{% url 'shop:cart_detail' %}" class="p-nav-item">
+          <i class="ri-shopping-cart-line"></i>
+          <span>سبد خرید</span>
+        </a>
+        <a href="{% url 'shop:order_tracking' %}" class="p-nav-item">
+          <i class="ri-radar-line"></i>
+          <span>پیگیری پستی مرسوله</span>
+        </a>
+        <form method="post" action="{% url 'logout' %}" style="margin: 8px 0 0;">
+          {% csrf_token %}
+          <button type="submit" class="p-nav-item p-nav-logout">
+            <i class="ri-logout-box-r-line"></i>
+            <span>خروج از حساب</span>
+          </button>
+        </form>
+      </nav>
+    </div>
+
+    <!-- محتوای اصلی پروفایل (تاریخچه سفارشات) -->
+    <div class="profile-main-content">
+      <div class="profile-header-bar">
+        <h2><i class="ri-history-line"></i> تاریخچه و وضعیت سفارش‌ها</h2>
+        <span>مدیریت و پیگیری خریدهای ثبت‌شده</span>
+      </div>
+
+      {% if orders %}
+        <div class="orders-list">
+          {% for order in orders %}
+          <div class="user-order-card">
+            <div class="uoc-header">
+              <div class="uoc-id">
+                <span class="uoc-tag status-{{ order.status }}">{{ order.status_label }}</span>
+                <strong>سفارش #{{ order.order_number }}</strong>
+              </div>
+              <div class="uoc-date">
+                <i class="ri-calendar-line"></i>
+                <span>{{ order.created_at|date:"Y/m/d - H:i" }}</span>
+              </div>
+            </div>
+
+            <div class="uoc-body">
+              <div class="uoc-info-row">
+                <div class="info-block">
+                  <span>تحویل‌گیرنده:</span>
+                  <strong>{{ order.full_name }}</strong>
+                </div>
+                <div class="info-block">
+                  <span>مبلغ کل پرداختی:</span>
+                  <strong class="price-val">{{ order.grand_total }} تومان</strong>
+                </div>
+                {% if order.postal_tracking_code %}
+                <div class="info-block">
+                  <span>کد رهگیری پستی:</span>
+                  <strong class="code-val" dir="ltr">{{ order.postal_tracking_code }}</strong>
+                </div>
+                {% endif %}
+              </div>
+
+              <!-- اقلام سفارش -->
+              <div class="uoc-items">
+                {% for item in order.items.all %}
+                <span class="order-item-pill">
+                  <i class="ri-leaf-line"></i>
+                  {{ item.product_name }} ({{ item.quantity }} عدد)
+                </span>
+                {% endfor %}
+              </div>
+            </div>
+
+            <div class="uoc-footer">
+              <a href="{% url 'shop:order_tracking' %}?query={{ order.order_number }}" class="btn-track-order"><i class="ri-radar-line"></i> رهگیری زنده مرسوله</a>
+              <a href="{% url 'shop:order_invoice' order.order_number %}" class="btn-view-invoice"><i class="ri-file-list-line"></i> مشاهده فاکتور</a>
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+      {% else %}
+        <div class="empty-orders-card">
+          <div class="empty-icon"><i class="ri-shopping-basket-line"></i></div>
+          <h3>شما هنوز هیچ سفارشی ثبت نکرده‌اید</h3>
+          <p>از میان تنوع بی‌نظیر گیاهان دارویی، دمنوش‌ها و عرقیات سنتی عطارباشی انتخاب کرده و اولین خرید خود را ثبت نمایید.</p>
+          <a href="{% url 'shop:search' %}" class="btn-shop-now"><i class="ri-store-2-line"></i> مشاهده فروشگاه</a>
+        </div>
+      {% endif %}
+
+    </div>
+
+  </div>
+</div>
+
+<style>
+.profile-page-wrap {
+  padding: 30px 16px 70px;
+  background: #fdfcfb;
+  min-height: calc(100vh - var(--site-header-height, 80px) - 200px);
+}
+.profile-container {
+  max-width: 1060px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: 280px 1fr;
+  gap: 24px;
+  align-items: start;
+}
+
+/* سایدبار پروفایل */
+.profile-sidebar {
+  background: #ffffff;
+  border: 1.5px solid rgba(255, 128, 93, 0.2);
+  border-radius: 20px;
+  padding: 24px 16px;
+  box-shadow: 0 6px 25px rgba(0,0,0,0.03);
+}
+.profile-user-card {
+  text-align: center;
+  padding-bottom: 20px;
+  border-bottom: 1px solid #faece1;
+  margin-bottom: 16px;
+}
+.user-avatar-circle {
+  width: 64px;
+  height: 64px;
+  background: linear-gradient(135deg, #faece1 0%, #fff2eb 100%);
+  border: 2px solid var(--secondary-color, #ff805d);
+  color: var(--secondary-color, #ff805d);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2rem;
+  margin: 0 auto 10px;
+}
+.profile-user-card h3 { font-size: 1.1rem; font-weight: 800; color: #2b1f15; margin-bottom: 4px; }
+.user-sub { font-size: 0.82rem; color: #8a7a6c; }
+
+.profile-nav-links { display: flex; flex-direction: column; gap: 4px; }
+.p-nav-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 11px 14px;
+  border-radius: 12px;
+  text-decoration: none;
+  color: #4a3b2c;
+  font-size: 0.9rem;
+  font-weight: 700;
+  transition: all 0.15s ease;
+  width: 100%;
+  box-sizing: border-box;
+  background: transparent;
+  border: none;
+  font-family: inherit;
+  cursor: pointer;
+}
+.p-nav-item i { font-size: 1.2rem; color: var(--secondary-color, #ff805d); }
+.p-nav-item:hover, .p-nav-item.active {
+  background: #faece1;
+  color: var(--secondary-color, #ff805d);
+}
+.p-count {
+  margin-right: auto;
+  background: var(--secondary-color, #ff805d);
+  color: #fff;
+  font-size: 0.72rem;
+  padding: 2px 8px;
+  border-radius: 10px;
+  font-weight: 800;
+}
+.p-nav-logout { color: #dc2626; }
+.p-nav-logout i { color: #dc2626; }
+.p-nav-logout:hover { background: #fee2e2; color: #b91c1c; }
+
+/* محتوای اصلی */
+.profile-main-content {
+  background: #ffffff;
+  border: 1.5px solid rgba(255, 128, 93, 0.2);
+  border-radius: 20px;
+  padding: 28px 24px;
+  box-shadow: 0 6px 25px rgba(0,0,0,0.03);
+}
+.profile-header-bar {
+  border-bottom: 1px solid #faece1;
+  padding-bottom: 16px;
+  margin-bottom: 24px;
+}
+.profile-header-bar h2 { font-size: 1.3rem; font-weight: 900; color: #2b1f15; display: flex; align-items: center; gap: 8px; margin-bottom: 4px; }
+.profile-header-bar span { font-size: 0.85rem; color: #7c6c5d; }
+
+.orders-list { display: flex; flex-direction: column; gap: 16px; }
+.user-order-card {
+  border: 1px solid #ebd0bc;
+  border-radius: 16px;
+  padding: 18px 20px;
+  background: #fdfaf7;
+  transition: all 0.2s ease;
+}
+.user-order-card:hover {
+  border-color: var(--secondary-color, #ff805d);
+  box-shadow: 0 6px 18px rgba(255, 128, 93, 0.1);
+}
+.uoc-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid #faece1;
+  padding-bottom: 12px;
+  margin-bottom: 14px;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.uoc-id { display: flex; align-items: center; gap: 10px; }
+.uoc-tag { font-size: 0.76rem; font-weight: 800; padding: 3px 10px; border-radius: 12px; }
+.status-paid, .status-processing { background: #e0f2fe; color: #0284c7; }
+.status-shipped { background: #fef3c7; color: #d97706; }
+.status-delivered { background: #dcfce7; color: #16a34a; }
+.status-cancelled { background: #fee2e2; color: #dc2626; }
+.uoc-date { color: #8a7a6c; font-size: 0.82rem; display: flex; align-items: center; gap: 4px; }
+
+.uoc-info-row {
+  display: flex;
+  gap: 24px;
+  margin-bottom: 12px;
+  flex-wrap: wrap;
+}
+.info-block { display: flex; flex-direction: column; gap: 2px; }
+.info-block span { font-size: 0.76rem; color: #8a7a6c; }
+.info-block strong { font-size: 0.88rem; color: #2b1f15; }
+.price-val { color: var(--secondary-color, #ff805d) !important; font-weight: 900 !important; }
+.code-val { font-family: monospace; letter-spacing: 1px; color: #0284c7; }
+
+.uoc-items { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 14px; }
+.order-item-pill {
+  background: #ffffff;
+  border: 1px solid #ebd0bc;
+  border-radius: 16px;
+  padding: 4px 10px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #4a3b2c;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+.order-item-pill i { color: var(--secondary-color, #ff805d); }
+
+.uoc-footer {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+  border-top: 1px dashed #e8d7c8;
+  padding-top: 12px;
+  flex-wrap: wrap;
+}
+.btn-track-order {
+  background: var(--secondary-color, #ff805d);
+  color: #fff;
+  text-decoration: none;
+  font-size: 0.82rem;
+  font-weight: 800;
+  padding: 7px 16px;
+  border-radius: 20px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+.btn-view-invoice {
+  background: #fff;
+  border: 1px solid #ebd0bc;
+  color: #4a3b2c;
+  text-decoration: none;
+  font-size: 0.82rem;
+  font-weight: 700;
+  padding: 7px 14px;
+  border-radius: 20px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.empty-orders-card {
+  text-align: center;
+  padding: 50px 20px;
+}
+.empty-icon { font-size: 3.5rem; color: #d1d5db; margin-bottom: 12px; }
+.empty-orders-card h3 { font-size: 1.2rem; font-weight: 800; color: #2b1f15; margin-bottom: 8px; }
+.empty-orders-card p { font-size: 0.9rem; color: #7c6c5d; max-width: 440px; margin: 0 auto 20px; }
+.btn-shop-now {
+  background: linear-gradient(135deg, var(--secondary-color, #ff805d) 0%, #ff6b4a 100%);
+  color: #fff;
+  text-decoration: none;
+  padding: 10px 24px;
+  border-radius: 25px;
+  font-weight: 800;
+  font-size: 0.9rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+@media (max-width: 768px) {
+  .profile-container { grid-template-columns: 1fr; }
+  .uoc-footer { justify-content: stretch; }
+  .btn-track-order, .btn-view-invoice { flex: 1; justify-content: center; text-align: center; }
+}
+</style>
+{% endblock content %}

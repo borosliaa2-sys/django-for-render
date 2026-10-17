@@ -1,0 +1,21 @@
+:root {
+    --site-header-height: 115px;
+}
+.all-content {
+    box-sizing: border-box;
+    width: 100%;
+}
+body:not(.is-home) .all-content {
+    padding-top: calc(var(--site-header-height) + 15px);
+}
+.flash-messages {
+    margin-top: calc(var(--site-header-height) + 10px);
+}
+@media (max-width: 768px) {
+    :root {
+        --site-header-height: 68px;
+    }
+    body:not(.is-home) .all-content {
+        padding-top: calc(var(--site-header-height) + 12px);
+    }
+}

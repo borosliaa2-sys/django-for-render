@@ -1,0 +1,63 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}دسترسی غیرمجاز (۴۰۳) | عطارباشی{% endblock title %}
+{% block content %}
+<div class="error-page-wrap">
+  <div class="error-card">
+    <div class="error-badge">خطای ۴۰۳</div>
+    <div class="error-icon"><i class="ri-lock-2-line"></i></div>
+    <h1>شما دسترسی به این بخش را ندارید!</h1>
+    <p>اجازه مشاهده این صفحه فقط برای کاربران مجاز یا مدیران سیستم مقدور است.</p>
+    <div class="error-actions">
+      <a href="{% url 'shop:home' %}" class="btn-err-primary"><i class="ri-home-4-line"></i> بازگشت به صفحه اصلی</a>
+    </div>
+  </div>
+</div>
+
+<style>
+  .error-page-wrap {
+    min-height: calc(100vh - var(--site-header-height, 80px) - 200px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 16px;
+    background: #fdfcfb;
+  }
+  .error-card {
+    background: #fff;
+    border: 1.5px solid rgba(255, 128, 93, 0.25);
+    border-radius: 20px;
+    padding: 40px 24px;
+    text-align: center;
+    max-width: 500px;
+    width: 100%;
+    box-shadow: 0 10px 30px rgba(255, 128, 93, 0.08);
+  }
+  .error-badge {
+    display: inline-block;
+    background: #fef3c7;
+    color: #b45309;
+    font-size: 0.85rem;
+    font-weight: 800;
+    padding: 4px 14px;
+    border-radius: 20px;
+    margin-bottom: 12px;
+  }
+  .error-icon { font-size: 3.5rem; color: #f59e0b; margin-bottom: 14px; }
+  .error-card h1 { font-size: 1.35rem; font-weight: 900; color: #2b1f15; margin-bottom: 8px; }
+  .error-card p { color: #6b5a4a; font-size: 0.92rem; line-height: 1.6; margin-bottom: 24px; }
+  .error-actions { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
+  .btn-err-primary {
+    background: linear-gradient(135deg, var(--secondary-color, #ff805d) 0%, #ff6b4a 100%);
+    color: #fff;
+    padding: 10px 22px;
+    border-radius: 30px;
+    text-decoration: none;
+    font-weight: 800;
+    font-size: 0.9rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+</style>
+{% endblock content %}

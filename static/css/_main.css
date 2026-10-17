@@ -1,0 +1,306 @@
+:root{
+    --main-color:#faece1;
+    --main-light:#f3d6bf;
+    --secondary-color:#ff805d;
+    --product-bg-color:#f8f8f8;
+}
+
+/* HERO SECTION — طراحی مدرن، جمع‌وجور و بدون ارتفاع کشیده اضافی */
+#main{
+    background: linear-gradient(
+        135deg,
+        #fff9f5 0%,
+        #faece1 50%,
+        #f9f3ee 100%
+    );
+    position: relative;
+    width: 100%;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    padding: calc(var(--site-header-height, 80px) + 24px) 0 35px;
+    box-sizing: border-box;
+}
+
+.main-content{
+    max-width: 1200px;
+    width: 92%;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: 1.15fr 0.85fr;
+    gap: 40px;
+    align-items: center;
+    position: relative;
+    z-index: 2;
+}
+
+.main-content-text{
+    position: relative;
+    animation: slideInleft 0.8s ease-out;
+}
+
+@keyframes slideInleft {
+    from{
+        opacity: 0;
+        transform: translateX(-30px);
+    }
+    to{
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+.main-content-text strong{
+    display: inline-flex;
+    align-items: center;
+    color: var(--secondary-color);
+    font-size: 0.88rem;
+    font-weight: 700;
+    margin-bottom: 14px;
+    padding: 6px 16px;
+    background: rgba(255,128,93,0.12);
+    border-radius: 30px;
+    border: 1px solid rgba(255,128,93,0.25);
+}
+
+.main-content-text h1{
+    color: #2b1f15;
+    font-size: 1.85rem;
+    line-height: 1.35;
+    font-weight: 900;
+    margin-bottom: 12px;
+}
+
+.main-content-text h1 span{
+    color: var(--secondary-color);
+    position: relative;
+    display: inline-block;
+}
+
+.main-content-text p{
+    color: #6b5a4a;
+    font-size: 0.95rem;
+    line-height: 1.6;
+    margin-bottom: 20px;
+    max-width: 520px;
+}
+
+.hero-buttons{
+    display: flex;
+    gap: 12px;
+    margin-bottom: 22px;
+    flex-wrap: wrap;
+}
+
+.hero-btn{
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    border-radius: 50px;
+    font-weight: 700;
+    font-size: 0.95rem;
+    text-decoration: none;
+    transition: all 0.25s ease;
+    padding: 10px 24px;
+    cursor: pointer;
+}
+
+.hero-btn-primarys{
+    background: linear-gradient(135deg, var(--secondary-color) 0%, #ff9d7d 100%);
+    color: #fff;
+    box-shadow: 0 6px 20px rgba(255, 128, 93, 0.35);
+    border: none;
+}
+
+.hero-btn-primarys:hover{
+    background: linear-gradient(135deg, #ff6b4a 0%, var(--secondary-color) 100%);
+    box-shadow: 0 8px 25px rgba(255, 128, 93, 0.45);
+}
+
+.hero-btn-secondary{
+    background: #fff;
+    color: #3e2c1b;
+    border: 1.5px solid rgba(255, 128, 93, 0.3);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
+}
+
+.hero-btn-secondary:hover{
+    border-color: var(--secondary-color);
+    color: var(--secondary-color);
+    background: #fff8f5;
+}
+
+.hero-state{
+    display: flex;
+    gap: 24px;
+    margin-top: 14px;
+    flex-wrap: wrap;
+}
+
+.state-item{
+    display: flex;
+    flex-direction: column;
+}
+
+.state-number{
+    font-size: 1.45rem;
+    font-weight: 800;
+    color: var(--secondary-color);
+    line-height: 1.1;
+}
+
+.state-lable{
+    font-size: 0.8rem;
+    color: #7c6c5d;
+    margin-top: 2px;
+    font-weight: 600;
+}
+
+#shamsi-date{
+    margin-top: 16px;
+    padding: 8px 16px;
+    background: rgba(255, 255, 255, 0.8);
+    backdrop-filter: blur(8px);
+    border-radius: 12px;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    color: #555;
+    font-size: 0.84rem;
+    font-weight: 600;
+    border: 1px solid rgba(255, 128, 93, 0.2);
+}
+
+#shamsi-date i{
+    color: var(--secondary-color);
+    font-size: 1rem;
+}
+
+/* main content img */
+.main-content-img{
+    position: relative;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.main-content-img img{
+    width: 100%;
+    max-width: 440px;
+    height: auto;
+    border-radius: 20px;
+    box-shadow: 0 14px 35px rgba(255, 128, 93, 0.15);
+    object-fit: cover;
+}
+
+.floating-element{
+    position: absolute;
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(6px);
+    border-radius: 12px;
+    padding: 8px 14px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    z-index: 3;
+    border: 1px solid rgba(255, 128, 93, 0.2);
+    font-size: 0.85rem;
+}
+
+.floating-element i{
+    color: var(--secondary-color);
+    font-size: 1.1rem;
+}
+
+.floating-element span{
+    font-weight: 700;
+    color: #3e2c1b;
+}
+
+.floating-1{
+    top: 10%;
+    left: -10px;
+    animation: float1 4s ease-in-out infinite alternate;
+}
+
+.floating-2{
+    bottom: 10%;
+    right: -10px;
+    animation: float2 4s ease-in-out infinite alternate;
+}
+
+@keyframes float1{
+    0% { transform: translateY(0); }
+    100% { transform: translateY(-10px); }
+}
+
+@keyframes float2{
+    0% { transform: translateY(0); }
+    100% { transform: translateY(10px); }
+}
+
+/* RESPONSIVE HERO */
+@media (max-width: 992px) {
+    #main{
+        padding: calc(var(--site-header-height, 75px) + 16px) 0 28px;
+    }
+    .main-content{
+        grid-template-columns: 1fr;
+        text-align: center;
+        gap: 24px;
+    }
+    .main-content-text p{
+        margin: 0 auto 18px;
+    }
+    .hero-buttons{
+        justify-content: center;
+    }
+    .hero-state{
+        justify-content: center;
+    }
+    .main-content-img img{
+        max-width: 320px;
+    }
+    .floating-1{ left: 10px; }
+    .floating-2{ right: 10px; }
+}
+
+@media (max-width: 576px) {
+    #main{
+        padding: calc(var(--site-header-height, 58px) + 12px) 0 20px;
+    }
+    .main-content-text h1{
+        font-size: 1.35rem;
+        line-height: 1.3;
+    }
+    .main-content-text p{
+        font-size: 0.85rem;
+        line-height: 1.5;
+    }
+    .hero-buttons{
+        flex-direction: row;
+        gap: 8px;
+        width: 100%;
+    }
+    .hero-btn{
+        flex: 1;
+        padding: 9px 12px;
+        font-size: 0.84rem;
+        min-width: 0;
+    }
+    .main-content-img img{
+        max-width: 260px;
+    }
+    .state-number{
+        font-size: 1.2rem;
+    }
+    .state-lable{
+        font-size: 0.75rem;
+    }
+    .floating-element{
+        font-size: 0.75rem;
+        padding: 6px 10px;
+    }
+}

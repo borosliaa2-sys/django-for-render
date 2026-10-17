@@ -1,0 +1,335 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}سوالات متداول (FAQ) | عطارباشی{% endblock title %}
+{% block content %}
+<div class="faq-page-wrap">
+  <div class="faq-container">
+    <div class="faq-header-card">
+      <div class="faq-badge"><i class="ri-question-answer-line"></i> پاسخ به پرسش‌های شما</div>
+      <h1>سوالات متداول و راهنمای خرید</h1>
+      <p>پاسخ جامع به پرتکرارترین پرسش‌ها پیرامون سفارش، ارسال، خواص و نگهداری گیاهان دارویی</p>
+      
+      <!-- باکس جستجوی سوال -->
+      <div class="faq-search-box">
+        <i class="ri-search-line"></i>
+        <input type="text" id="faqSearchInput" placeholder="جستجو در سوالات متداول (مثلاً: ارسال، طبع، مرجوعی...)" onkeyup="filterFaqs()">
+      </div>
+    </div>
+
+    <!-- دسته‌بندی سوالات -->
+    <div class="faq-categories-tabs">
+      <button type="button" class="faq-tab active" onclick="filterTab('all', this)"><i class="ri-apps-line"></i> همه سوالات</button>
+      <button type="button" class="faq-tab" onclick="filterTab('shipping', this)"><i class="ri-truck-line"></i> ارسال و تحویل</button>
+      <button type="button" class="faq-tab" onclick="filterTab('quality', this)"><i class="ri-leaf-line"></i> کیفیت و اصالت</button>
+      <button type="button" class="faq-tab" onclick="filterTab('payment', this)"><i class="ri-bank-card-line"></i> پرداخت و فاکتور</button>
+      <button type="button" class="faq-tab" onclick="filterTab('return', this)"><i class="ri-shield-check-line"></i> ضمانت و مرجوعی</button>
+    </div>
+
+    <!-- لیست سوالات و پاسخ‌ها (آکاردئون) -->
+    <div class="faq-list">
+      <!-- سوال ۱ -->
+      <div class="faq-item" data-cat="shipping">
+        <button class="faq-question" onclick="toggleFaq(this)">
+          <span>سفارش‌ها چگونه و طی چه مدت زمانی ارسال می‌شوند؟</span>
+          <i class="ri-arrow-down-s-line"></i>
+        </button>
+        <div class="faq-answer">
+          <p>سفارش‌های شهر تهران از طریق پیک اختصاصی ظرف مدت ۲۴ ساعت کاری تحویل می‌گردند. برای سایر شهرهای سراسر ایران، بسته‌ها از طریق پست پیشتاز ظرف مدت ۲ الی ۴ روز کاری به دست شما خواهند رسید. پس از تحویل به پست، کد رهگیری ۲۴ رقمی پیامک خواهد شد.</p>
+        </div>
+      </div>
+
+      <!-- سوال ۲ -->
+      <div class="faq-item" data-cat="shipping">
+        <button class="faq-question" onclick="toggleFaq(this)">
+          <span>چگونه می‌توانم وضعیت بسته خود را پیگیری کنم؟</span>
+          <i class="ri-arrow-down-s-line"></i>
+        </button>
+        <div class="faq-answer">
+          <p>با مراجعه به صفحه <a href="{% url 'shop:order_tracking' %}"><strong>پیگیری سفارش</strong></a> و وارد کردن شماره سفارش یا شماره موبایل ثبت‌شده، می‌توانید وضعیت لحظه‌ای بسته‌بندی، ارسال و کد رهگیری پستی مرسوله خود را مشاهده نمایید.</p>
+        </div>
+      </div>
+
+      <!-- سوال ۳ -->
+      <div class="faq-item" data-cat="quality">
+        <button class="faq-question" onclick="toggleFaq(this)">
+          <span>آیا گیاهان دارویی و عرقیات عطارباشی کاملاً ارگانیک و تازه هستند؟</span>
+          <i class="ri-arrow-down-s-line"></i>
+        </button>
+        <div class="faq-answer">
+          <p>بله؛ تمامی محصولات به صورت تازه، بدون استفاده از اسانس‌های شیمیایی و با نظارت متخصصین طب سنتی فرآوری و بسته‌بندی می‌شوند. عرقیات ما به روش سنتی دوآتشه و با بالاترین درجه خلوص تولید می‌گردند.</p>
+        </div>
+      </div>
+
+      <!-- سوال ۴ -->
+      <div class="faq-item" data-cat="quality">
+        <button class="faq-question" onclick="toggleFaq(this)">
+          <span>بهترین روش نگهداری گیاهان دارویی و دمنوش‌ها چیست؟</span>
+          <i class="ri-arrow-down-s-line"></i>
+        </button>
+        <div class="faq-answer">
+          <p>توصیه می‌شود گیاهان دارویی و دمنوش‌ها را در جای خشک، خنک، دور از تابش مستقیم نور خورشید و در ظروف دربسته شیشه‌ای یا زیپ‌کیپ نگهداری کنید تا عطر، طعم و خواص درمانی آن‌ها به مدت طولانی حفظ شود.</p>
+        </div>
+      </div>
+
+      <!-- سوال ۵ -->
+      <div class="faq-item" data-cat="payment">
+        <button class="faq-question" onclick="toggleFaq(this)">
+          <span>چه روش‌هایی برای پرداخت مبلغ سفارش وجود دارد؟</span>
+          <i class="ri-arrow-down-s-line"></i>
+        </button>
+        <div class="faq-answer">
+          <p>پرداخت آنلاین از طریق کلیه کارت‌های عضو شبکه شتاب با درگاه امن بانکی زرین‌پال و شاپرک امکان‌پذیر است. همچنین برای خریداران شهر تهران امکان پرداخت در محل وجود دارد.</p>
+        </div>
+      </div>
+
+      <!-- سوال ۶ -->
+      <div class="faq-item" data-cat="return">
+        <button class="faq-question" onclick="toggleFaq(this)">
+          <span>شرایط ضمانت بازگشت وجه (۷ روز ضمانت مرجوعی) چیست؟</span>
+          <i class="ri-arrow-down-s-line"></i>
+        </button>
+        <div class="faq-answer">
+          <p>در صورتی که محصول دریافتی دارای هرگونه آسیب‌دیدگی، مغایرت یا عدم رضایت از کیفیت باشد، تا ۷ روز کاری پس از دریافت می‌توانید با پشتیبانی تماس گرفته و بدون هیچ هزینه‌ای کالا را تعویض کرده یا وجه پرداختی خود را به طور کامل دریافت کنید.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- کارت تماس تکمیلی -->
+    <div class="faq-help-box">
+      <div class="help-text">
+        <h3>پاسخ سوال خود را پیدا نکردید؟</h3>
+        <p>کارشناسان عطارباشی آماده پاسخگویی و مشاوره تخصصی گیاهی به شما هستند.</p>
+      </div>
+      <a href="{% url 'shop:contact' %}" class="btn-help-contact"><i class="ri-headphone-line"></i> ارتباط با کارشناسان</a>
+    </div>
+  </div>
+</div>
+
+<style>
+.faq-page-wrap {
+  padding: 30px 16px 60px;
+  background: #fdfcfb;
+}
+.faq-container {
+  max-width: 860px;
+  margin: 0 auto;
+}
+.faq-header-card {
+  text-align: center;
+  background: #ffffff;
+  border: 1.5px solid rgba(255, 128, 93, 0.2);
+  border-radius: 20px;
+  padding: 36px 20px;
+  box-shadow: 0 8px 30px rgba(0,0,0,0.03);
+  margin-bottom: 24px;
+}
+.faq-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: #faece1;
+  color: var(--secondary-color, #ff805d);
+  font-size: 0.84rem;
+  font-weight: 800;
+  padding: 4px 14px;
+  border-radius: 20px;
+  margin-bottom: 12px;
+}
+.faq-header-card h1 {
+  font-size: 1.6rem;
+  font-weight: 900;
+  color: #2b1f15;
+  margin-bottom: 8px;
+}
+.faq-header-card p {
+  color: #7c6c5d;
+  font-size: 0.94rem;
+  max-width: 600px;
+  margin: 0 auto 20px;
+  line-height: 1.6;
+}
+.faq-search-box {
+  max-width: 480px;
+  margin: 0 auto;
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+.faq-search-box i {
+  position: absolute;
+  right: 14px;
+  font-size: 1.2rem;
+  color: #a39281;
+}
+.faq-search-box input {
+  width: 100%;
+  padding: 12px 42px 12px 14px;
+  border: 1.5px solid #ebd0bc;
+  border-radius: 30px;
+  font-family: inherit;
+  font-size: 0.9rem;
+  outline: none;
+  background: #fdfaf7;
+  transition: all 0.2s ease;
+}
+.faq-search-box input:focus {
+  border-color: var(--secondary-color, #ff805d);
+  background: #fff;
+  box-shadow: 0 4px 14px rgba(255, 128, 93, 0.15);
+}
+.faq-categories-tabs {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding-bottom: 10px;
+  margin-bottom: 20px;
+  scrollbar-width: none;
+}
+.faq-categories-tabs::-webkit-scrollbar { display: none; }
+.faq-tab {
+  background: #ffffff;
+  border: 1px solid #ebd0bc;
+  border-radius: 20px;
+  padding: 8px 16px;
+  font-family: inherit;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #4a3b2c;
+  cursor: pointer;
+  white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.15s ease;
+}
+.faq-tab.active, .faq-tab:hover {
+  background: var(--secondary-color, #ff805d);
+  color: #fff;
+  border-color: var(--secondary-color, #ff805d);
+  box-shadow: 0 4px 12px rgba(255, 128, 93, 0.25);
+}
+.faq-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.faq-item {
+  background: #ffffff;
+  border: 1.5px solid rgba(255, 128, 93, 0.18);
+  border-radius: 14px;
+  overflow: hidden;
+  transition: all 0.2s ease;
+}
+.faq-item.is-open {
+  border-color: var(--secondary-color, #ff805d);
+  box-shadow: 0 6px 20px rgba(255, 128, 93, 0.1);
+}
+.faq-question {
+  width: 100%;
+  padding: 16px 20px;
+  background: transparent;
+  border: none;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 0.96rem;
+  font-weight: 800;
+  color: #2b1f15;
+  text-align: right;
+  gap: 12px;
+}
+.faq-question i {
+  font-size: 1.3rem;
+  color: var(--secondary-color, #ff805d);
+  transition: transform 0.25s ease;
+  flex-shrink: 0;
+}
+.faq-item.is-open .faq-question i {
+  transform: rotate(180deg);
+}
+.faq-answer {
+  display: none;
+  padding: 0 20px 18px;
+  font-size: 0.92rem;
+  line-height: 1.7;
+  color: #5d4d3d;
+  border-top: 1px solid #faece1;
+}
+.faq-answer p { margin: 12px 0 0; }
+.faq-answer a { color: var(--secondary-color, #ff805d); text-decoration: none; font-weight: 700; }
+.faq-item.is-open .faq-answer { display: block; }
+
+.faq-help-box {
+  margin-top: 32px;
+  background: linear-gradient(135deg, #faece1 0%, #fff4ee 100%);
+  border: 1.5px dashed rgba(255, 128, 93, 0.4);
+  border-radius: 16px;
+  padding: 22px 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+.faq-help-box h3 { font-size: 1.05rem; font-weight: 800; color: #2b1f15; margin-bottom: 4px; }
+.faq-help-box p { font-size: 0.88rem; color: #6b5a4a; margin: 0; }
+.btn-help-contact {
+  background: var(--secondary-color, #ff805d);
+  color: #fff;
+  padding: 10px 20px;
+  border-radius: 25px;
+  text-decoration: none;
+  font-size: 0.88rem;
+  font-weight: 800;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+  box-shadow: 0 4px 12px rgba(255, 128, 93, 0.3);
+}
+
+@media (max-width: 600px) {
+  .faq-help-box { flex-direction: column; text-align: center; }
+  .faq-header-card { padding: 24px 14px; }
+  .faq-question { font-size: 0.9rem; padding: 14px 14px; }
+}
+</style>
+
+<script>
+function toggleFaq(btn) {
+  const item = btn.closest('.faq-item');
+  const wasOpen = item.classList.contains('is-open');
+  document.querySelectorAll('.faq-item').forEach(el => el.classList.remove('is-open'));
+  if (!wasOpen) {
+    item.classList.add('is-open');
+  }
+}
+
+function filterTab(category, btn) {
+  document.querySelectorAll('.faq-tab').forEach(t => t.classList.remove('active'));
+  btn.classList.add('active');
+  const items = document.querySelectorAll('.faq-item');
+  items.forEach(item => {
+    if (category === 'all' || item.dataset.cat === category) {
+      item.style.display = 'block';
+    } else {
+      item.style.display = 'none';
+    }
+  });
+}
+
+function filterFaqs() {
+  const input = document.getElementById('faqSearchInput').value.toLowerCase().trim();
+  const items = document.querySelectorAll('.faq-item');
+  items.forEach(item => {
+    const text = item.innerText.toLowerCase();
+    if (text.includes(input)) {
+      item.style.display = 'block';
+    } else {
+      item.style.display = 'none';
+    }
+  });
+}
+</script>
+{% endblock content %}

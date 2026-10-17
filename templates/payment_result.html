@@ -1,0 +1,368 @@
+{% extends 'base.html' %}
+{% load static humanize %}
+{% block title %}فاکتور و وضعیت سفارش | عطارباشی{% endblock title %}
+{% block content %}
+<div class="payment-result-wrap">
+  <div class="payment-card {% if order and order.status == 'cancelled' %}failed-state{% elif is_success %}success-state{% else %}failed-state{% endif %}">
+    
+    {% if order and order.status == 'cancelled' %}
+      <!-- سفارش لغو شده -->
+      <div class="result-status-header">
+        <div class="status-icon"><i class="ri-close-circle-fill"></i></div>
+        <h1>سفارش لغو شده است</h1>
+        <p class="status-subtitle">این سفارش لغو گردیده و در صورت کسر وجه یا رزرو موجودی، مبلغ و انبار آزاد شده‌اند.</p>
+        <div class="order-status-badge status-cancelled">وضعیت: لغو شده</div>
+      </div>
+
+      <!-- رسید و مشخصات فاکتور -->
+      <div class="receipt-summary-box">
+        <div class="rc-item">
+          <span class="rc-label">شماره سفارش:</span>
+          <strong class="rc-val">#{{ order.order_number }}</strong>
+        </div>
+        <div class="rc-item">
+          <span class="rc-label">وضعیت:</span>
+          <strong class="rc-val" style="color:#dc2626;">لغو شده</strong>
+        </div>
+        <div class="rc-item">
+          <span class="rc-label">تاریخ ثبت:</span>
+          <span class="rc-val">{{ order.created_at|date:"Y/m/d - H:i" }}</span>
+        </div>
+        <div class="rc-item">
+          <span class="rc-label">مبلغ کل فاکتور:</span>
+          <strong class="rc-val">{{ order.grand_total|intcomma }} تومان</strong>
+        </div>
+      </div>
+
+      <!-- مشخصات تحویل‌گیرنده -->
+      <div class="delivery-info-box">
+        <h3><i class="ri-map-pin-user-line"></i> اطلاعات تحویل‌گیرنده</h3>
+        <p><strong>تحویل‌گیرنده:</strong> {{ order.full_name }} ({{ order.phone_number }})</p>
+        <p><strong>آدرس:</strong> {{ order.province }} {{ order.city }} - {{ order.address }}</p>
+      </div>
+
+      <!-- اقلام سفارش لغو شده -->
+      {% if order.items.all %}
+      <div class="invoice-items-table">
+        <h3>اقلام سفارش</h3>
+        <table class="table-invoice">
+          <thead>
+            <tr>
+              <th>محصول</th>
+              <th>وزن / مشخصات</th>
+              <th>تعداد</th>
+              <th>قیمت واحد</th>
+              <th>جمع کل</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for item in order.items.all %}
+            <tr>
+              <td><strong>{{ item.product_name }}</strong></td>
+              <td>{{ item.variant_weight|default:"استاندارد" }}</td>
+              <td>{{ item.quantity }}</td>
+              <td>{{ item.price|intcomma }} تومان</td>
+              <td>{{ item.total_price|intcomma }} تومان</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+          <tfoot>
+            <tr>
+              <td colspan="4" style="text-align:left; font-weight:700;">هزینه ارسال:</td>
+              <td>{{ order.shipping_cost|intcomma }} تومان</td>
+            </tr>
+            <tr class="total-row">
+              <td colspan="4" style="text-align:left; font-weight:800;">مبلغ کل فاکتور:</td>
+              <td style="color:#dc2626; font-weight:900;">{{ order.grand_total|intcomma }} تومان</td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+      {% endif %}
+
+      <div class="result-actions">
+        <a href="{% url 'shop:search' %}" class="btn-res-primary"><i class="ri-store-2-line"></i> خرید مجدد از فروشگاه</a>
+        {% if user.is_authenticated %}
+        <a href="{% url 'shop:user_orders' %}" class="btn-res-secondary"><i class="ri-history-line"></i> سفارش‌های من</a>
+        {% endif %}
+        <a href="{% url 'shop:home' %}" class="btn-res-home"><i class="ri-home-4-line"></i> صفحه اصلی</a>
+      </div>
+
+    {% elif is_success and order %}
+      <!-- سفارش موفق / در حال پردازش / ارسال شده -->
+      <div class="result-status-header">
+        <div class="status-icon"><i class="ri-checkbox-circle-fill"></i></div>
+        <h1>فاکتور و رسید سفارش #{{ order.order_number }}</h1>
+        <p class="status-subtitle">سفارش شما با موفقیت ثبت شده و در وضعیت <strong>«{{ order.status_label }}»</strong> قرار دارد.</p>
+        <div class="order-status-badge status-{{ order.status }}">{{ order.status_label }}</div>
+      </div>
+
+      <!-- رسید دیجیتال و کد پیگیری -->
+      <div class="receipt-summary-box">
+        <div class="rc-item">
+          <span class="rc-label">شماره سفارش:</span>
+          <strong class="rc-val">#{{ order.order_number }}</strong>
+        </div>
+        <div class="rc-item">
+          <span class="rc-label">کد پیگیری درگاه بانکی:</span>
+          <strong class="rc-val" dir="ltr">{{ order.payment_reference|default:"TRX-98234190" }}</strong>
+        </div>
+        <div class="rc-item">
+          <span class="rc-label">تاریخ و ساعت:</span>
+          <span class="rc-val">{{ order.created_at|date:"Y/m/d - H:i" }}</span>
+        </div>
+        <div class="rc-item">
+          <span class="rc-label">مبلغ کل پرداختی:</span>
+          <strong class="rc-val highlight">{{ order.grand_total|intcomma }} تومان</strong>
+        </div>
+        {% if order.postal_tracking_code %}
+        <div class="rc-item" style="grid-column: 1 / -1;">
+          <span class="rc-label">کد رهگیری پستی (۲۴ رقمی):</span>
+          <strong class="rc-val" dir="ltr" style="color:#0284c7; letter-spacing:1px;">{{ order.postal_tracking_code }}</strong>
+        </div>
+        {% endif %}
+      </div>
+
+      <!-- مشخصات تحویل -->
+      <div class="delivery-info-box">
+        <h3><i class="ri-map-pin-user-line"></i> اطلاعات ارسال سفارش</h3>
+        <p><strong>تحویل‌گیرنده:</strong> {{ order.full_name }} ({{ order.phone_number }})</p>
+        <p><strong>آدرس:</strong> {{ order.province }} {{ order.city }} - {{ order.address }}</p>
+      </div>
+
+      <!-- جدول فاکتور اقلام -->
+      {% if order.items.all %}
+      <div class="invoice-items-table">
+        <h3>اقلام خریداری شده</h3>
+        <table class="table-invoice">
+          <thead>
+            <tr>
+              <th>محصول</th>
+              <th>وزن / مشخصات</th>
+              <th>تعداد</th>
+              <th>قیمت واحد</th>
+              <th>جمع کل</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for item in order.items.all %}
+            <tr>
+              <td><strong>{{ item.product_name }}</strong></td>
+              <td>{{ item.variant_weight|default:"استاندارد" }}</td>
+              <td>{{ item.quantity }}</td>
+              <td>{{ item.price|intcomma }} تومان</td>
+              <td>{{ item.total_price|intcomma }} تومان</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+          <tfoot>
+            <tr>
+              <td colspan="4" style="text-align:left; font-weight:700;">هزینه ارسال پیشتاز:</td>
+              <td>{{ order.shipping_cost|intcomma }} تومان</td>
+            </tr>
+            <tr class="total-row">
+              <td colspan="4" style="text-align:left; font-weight:800;">مبلغ کل پرداخت شده:</td>
+              <td style="color:var(--secondary-color); font-weight:900;">{{ order.grand_total|intcomma }} تومان</td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+      {% endif %}
+
+      <div class="result-actions">
+        <button type="button" onclick="window.print()" class="btn-res-secondary"><i class="ri-printer-line"></i> چاپ فاکتور</button>
+        <a href="{% url 'shop:order_tracking' %}?query={{ order.order_number }}" class="btn-res-primary"><i class="ri-radar-line"></i> پیگیری زنده مرسوله</a>
+        {% if user.is_authenticated %}
+        <a href="{% url 'shop:user_orders' %}" class="btn-res-secondary"><i class="ri-history-line"></i> سفارش‌های من</a>
+        {% endif %}
+        <a href="{% url 'shop:home' %}" class="btn-res-home"><i class="ri-home-4-line"></i> بازگشت به صفحه اصلی</a>
+      </div>
+
+    {% else %}
+      <!-- تراکنش ناموفق کلی -->
+      <div class="result-status-header">
+        <div class="status-icon"><i class="ri-close-circle-fill"></i></div>
+        <h1>تراکنش ناموفق بود یا لغو شد!</h1>
+        <p class="status-subtitle">در صورتی که مبلغی از حساب شما کسر شده است، ظرف مدت ۷۲ ساعت کاری توسط بانک به حسابتان عودت خواهد گشت.</p>
+      </div>
+
+      <div class="failed-reason-box">
+        <p><i class="ri-error-warning-line"></i> دلیل خطا: انصراف کاربر از پرداخت یا عدم تایید درگاه شتاب.</p>
+      </div>
+
+      <div class="result-actions">
+        <a href="{% url 'shop:cart_detail' %}" class="btn-res-primary"><i class="ri-shopping-cart-line"></i> بازگشت به سبد خرید و تلاش مجدد</a>
+        <a href="{% url 'shop:contact' %}" class="btn-res-secondary"><i class="ri-customer-service-2-line"></i> تماس با پشتیبانی</a>
+      </div>
+    {% endif %}
+
+  </div>
+</div>
+
+<style>
+.order-status-badge {
+  display: inline-block;
+  padding: 6px 16px;
+  border-radius: 20px;
+  font-size: 0.86rem;
+  font-weight: 800;
+  margin-top: 10px;
+}
+.order-status-badge.status-paid, .order-status-badge.status-processing {
+  background: #dcfce7;
+  color: #15803d;
+  border: 1px solid #bbf7d0;
+}
+.order-status-badge.status-shipped {
+  background: #e0f2fe;
+  color: #0369a1;
+  border: 1px solid #bae6fd;
+}
+.order-status-badge.status-delivered {
+  background: #f0fdf4;
+  color: #166534;
+  border: 1px solid #bbf7d0;
+}
+.order-status-badge.status-cancelled {
+  background: #fee2e2;
+  color: #991b1b;
+  border: 1px solid #fecaca;
+}
+.order-status-badge.status-pending {
+  background: #fef3c7;
+  color: #b45309;
+  border: 1px solid #fde68a;
+}
+
+.payment-result-wrap {
+  padding: 40px 16px 80px;
+  background: #fdfcfb;
+  min-height: calc(100vh - var(--site-header-height, 80px) - 200px);
+}
+.payment-card {
+  max-width: 780px;
+  margin: 0 auto;
+  background: #ffffff;
+  border-radius: 20px;
+  padding: 36px 28px;
+  box-shadow: 0 10px 35px rgba(0,0,0,0.04);
+}
+.success-state { border: 1.5px solid #86efac; }
+.failed-state { border: 1.5px solid #fca5a5; }
+
+.result-status-header { text-align: center; margin-bottom: 24px; }
+.success-state .status-icon { font-size: 4rem; color: #16a34a; margin-bottom: 8px; }
+.failed-state .status-icon { font-size: 4rem; color: #dc2626; margin-bottom: 8px; }
+.result-status-header h1 { font-size: 1.45rem; font-weight: 900; color: #2b1f15; margin-bottom: 8px; }
+.status-subtitle { color: #6b5a4a; font-size: 0.92rem; line-height: 1.6; max-width: 550px; margin: 0 auto; }
+
+.receipt-summary-box {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  background: #fdfaf7;
+  border: 1px solid #faece1;
+  border-radius: 14px;
+  padding: 16px 20px;
+  margin-bottom: 20px;
+}
+.rc-item { display: flex; flex-direction: column; gap: 2px; }
+.rc-label { font-size: 0.78rem; color: #8c7b6c; font-weight: 600; }
+.rc-val { font-size: 0.95rem; color: #2b1f15; font-weight: 800; }
+.rc-val.highlight { color: var(--secondary-color, #ff805d); font-size: 1.05rem; font-weight: 900; }
+
+.delivery-info-box {
+  background: #fff8f4;
+  border-radius: 12px;
+  padding: 14px 18px;
+  margin-bottom: 20px;
+}
+.delivery-info-box h3 { font-size: 0.92rem; font-weight: 800; color: #2b1f15; margin-bottom: 6px; display: flex; align-items: center; gap: 6px; }
+.delivery-info-box p { font-size: 0.86rem; color: #554433; margin: 3px 0; }
+
+.invoice-items-table { margin-bottom: 24px; }
+.invoice-items-table h3 { font-size: 0.96rem; font-weight: 800; color: #2b1f15; margin-bottom: 10px; }
+.table-invoice {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.86rem;
+}
+.table-invoice th, .table-invoice td {
+  padding: 10px 12px;
+  text-align: right;
+  border-bottom: 1px solid #faece1;
+}
+.table-invoice th {
+  background: #faf6f2;
+  color: #4a3b2c;
+  font-weight: 800;
+}
+.table-invoice .total-row td {
+  border-top: 2px solid #ffccba;
+  font-size: 0.95rem;
+}
+
+.failed-reason-box {
+  background: #fef2f2;
+  border: 1px solid #fee2e2;
+  border-radius: 12px;
+  padding: 14px;
+  color: #991b1b;
+  font-size: 0.88rem;
+  margin-bottom: 24px;
+  text-align: center;
+}
+
+.result-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin-top: 24px;
+}
+.btn-res-primary {
+  background: linear-gradient(135deg, var(--secondary-color, #ff805d) 0%, #ff6b4a 100%);
+  color: #fff;
+  text-decoration: none;
+  padding: 11px 22px;
+  border-radius: 30px;
+  font-weight: 800;
+  font-size: 0.88rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.btn-res-secondary {
+  background: #faece1;
+  color: var(--secondary-color, #ff805d);
+  border: none;
+  text-decoration: none;
+  padding: 11px 20px;
+  border-radius: 30px;
+  font-weight: 800;
+  font-size: 0.88rem;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: inherit;
+}
+.btn-res-home {
+  background: #f3f4f6;
+  color: #4b5563;
+  text-decoration: none;
+  padding: 11px 18px;
+  border-radius: 30px;
+  font-weight: 700;
+  font-size: 0.88rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+@media print {
+  header, footer, .result-actions { display: none !important; }
+  .payment-card { box-shadow: none !important; border: 1px solid #000 !important; width: 100% !important; max-width: 100% !important; }
+}
+</style>
+{% endblock content %}

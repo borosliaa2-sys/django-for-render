@@ -1,0 +1,212 @@
+{% extends 'base.html' %}
+{% load static humanize l10n shop_tags %}
+{% block body_class %}is-home{% endblock body_class %}
+{% block content %}
+<!-- HERO -->
+<section id="main">
+    <div class="main-content">
+        <div class="main-content-text">
+            <strong>اینجا، عطاریِ ما، نه یک دکان که یک پاتوقِ جان‌آشناست؛</strong>
+            <h1>هر قفسه‌ی این دیرین‌کده، روایتی از <span> طبیعت بکر </span> و <span> کهن‌ </span> الگوی طب ایرانی را زمزمه می‌کند.</h1>
+            <p>با ما، سفری به اعماق شفابخش زمین را آغاز کنید؛ سفری که مقصدش، سلامتیِ پایدار و زندگیِ متوازن شماست.</p>
+            <div class="hero-buttons">
+                <a href="{% url 'shop:search' %}" class="hero-btn hero-btn-primarys"><span>خرید آنلاین</span><i class="ri-shopping-bag-4-line"></i></a>
+                <a href="{% url 'shop:suggested' %}" class="hero-btn hero-btn-secondary"><span>محصولات پیشنهادی</span><i class="ri-fire-line"></i></a>
+            </div>
+            <div class="hero-state">
+                <div class="state-item"><span class="state-number">{{ categories|length|add:"500" }}+</span><span class="state-lable">محصولات متنوع</span></div>
+                <div class="state-item"><span class="state-number">98%</span><span class="state-lable">رضایت مشتری</span></div>
+                <div class="state-item"><span class="state-number">24/7</span><span class="state-lable">پشتیبانی</span></div>
+            </div>
+            <div id="shamsi-date"><i class="ri-calendar-2-line"></i><span>امروز؛ درحال بارگذاری...</span></div>
+        </div>
+        <div class="main-content-img">
+            <img src="{% static 'images/dam.jpg' %}" alt="عطاری عطارباشی">
+            <div class="floating-element floating-1"><i class="ri-truck-line"></i><span>ارسال سریع</span></div>
+            <div class="floating-element floating-2"><i class="ri-vip-crown-2-line"></i><span>تضمین اصالت</span></div>
+        </div>
+    </div>
+</section>
+
+<!-- CATEGORY -->
+<section id="category">
+    <div class="category-header">
+        <h2>دسته‌بندی محصولات</h2>
+        <p>محصولات مورد علاقه خود را از میان دسته‌بندی‌های متنوع ما انتخاب کنید</p>
+    </div>
+    <div class="category-grid">
+        {% for cat in categories %}
+        <a href="{% url 'shop:category' cat.slug %}" class="category-box">
+            <div class="category-box-img">
+                {% if cat.icon_image %}<img src="{% static 'images/'|add:cat.icon_image %}" alt="{{ cat.name }}">{% else %}<img src="{% static 'images/سایر.png' %}" alt="{{ cat.name }}">{% endif %}
+            </div>
+            <strong class="category-name">{{ cat.name }}</strong>
+            <span class="category-count">{{ cat.product_count }} محصول</span>
+        </a>
+        {% empty %}
+        <p class="text-center text-muted" style="grid-column: 1/-1;">دسته‌بندی فعالی یافت نشد.</p>
+        {% endfor %}
+    </div>
+</section>
+
+<!-- PPR (Popular Products Carousel) -->
+<section id="ppr">
+    <div class="ppr-top-header">
+        <div class="section-header-title">
+            <a href="{% url 'shop:suggested' %}" class="ppr-title-link" title="مشاهده آرشیو کامل محصولات پرفروش و پیشنهادی">
+                <h2>محصولات پرفروش و پیشنهادی</h2>
+            </a>
+            <p>محبوب‌ترین و مرغوب‌ترین گیاهان دارویی و محصولات طبیعی با ضمانت اصالت</p>
+        </div>
+        <a href="{% url 'shop:suggested' %}" class="ppr-header-more-btn" title="مشاهده آرشیو کامل محصولات">
+            <span>مشاهده همه</span>
+            <i class="ri-arrow-left-line"></i>
+        </a>
+    </div>
+
+    <div class="ppr-carousel-wrapper">
+        <button type="button" class="btn-carousel-side btn-prev" onclick="slideCarousel('ppr-slider', 1)" aria-label="قبلی" title="قبلی"><i class="ri-arrow-right-s-line"></i></button>
+        <button type="button" class="btn-carousel-side btn-next" onclick="slideCarousel('ppr-slider', -1)" aria-label="بعدی" title="بعدی"><i class="ri-arrow-left-s-line"></i></button>
+
+        <div class="ppr-pro-container" id="ppr-slider">
+            {% for product in popular_products %}
+            {% with product.primary_variant as variant %}
+            <div class="pro-box" data-product-id="{{ product.id }}" data-variant-id="{{ variant.id|default:''|unlocalize }}" data-product-name="{{ product.name }}" data-product-price="{% if variant %}{{ variant.price|unlocalize }}{% endif %}" data-product-img="{{ product.image_url }}" data-product-href="{{ product.get_absolute_url }}" style="cursor:pointer;" onclick="location.href=this.dataset.productHref">
+                <div class="pro-box-img">
+                    <img src="{{ product.image_url }}" alt="{{ product.name }}" loading="lazy">
+                    <button type="button" class="quick-view-btn" aria-label="پیش‌نمایش سریع" title="مشاهده سریع" onclick="event.stopPropagation(); openQuickPreview(this);"><i class="ri-eye-line"></i></button>
+                    <button type="button" class="fav-btn {% if product.id in wishlist_ids %}active{% endif %}" data-url="{% url 'shop:wishlist_toggle' product.id %}" data-product-id="{{ product.id }}" onclick="event.stopPropagation(); toggleWishlistAjax(event, this);" title="افزودن به علاقه‌مندی"><i class="{% if product.id in wishlist_ids %}ri-heart-3-fill{% else %}ri-heart-3-line{% endif %}"></i></button>
+                </div>
+                <div class="pro-box-text">
+                    <div class="pro-title-wrap">
+                        <span class="pro-text-title" title="{{ product.name }}">{{ product.name }}</span>
+                        {% if not variant or variant.stock == 0 %}
+                            <span class="pro-tag out-tag">ناموجود</span>
+                        {% elif product.best_discount_percent %}
+                            <span class="pro-tag discount-tag">%{{ product.best_discount_percent }} تخفیف</span>
+                        {% elif forloop.counter <= 3 %}
+                            <span class="pro-tag new-tag">جدید</span>
+                        {% endif %}
+                    </div>
+                    <div class="pro-rating">
+                        {% if product.avg_rating %}
+                        <div class="rating-stars">
+                            <span style="color:#f9b74a">{% if product.avg_rating >= 1 %}★{% endif %}{% if product.avg_rating >= 2 %}★{% endif %}{% if product.avg_rating >= 3 %}★{% endif %}{% if product.avg_rating >= 4 %}★{% endif %}{% if product.avg_rating >= 5 %}★{% else %}☆{% endif %}</span>
+                            <span class="rating-count">({{ product.avg_rating }})</span>
+                        </div>
+                        {% else %}
+                        <div class="rating-stars" style="color:#ccc"><span>☆☆☆☆☆</span><span class="rating-count">(–)</span></div>
+                        {% endif %}
+                    </div>
+                    <div class="price-continer">
+                        {% if variant and variant.price %}
+                            <div class="current-prise">
+                                <span class="price">{{ variant.price|format_price }} <small style="font-size:0.75rem; font-weight:700;">تومان</small></span>
+                                {% if variant.compare_price and variant.compare_price > variant.price %}<span class="old-price">{{ variant.compare_price|format_price }} تومان</span>{% endif %}
+                            </div>
+                        {% else %}
+                            <div class="current-prise"><span class="price">تماس بگیرید</span></div>
+                        {% endif %}
+                    </div>
+                    {% if variant and variant.id and variant.stock > 0 %}
+                    <form method="post" action="{% url 'shop:cart_add' variant.id %}" class="cart-add-form" onclick="event.stopPropagation();">
+                        {% csrf_token %}
+                        <input type="hidden" name="qty" value="1">
+                        <input type="hidden" name="next" value="{{ request.get_full_path }}">
+                        <button type="submit" class="pro-cart-btn"><i class="ri-shopping-bag-4-line"></i><span>افزودن به سبد</span></button>
+                    </form>
+                    {% else %}
+                    <button type="button" class="pro-cart-btn" disabled style="background:#e5e7eb; color:#9ca3af; cursor:not-allowed;"><i class="ri-close-circle-line"></i><span>ناموجود</span></button>
+                    {% endif %}
+                </div>
+            </div>
+            {% endwith %}
+            {% empty %}<p class="text-center text-muted" style="padding: 20px;">محصول پرفروشی یافت نشد.</p>{% endfor %}
+
+            <!-- کارت مشاهده همه در انتهای کاروسل -->
+            <a href="{% url 'shop:suggested' %}" class="pro-box pro-box-more" title="مشاهده همه محصولات پیشنهادی">
+                <div class="more-card-content">
+                    <div class="more-icon-circle">
+                        <i class="ri-arrow-left-line"></i>
+                    </div>
+                    <strong>مشاهده بیشتر</strong>
+                    <span>همه محصولات پیشنهادی</span>
+                    <span class="more-badge"><i class="ri-sparkling-fill"></i> آرشیو کامل</span>
+                </div>
+            </a>
+        </div>
+    </div>
+</section>
+
+<!-- QUICK PREVIEW MODAL -->
+<div id="quickPreviewModal" class="quick-modal hidden" aria-hidden="true">
+  <div class="quick-modal-bg" onclick="closeQuickPreview()"></div>
+  <div class="quick-modal-card">
+    <button type="button" class="quick-close" onclick="closeQuickPreview()" aria-label="بستن">✕</button>
+    <div class="quick-modal-grid">
+      <div style="display:flex; align-items:center; justify-content:center; background:#fbf9f7; border-radius:12px; padding:14px;">
+        <img id="qp-img" src="" alt="" style="max-width:100%; max-height:220px; object-fit:contain;">
+      </div>
+      <div style="display:flex; flex-direction:column; justify-content:center;">
+        <h3 id="qp-name" style="margin:0 0 10px; font-size:1.25rem; font-weight:800; color:#2b1f15;"></h3>
+        <p id="qp-price" style="color:#ff805d; font-weight:900; font-size:1.2rem; margin-bottom:14px;"></p>
+        <form method="post" id="qp-form" class="cart-add-form" action="">
+          {% csrf_token %}
+          <input type="hidden" name="qty" id="qp-qty" value="1">
+          <div style="display:flex; gap:10px; align-items:center; margin-bottom:14px;">
+            <span style="font-size:0.9rem; color:#6b5a4a; font-weight:600;">تعداد:</span>
+            <div style="display:inline-flex; align-items:center; background:#f0ece8; border-radius:30px; overflow:hidden;">
+              <button type="button" onclick="qpQty(-1)" style="border:none; background:transparent; padding:6px 14px; cursor:pointer; font-size:1.1rem; font-weight:700;">−</button>
+              <span id="qp-qty-display" style="min-width:28px; text-align:center; font-weight:800;">1</span>
+              <button type="button" onclick="qpQty(1)" style="border:none; background:transparent; padding:6px 14px; cursor:pointer; font-size:1.1rem; font-weight:700;">+</button>
+            </div>
+          </div>
+          <button type="submit" class="btn-primary" style="background:linear-gradient(135deg, #ff805d 0%, #ff6b4a 100%); color:#fff; border:none; border-radius:30px; padding:10px 20px; font-weight:800; cursor:pointer; font-family:inherit; width:100%; display:flex; align-items:center; justify-content:center; gap:8px;">
+            <i class="ri-shopping-bag-4-line"></i> افزودن به سبد
+          </button>
+        </form>
+        <a id="qp-link" href="#" style="display:inline-block; margin-top:12px; color:#ff805d; font-size:0.9rem; font-weight:700; text-decoration:none;">مشاهده صفحه کامل محصول ←</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+  .quick-modal.hidden{display:none;}
+  .quick-modal{position:fixed; inset:0; z-index:9999; display:flex; align-items:center; justify-content:center; padding:16px;}
+  .quick-modal-bg{position:absolute; inset:0; background:rgba(0,0,0,.5); backdrop-filter:blur(3px);}
+  .quick-modal-card{position:relative; background:#fff; border-radius:20px; padding:24px; width:min(620px,94%); max-height:90vh; overflow:auto; box-shadow:0 15px 40px rgba(0,0,0,0.2); box-sizing:border-box;}
+  .quick-close{position:absolute; left:14px; top:14px; border:none; background:#f0ece8; border-radius:50%; width:32px; height:32px; cursor:pointer; font-size:0.9rem; font-weight:700;}
+  .quick-modal-grid{display:grid; grid-template-columns:1fr 1fr; gap:20px;}
+  @media(max-width:640px){.quick-modal-grid{grid-template-columns:1fr;}}
+</style>
+<script>
+function openQuickPreview(el){
+  var card = el.closest('[data-product-id]');
+  if(!card) return;
+  var id = card.dataset.variantId || card.dataset.productId;
+  var name = card.dataset.productName || '';
+  var priceRaw = card.dataset.productPrice || '';
+  var cleanPrice = String(priceRaw).replace(/[^\d]/g, '');
+  var numPrice = parseInt(cleanPrice, 10);
+  var img = card.dataset.productImg || '';
+  var link = card.dataset.productHref || card.getAttribute('href') || '#';
+  document.getElementById('qp-name').textContent = name;
+  document.getElementById('qp-price').textContent = (!isNaN(numPrice) && numPrice > 0) ? (Number(numPrice).toLocaleString('fa-IR') + ' تومان') : 'تماس بگیرید';
+  document.getElementById('qp-img').src = img;
+  document.getElementById('qp-img').alt = name;
+  document.getElementById('qp-link').href = link;
+  document.getElementById('qp-form').action = id ? ('/cart/add/' + id + '/') : '/';
+  document.getElementById('qp-qty').value = 1;
+  document.getElementById('qp-qty-display').textContent = '1';
+  document.getElementById('quickPreviewModal').classList.remove('hidden');
+}
+function closeQuickPreview(){ document.getElementById('quickPreviewModal').classList.add('hidden'); }
+function qpQty(d){
+  var inp = document.getElementById('qp-qty'), disp = document.getElementById('qp-qty-display');
+  var v = Math.max(1, Math.min(99, (parseInt(inp.value)||1)+d));
+  inp.value = v; disp.textContent = v;
+}
+document.addEventListener('keydown', function(e){ if(e.key === 'Escape') closeQuickPreview(); });
+</script>
+{% endblock content %}

@@ -1,0 +1,408 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}مقالات و دانشنامه طب سنتی | عطارباشی{% endblock title %}
+{% block content %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
+
+<div class="blog-page">
+  <div class="blog-container">
+    
+    <!-- BLOG HERO HEADER -->
+    <div class="blog-header">
+      <div class="blog-header-badge"><i class="fas fa-book-open"></i> وبلاگ و دانستنی‌ها</div>
+      <h1>مقالات آموزشی و سلامت طب سنتی</h1>
+      <p>مرجع تخصصی خواص گیاهان دارویی، رژیم‌های غذایی سنتی، شناخت مزاج و سبک زندگی سالم</p>
+      
+      <form method="get" class="blog-search-box">
+        <input type="text" name="q" value="{{ query }}" placeholder="جستجو در مقالات آموزشی...">
+        {% if selected_category %}<input type="hidden" name="category" value="{{ selected_category }}">{% endif %}
+        <button type="submit"><i class="fas fa-search"></i> <span>جستجو</span></button>
+      </form>
+    </div>
+
+    <!-- CATEGORY CHIPS (اسکرول افقی تمیز در موبایل) -->
+    {% if categories %}
+    <div class="blog-cats-wrap">
+      <div class="blog-cats">
+        <a href="{% url 'shop:article_list' %}" class="cat-pill {% if not selected_category %}active{% endif %}">همه موضوعات</a>
+        {% for cat in categories %}
+          <a href="{% url 'shop:article_list' %}?category={{ cat|urlencode }}" class="cat-pill {% if selected_category == cat %}active{% endif %}">{{ cat }}</a>
+        {% endfor %}
+      </div>
+    </div>
+    {% endif %}
+
+    <!-- TOP PAGINATION -->
+    {% if articles.paginator.num_pages > 1 %}
+    <div class="pagination pagination-top">
+      <div class="page-numbers">
+        {% if articles.has_previous %}
+          <a class="page-arrow prev" href="?{% if query %}q={{ query }}&amp;{% endif %}{% if selected_category %}category={{ selected_category }}&amp;{% endif %}page={{ articles.previous_page_number }}" title="صفحه قبلی">
+            <i class="fas fa-chevron-right"></i>
+            <span>قبلی</span>
+          </a>
+        {% endif %}
+        {% for num in articles.paginator.page_range %}
+          {% if articles.number == num %}
+            <span class="active">{{ num }}</span>
+          {% elif num > articles.number|add:'-3' and num < articles.number|add:'3' %}
+            <a href="?{% if query %}q={{ query }}&amp;{% endif %}{% if selected_category %}category={{ selected_category }}&amp;{% endif %}page={{ num }}">{{ num }}</a>
+          {% endif %}
+        {% endfor %}
+        {% if articles.has_next %}
+          <a class="page-arrow next" href="?{% if query %}q={{ query }}&amp;{% endif %}{% if selected_category %}category={{ selected_category }}&amp;{% endif %}page={{ articles.next_page_number }}" title="صفحه بعدی">
+            <span>بعدی</span>
+            <i class="fas fa-chevron-left"></i>
+          </a>
+        {% endif %}
+      </div>
+    </div>
+    {% endif %}
+
+    <!-- ARTICLES GRID -->
+    <div class="articles-grid">
+      {% for art in articles %}
+      <article class="article-card">
+        <a href="{{ art.get_absolute_url }}" class="art-img-wrap">
+          <img src="{{ art.image_url }}" alt="{{ art.title }}" loading="lazy">
+          <span class="art-cat-badge">{{ art.category_name }}</span>
+        </a>
+        <div class="art-body">
+          <div class="art-meta">
+            <span><i class="far fa-calendar-alt"></i> {{ art.created_at|date:"Y/m/d" }}</span>
+            <span><i class="far fa-clock"></i> {{ art.reading_time }} دقیقه مطالعه</span>
+          </div>
+          <h2><a href="{{ art.get_absolute_url }}">{{ art.title }}</a></h2>
+          <p class="art-summary">{{ art.summary }}</p>
+          <div class="art-footer">
+            <span class="art-author"><i class="far fa-user"></i> {{ art.author_name }}</span>
+            <a href="{{ art.get_absolute_url }}" class="art-read-more">مطالعه مقاله <i class="fas fa-arrow-left"></i></a>
+          </div>
+        </div>
+      </article>
+      {% empty %}
+      <div class="no-articles">
+        <i class="fas fa-newspaper" style="font-size:2.5rem; color:#ff805d; margin-bottom:12px;"></i>
+        <h3>مقاله‌ای یافت نشد</h3>
+        <p>متأسفانه مقاله‌ای مطابق جستجوی شما پیدا نشد. لطفاً عبارت دیگری را جستجو کنید.</p>
+        <a href="{% url 'shop:article_list' %}" class="btn-back">مشاهده همه مقالات</a>
+      </div>
+      {% endfor %}
+    </div>
+
+    <!-- PAGINATION -->
+    {% if articles.paginator.num_pages > 1 %}
+    <div class="pagination">
+      {% if articles.has_previous %}
+        <a href="?{% if query %}q={{ query }}&amp;{% endif %}{% if selected_category %}category={{ selected_category }}&amp;{% endif %}page={{ articles.previous_page_number }}"><i class="fas fa-chevron-right"></i></a>
+      {% endif %}
+      {% for num in articles.paginator.page_range %}
+        {% if articles.number == num %}
+          <a class="active">{{ num }}</a>
+        {% elif num > articles.number|add:'-3' and num < articles.number|add:'3' %}
+          <a href="?{% if query %}q={{ query }}&amp;{% endif %}{% if selected_category %}category={{ selected_category }}&amp;{% endif %}page={{ num }}">{{ num }}</a>
+        {% endif %}
+      {% endfor %}
+      {% if articles.has_next %}
+        <a href="?{% if query %}q={{ query }}&amp;{% endif %}{% if selected_category %}category={{ selected_category }}&amp;{% endif %}page={{ articles.next_page_number }}"><i class="fas fa-chevron-left"></i></a>
+      {% endif %}
+    </div>
+    {% endif %}
+
+  </div>
+</div>
+
+<style>
+  :root {
+    --main-color:#faece1;
+    --main-light:#f3d6bf;
+    --secondary-color:#ff805d;
+    --text-dark:#2b1f15;
+    --text-muted:#6b5a4a;
+    --white:#fff;
+    --radius:16px;
+  }
+  .blog-page {
+    background: #fdfcfb;
+    padding: 16px 12px 40px;
+    box-sizing: border-box;
+    width: 100%;
+    overflow-x: hidden;
+  }
+  .blog-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    box-sizing: border-box;
+    width: 100%;
+  }
+  
+  .blog-header {
+    background: linear-gradient(135deg, #fff8f4 0%, #faece1 100%);
+    border: 1px solid rgba(255, 128, 93, 0.25);
+    border-radius: var(--radius);
+    padding: 28px 18px;
+    text-align: center;
+    margin-bottom: 20px;
+    box-shadow: 0 6px 20px rgba(255, 128, 93, 0.06);
+    box-sizing: border-box;
+  }
+  .blog-header-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: rgba(255, 128, 93, 0.15);
+    color: var(--secondary-color);
+    font-size: 0.82rem;
+    font-weight: 800;
+    padding: 4px 14px;
+    border-radius: 20px;
+    margin-bottom: 10px;
+  }
+  .blog-header h1 {
+    font-size: 1.55rem;
+    font-weight: 900;
+    color: var(--text-dark);
+    margin-bottom: 8px;
+    line-height: 1.35;
+  }
+  .blog-header p {
+    color: var(--text-muted);
+    font-size: 0.92rem;
+    max-width: 600px;
+    margin: 0 auto 16px;
+    line-height: 1.6;
+  }
+
+  .blog-search-box {
+    display: flex;
+    max-width: 460px;
+    margin: 0 auto;
+    gap: 8px;
+    width: 100%;
+    box-sizing: border-box;
+  }
+  .blog-search-box input {
+    flex: 1;
+    min-width: 0;
+    padding: 10px 16px;
+    border: 1.5px solid #ebd0bc;
+    border-radius: 30px;
+    font-size: 0.9rem;
+    font-family: inherit;
+    outline: none;
+    background: #fff;
+    box-sizing: border-box;
+  }
+  .blog-search-box button {
+    background: linear-gradient(135deg, var(--secondary-color) 0%, #ff6b4a 100%);
+    color: #fff;
+    border: none;
+    padding: 0 18px;
+    border-radius: 30px;
+    font-weight: 700;
+    cursor: pointer;
+    font-family: inherit;
+    font-size: 0.88rem;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-shrink: 0;
+  }
+
+  /* نوار موضوعات اسکرول‌پذیر در موبایل */
+  .blog-cats-wrap {
+    width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    margin-bottom: 24px;
+    padding-bottom: 4px;
+  }
+  .blog-cats-wrap::-webkit-scrollbar { display: none; }
+  .blog-cats {
+    display: flex;
+    gap: 8px;
+    flex-wrap: nowrap;
+    width: max-content;
+    margin: 0 auto;
+    padding: 0 4px;
+  }
+  .cat-pill {
+    background: #fff;
+    border: 1px solid #ebd0bc;
+    color: var(--text-muted);
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-size: 0.82rem;
+    font-weight: 700;
+    text-decoration: none;
+    white-space: nowrap;
+    transition: all 0.2s ease;
+  }
+  .cat-pill:hover, .cat-pill.active {
+    background: var(--secondary-color);
+    color: #fff;
+    border-color: var(--secondary-color);
+  }
+
+  .articles-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 18px;
+    margin-bottom: 30px;
+  }
+
+  .article-card {
+    background: #ffffff;
+    border: 1px solid rgba(255, 128, 93, 0.2);
+    border-radius: var(--radius);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.03);
+    transition: all 0.25s ease;
+    box-sizing: border-box;
+  }
+  .article-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 22px rgba(255, 128, 93, 0.12);
+    border-color: var(--secondary-color);
+  }
+
+  .art-img-wrap {
+    height: 180px;
+    position: relative;
+    overflow: hidden;
+    display: block;
+    background: #fbf9f7;
+  }
+  .art-img-wrap img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.3s ease;
+  }
+  .article-card:hover .art-img-wrap img {
+    transform: scale(1.05);
+  }
+  .art-cat-badge {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(4px);
+    color: var(--secondary-color);
+    font-size: 0.74rem;
+    font-weight: 800;
+    padding: 3px 10px;
+    border-radius: 12px;
+    border: 1px solid rgba(255, 128, 93, 0.3);
+  }
+
+  .art-body {
+    padding: 14px;
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    box-sizing: border-box;
+  }
+  .art-meta {
+    display: flex;
+    gap: 12px;
+    font-size: 0.76rem;
+    color: #8c7b6c;
+    margin-bottom: 6px;
+    flex-wrap: wrap;
+  }
+  .art-body h2 {
+    font-size: 1.02rem;
+    font-weight: 900;
+    line-height: 1.4;
+    margin: 0 0 6px 0;
+  }
+  .art-body h2 a {
+    color: var(--text-dark);
+    text-decoration: none;
+  }
+  .art-body h2 a:hover {
+    color: var(--secondary-color);
+  }
+  .art-summary {
+    font-size: 0.84rem;
+    color: var(--text-muted);
+    line-height: 1.6;
+    margin-bottom: 12px;
+    flex: 1;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .art-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-top: 1px solid #f5ebe1;
+    padding-top: 10px;
+    font-size: 0.8rem;
+  }
+  .art-author { color: #8c7b6c; }
+  .art-read-more {
+    color: var(--secondary-color);
+    font-weight: 800;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    transition: transform 0.2s ease;
+  }
+  .art-read-more:hover { transform: translateX(-4px); }
+
+  .no-articles {
+    grid-column: 1 / -1;
+    text-align: center;
+    padding: 36px 16px;
+    background: #fff;
+    border-radius: var(--radius);
+    border: 1px dashed #ebd0bc;
+  }
+  .btn-back {
+    display: inline-block;
+    margin-top: 12px;
+    background: var(--secondary-color);
+    color: #fff;
+    padding: 8px 18px;
+    border-radius: 20px;
+    text-decoration: none;
+    font-weight: 700;
+    font-size: 0.85rem;
+  }
+
+  .pagination { display: flex; justify-content: center; gap: 6px; flex-wrap: wrap; margin-top: 20px; }
+  .pagination a {
+    padding: 6px 12px;
+    border-radius: 20px;
+    border: 1px solid #ebd0bc;
+    text-decoration: none;
+    color: var(--text-dark);
+    font-weight: 700;
+    font-size: 0.85rem;
+  }
+  .pagination a.active { background: var(--secondary-color); color: #fff; border-color: var(--secondary-color); }
+
+  @media (max-width: 768px) {
+    .blog-header { padding: 20px 14px; }
+    .blog-header h1 { font-size: 1.3rem; }
+    .blog-header p { font-size: 0.84rem; }
+    .articles-grid { grid-template-columns: 1fr; gap: 14px; }
+    .art-img-wrap { height: 160px; }
+    .blog-cats { justify-content: flex-start; }
+  }
+
+  @media (max-width: 480px) {
+    .blog-search-box { flex-direction: row; }
+    .blog-search-box input { font-size: 0.84rem; padding: 8px 12px; }
+    .blog-search-box button { padding: 0 14px; font-size: 0.82rem; }
+  }
+</style>
+{% endblock content %}

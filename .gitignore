@@ -1,0 +1,26 @@
+# Secrets and local settings
+.env
+.env.*
+!.env.example
+
+# Python
+__pycache__/
+*.py[cod]
+*.so
+.venv/
+venv/
+
+# Local database and runtime output
+db.sqlite3
+staticfiles/
+
+# Keep committed catalogue images under media/products/catalog/.
+# Ignore any future transient user uploads instead.
+media/uploads/
+
+# Tooling / OS
+.pytest_cache/
+.mypy_cache/
+.DS_Store
+.idea/
+.vscode/

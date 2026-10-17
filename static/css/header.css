@@ -1,0 +1,498 @@
+:root{
+    --main-color: #faece1;
+    --main-light: #f9f3ee;
+    --secondary-color: #ff805d;
+    --product-bg-color: #f8f8f8;
+    --site-header-height: 80px;
+}
+
+header.site-header{
+    position: fixed;
+    top: 0;
+    right: 0;
+    left: 0;
+    z-index: 1000;
+    background: rgba(255, 255, 255, 0.98);
+    backdrop-filter: blur(15px);
+    border-bottom: 1px solid rgba(255, 128, 93, 0.15);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
+    transition: all 0.3s ease;
+}
+header.site-header.header-scrolled{
+    background: rgba(255, 255, 255, 0.98);
+    backdrop-filter: blur(20px);
+    box-shadow: 0 6px 25px rgba(0, 0, 0, 0.07);
+}
+
+/* menu-btn — آیکون همبرگری در موبایل */
+.menu-icon{
+    display: none;
+    cursor: pointer;
+    margin: 0;
+    width: 28px;
+    height: 20px;
+    position: relative;
+    z-index: 1002;
+    justify-self: start;
+}
+
+.menu-icon .nav-icon,
+.menu-icon .nav-icon::before,
+.menu-icon .nav-icon::after{
+    content: '';
+    position: absolute;
+    width: 100%;
+    height: 2.5px;
+    background: #3e2c1b;
+    border-radius: 2px;
+    transition: all 0.25s ease;
+}
+.menu-icon .nav-icon{
+    top: 50%;
+    transform: translateY(-50%);    
+}
+.menu-icon .nav-icon::before{
+    top: -7px;
+}
+.menu-icon .nav-icon::after{
+    top: 7px;
+}
+.menu-btn{
+    display: none;
+}
+.menu-btn:checked + .header-top .menu-icon .nav-icon{
+    background: transparent;
+}
+.menu-btn:checked + .header-top .menu-icon .nav-icon::before{
+    top: 0;
+    transform: rotate(45deg);
+    background: var(--secondary-color);
+}
+.menu-btn:checked + .header-top .menu-icon .nav-icon::after{
+    top: 0;
+    transform: rotate(-45deg);
+    background: var(--secondary-color);
+}
+
+/* header-top — گرید ۳ستونه کم‌ارتفاع و جمع‌وجور */
+.header-top{
+    max-width: 1200px;
+    width: 94%;
+    margin: 0 auto;
+    padding: 8px 0;
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    align-items: center;
+    gap: 16px;
+}
+
+/* nav-location */ 
+.nav-location{
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+}
+.nav-location a{
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    color: #555;
+    font-size: 0.85rem;
+    font-weight: 600;
+    background: rgba(250, 236, 225, 0.6);
+    border-radius: 30px;
+    transition: all 0.2s ease;
+    border: 1px solid rgba(255, 128, 93, 0.2);
+    padding: 6px 14px;
+}
+.nav-location a:hover{
+    background: #fff;
+    color: var(--secondary-color);
+    border-color: var(--secondary-color);
+    box-shadow: 0 4px 12px rgba(255, 128, 93, 0.15);
+}
+.nav-location a i{
+    color: var(--secondary-color);
+    font-size: 0.95rem;
+}
+
+/* logo */
+.logo{
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+.logo img{
+    max-height: 40px;
+    width: auto;
+    border-radius: 50%;
+    transition: all 0.3s ease;
+}
+header.site-header.header-scrolled .logo img{
+    max-height: 35px;
+}
+
+/* nav-btns — فقط دکمه‌های مستقیم هدر گرد هستند */
+.nav-btns {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 10px;
+    margin: 0;
+}
+.nav-btns > a,
+.nav-btns > form > .nav-logout,
+.nav-btns > .nav-user-wrap > .nav-user {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    background: #fafafa;
+    color: #444;
+    font-size: 1.1rem;
+    transition: all 0.15s ease;
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
+    cursor: pointer;
+    text-decoration: none;
+    box-sizing: border-box;
+}
+.nav-btns > a:hover,
+.nav-btns > form > .nav-logout:hover,
+.nav-btns > .nav-user-wrap > .nav-user:hover {
+    background: #fff;
+    color: var(--secondary-color);
+    border-color: var(--secondary-color);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(255, 128, 93, 0.2);
+}
+
+.nav-cart, .nav-wish {
+    position: relative;
+}
+.nav-cart span, .nav-wish span{
+    position: absolute;
+    top: -5px;
+    left: -5px;
+    background: linear-gradient(135deg, var(--secondary-color), #ff6b4a);
+    color: #fff;
+    min-width: 18px;
+    height: 18px;
+    padding: 0 5px;
+    border-radius: 9px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.65rem;
+    font-weight: 700;
+    box-shadow: 0 2px 8px rgba(255, 128, 93, 0.35);
+    line-height: 1;
+}
+
+/* ========================================================
+   منوی کاربر (دراپ‌داون آیکون آدمک) — کاملاً فول و بدون پرش
+   ======================================================== */
+.nav-user-wrap {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+/* پل نامرئی جهت حفظ وضعیت هاور ماوس هنگام حرکت به سمت منو */
+.nav-user-wrap::after {
+    content: '';
+    position: absolute;
+    top: 100%;
+    left: -20px;
+    right: -20px;
+    height: 18px;
+    z-index: 1199;
+}
+
+.user-dropdown {
+    position: absolute;
+    top: calc(100% + 8px);
+    left: 50%;
+    transform: translateX(-50%) translateY(4px);
+    background: #ffffff;
+    border: 1.5px solid #ff805d;
+    border-radius: 14px;
+    box-shadow: 0 12px 35px rgba(255, 128, 93, 0.2), 0 4px 14px rgba(0,0,0,0.08);
+    padding: 8px;
+    min-width: 165px;
+    width: max-content;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transition: opacity 0.2s ease, transform 0.2s ease, visibility 0.2s ease;
+    z-index: 1200;
+    box-sizing: border-box;
+}
+.user-dropdown::before {
+    content: '';
+    position: absolute;
+    top: -14px;
+    left: 0;
+    right: 0;
+    height: 16px;
+}
+
+.nav-user-wrap:hover .user-dropdown,
+.nav-user-wrap:focus-within .user-dropdown,
+.nav-user-wrap.is-open .user-dropdown {
+    opacity: 1;
+    visibility: visible;
+    transform: translateX(-50%) translateY(0);
+    pointer-events: auto;
+}
+
+/* دکمه‌های داخل منوی کشویی کاربر — کاملاً پهن و پرکننده باکس */
+.user-dropdown a {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: flex-start !important;
+    gap: 10px !important;
+    padding: 10px 14px !important;
+    border-radius: 10px !important;
+    font-size: 0.92rem !important;
+    font-weight: 800 !important;
+    color: #3e2c1b !important;
+    text-decoration: none !important;
+    background: #ffffff !important;
+    border: 1px solid transparent !important;
+    width: 100% !important;
+    height: auto !important;
+    min-height: 42px !important;
+    box-sizing: border-box !important;
+    white-space: nowrap !important;
+    transition: all 0.15s ease !important;
+    box-shadow: none !important;
+    transform: none !important;
+}
+.user-dropdown a i {
+    font-size: 1.25rem !important;
+    color: var(--secondary-color) !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    flex-shrink: 0 !important;
+    width: 24px !important;
+    height: 24px !important;
+}
+.user-dropdown a:hover {
+    background: #faece1 !important;
+    border-color: #f3d6bf !important;
+    color: var(--secondary-color) !important;
+    box-shadow: 0 2px 8px rgba(255, 128, 93, 0.15) !important;
+    transform: translateY(-1px) !important;
+}
+
+/* navigation (Desktop) */
+.navigation{
+    padding: 4px 0 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-top: 1px solid rgba(255, 128, 93, 0.1);
+}
+.menu{
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 32px;
+    margin: 0;
+    padding: 0;
+}
+.menu li{
+    position: relative;
+}
+.menu li a{
+    color: #3e2c1b;
+    font-size: 0.92rem;
+    font-weight: 600;
+    padding: 6px 2px;
+    position: relative;
+    transition: all 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+.menu li a::before{
+    content: '';
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    width: 0;
+    height: 2px;
+    background: var(--secondary-color);
+    border-radius: 2px;
+    transition: all 0.2s ease;
+}
+.menu li a:hover{
+    color: var(--secondary-color);
+}
+.menu li a:hover::before{
+    width: 100%;
+}
+.nav-lable{
+    position: absolute;
+    top: -12px;
+    right: -16px;
+    background: linear-gradient(135deg, var(--secondary-color), #f5c161);
+    color: #fff;
+    font-size: 0.6rem;
+    font-weight: 700;
+    padding: 2px 7px;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(255, 128, 93, 0.3);
+    z-index: 2;
+}
+
+/* ========================================================
+   RESPONSIVE MOBILE
+   ======================================================== */
+@media (max-width: 768px) {
+    :root {
+        --site-header-height: 60px;
+    }
+    .menu-icon{
+        display: block;
+        width: 30px;
+        height: 22px;
+        padding: 4px;
+        box-sizing: content-box;
+    }
+    .nav-location{
+        display: none;
+    }
+    .header-top{
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 10px 14px;
+        width: 100%;
+        box-sizing: border-box;
+        gap: 8px;
+    }
+    .logo img{
+        max-height: 36px;
+        max-width: 120px;
+    }
+    .nav-btns{
+        gap: 8px;
+        margin: 0;
+    }
+    .nav-btns > a,
+    .nav-btns > form > .nav-logout,
+    .nav-btns > .nav-user-wrap > .nav-user {
+        width: 38px;
+        height: 38px;
+        font-size: 1.1rem;
+    }
+    .nav-cart span, .nav-wish span{
+        min-width: 17px;
+        height: 17px;
+        font-size: 0.65rem;
+        top: -4px;
+        left: -4px;
+    }
+
+    /* دراپ‌داون آیکون آدمک در موبایل — متمرکز و عریض */
+    .user-dropdown {
+        top: calc(100% + 10px);
+        left: 50%;
+        right: auto;
+        transform: translateX(-50%) translateY(4px);
+        min-width: 165px;
+        width: max-content;
+        box-shadow: 0 12px 35px rgba(0,0,0,0.2);
+    }
+    .nav-user-wrap:hover .user-dropdown,
+    .nav-user-wrap:focus-within .user-dropdown,
+    .nav-user-wrap.is-open .user-dropdown {
+        transform: translateX(-50%) translateY(0);
+    }
+
+    /* منوی کشویی سایدبار در موبایل */
+    .navigation{
+        position: fixed;
+        top: 0;
+        right: 0;
+        transform: translateX(100%);
+        width: min(280px, 85vw);
+        height: 100vh;
+        background: #ffffff;
+        box-shadow: -6px 0 30px rgba(0, 0, 0, 0.2);
+        transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        padding: 65px 18px 24px;
+        z-index: 1001;
+        margin: 0;
+        display: block;
+        border-top: none;
+        box-sizing: border-box;
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+    .menu-btn:checked ~ .navigation{
+        transform: translateX(0);
+    }
+    .menu{
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0;
+        width: 100%;
+    }
+    .menu li{
+        width: 100%;
+    }
+    .menu li a{
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 13px 10px;
+        font-size: 0.95rem;
+        font-weight: 700;
+        color: #3e2c1b;
+        border-bottom: 1px solid #faece1;
+        width: 100%;
+        box-sizing: border-box;
+    }
+    .menu li a i{
+        font-size: 1.15rem;
+        color: var(--secondary-color);
+    }
+    .menu li a::before{
+        display: none;
+    }
+    .nav-lable{
+        top: 10px;
+        right: auto;
+        left: 10px;
+    }
+}
+
+@media (max-width: 380px) {
+    .header-top{
+        padding: 8px 10px;
+    }
+    .logo img{
+        max-height: 32px;
+        max-width: 100px;
+    }
+    .nav-btns{
+        gap: 6px;
+    }
+    .nav-btns > a,
+    .nav-btns > form > .nav-logout,
+    .nav-btns > .nav-user-wrap > .nav-user {
+        width: 36px;
+        height: 36px;
+        font-size: 1rem;
+    }
+}
