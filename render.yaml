@@ -1,0 +1,21 @@
+services:
+  - type: web
+    name: attarbashi
+    runtime: python
+    buildCommand: "bash build.sh"
+    startCommand: "gunicorn config.wsgi:application --bind 0.0.0.0:$PORT --workers ${WEB_CONCURRENCY:-2} --timeout 120 --access-logfile - --error-logfile -"
+    healthCheckPath: /
+    autoDeploy: true
+    envVars:
+      - key: PYTHON_VERSION
+        value: "3.12.8"
+      - key: DJANGO_SECRET_KEY
+        generateValue: true
+      - key: DJANGO_DEBUG
+        value: "0"
+      - key: DJANGO_SECURE_SSL_REDIRECT
+        value: "1"
+      # The database is Neon, configured in Render's Environment page.
+      # `sync: false` prevents a database URL from being committed to Git.
+      - key: DATABASE_URL
+        sync: false

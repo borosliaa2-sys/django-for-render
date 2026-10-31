@@ -1,115 +1,146 @@
-# عطارباشی — نسخهٔ آمادهٔ Railway
+# عطارباشی — نسخهٔ آمادهٔ Render + Neon
 
-این نسخه برای استقرار Django روی **Railway + PostgreSQL** آماده شده است. کاتالوگ بهینه‌شدهٔ عطاری، تصاویر محصول و تنظیمات production در همین مخزن قرار دارند.
+این نسخه برای استقرار Django روی **Render Web Service** و اتصال به دیتابیس **Neon PostgreSQL** آماده شده است. اتصال Neon با متغیر استاندارد `DATABASE_URL` انجام می‌شود.
 
-## محتوا و وضعیت کاتالوگ
+## وضعیت کاتالوگ داخل پروژه
 
-- **۳۷۷ محصول**، **۱۶ دسته‌بندی** و **۴۳ واریانت قیمت/وزن قبلی**
+- **۳۷۷ محصول**، **۱۶ دسته‌بندی** و **۴۳ واریانت قبلی**
 - **۴ مقاله** از دیتابیس اولیه
 - ۳۵۴ تصویر ارسالی به WebP مربع ۱۲۰۰×۱۲۰۰ تبدیل شده‌اند.
-- همهٔ محصولات توضیح کوتاه و کامل دارند.
-- ۳۳۹ کالای جدیدی که قیمت و موجودی‌شان در منیفست نبود، بدون قیمت/واریانت وارد شده‌اند؛ پس پیش از فروش باید قیمت و موجودی واقعی‌شان در پنل ادمین ثبت شود.
-- جزئیات ورودی کاتالوگ و تشابه‌ها در `reports/catalog-import-report-fa.md` است.
+- برای همهٔ محصولات توضیح کوتاه و کامل ثبت شده است.
+- ۳۳۹ کالای جدیدی که در منیفست قیمت و موجودی نداشتند، باید پیش از فروش در پنل ادمین قیمت/موجودی واقعی بگیرند.
+- گزارش ورود کاتالوگ و شباهت کالاها در `reports/catalog-import-report-fa.md` است.
 
-## فایل‌های Railway
+## فایل‌های مخصوص Render
 
 | فایل | کاربرد |
 |---|---|
-| `railway.toml` | دستور build، start و health check Railway |
-| `Procfile` | دستور سازگار با محیط‌های Procfile |
-| `.python-version` | Python 3.12.8 برای Railway/Nixpacks |
-| `requirements.txt` | Django، Gunicorn، WhiteNoise، Postgres driver و وابستگی‌ها |
-| `shop/fixtures/catalog.json` | کاتالوگ اولیه برای یک دیتابیس PostgreSQL خالی |
-| `shop/management/commands/ensure_catalog.py` | بارگذاری خودکار fixture فقط وقتی هیچ محصولی وجود ندارد |
+| `render.yaml` | تعریف اختیاری Render Blueprint برای Web Service |
+| `build.sh` | نصب وابستگی‌ها، `collectstatic`، Migration و Seed اولیه |
+| `requirements.txt` | Django، Gunicorn، WhiteNoise، PostgreSQL driver و وابستگی‌ها |
+| `shop/fixtures/catalog.json` | کاتالوگ اولیه برای Neon خالی |
+| `shop/management/commands/ensure_catalog.py` | Fixture را فقط زمانی وارد می‌کند که هیچ محصولی در دیتابیس نیست |
 
-در اولین بالا آمدن سرویس، Railway این ترتیب را اجرا می‌کند: `migrate` → `ensure_catalog` → `gunicorn`.
+در اولین Deploy روی دیتابیس خالی، `build.sh` این ترتیب را اجرا می‌کند:
 
-## راه‌اندازی روی Railway
+```text
+pip install → collectstatic → migrate → ensure_catalog
+```
 
-### ۱. آپلود در GitHub
+در Deployهای بعدی، اگر در Neon محصولی وجود داشته باشد، کاتالوگ دوباره‌نویسی نمی‌شود.
 
-ZIP را از حالت فشرده خارج کنید و محتوای پوشه را در repository خود قرار دهید. سپس Commit و Push کنید. فایل‌های زیر نباید Commit شوند:
+---
+
+## روش توصیه‌شده: جایگزینی فایل‌ها در GitHub
+
+### با Git / GitHub Desktop
+
+1. از repository فعلی یک Clone یا Backup بگیرید.
+2. ZIP را Extract کنید.
+3. **محتویات** پوشهٔ `attarbashi-render-neon-ready` را، نه خود پوشه را، روی ریشهٔ repository کپی کنید و فایل‌ها را Overwrite کنید.
+4. پوشهٔ مخفی `.git` repository خود را حذف نکنید.
+5. در ترمینال داخل repository اجرا کنید:
+
+```bash
+git status
+git add -A
+git commit -m "Configure Django for Render and Neon"
+git push origin main
+```
+
+اگر با Linux/macOS کار می‌کنید، پس از Extract می‌توانید از این الگو استفاده کنید:
+
+```bash
+rsync -av --delete --exclude='.git' /path/to/attarbashi-render-neon-ready/ /path/to/your-repository/
+```
+
+این کار فایل‌های Railway قبلی مانند `railway.toml` و `Procfile` را نیز حذف می‌کند. Render آن فایل‌ها را استفاده نمی‌کند؛ باقی ماندنشان هم مانع Deploy نیست، اما بهتر است پاک شوند.
+
+### با رابط وب GitHub
+
+می‌توانید فایل‌های ZIP را Extract کنید و تمام محتویات پوشهٔ نهایی را با **Add file → Upload files** آپلود کنید. برای حجم تصاویر کاتالوگ، روش GitHub Desktop یا `git push` مطمئن‌تر است. فایل‌های زیر را آپلود نکنید:
 
 - `.env`
 - `db.sqlite3`
 - `staticfiles/`
 
-`.gitignore` برای این موارد آماده است؛ اما `media/products/catalog/` عمداً باید Commit شود، چون تصاویر کاتالوگ سایت هستند.
+تصاویر `media/products/catalog/` باید در repository باشند؛ `.gitignore` جدید این مسیر را نادیده نمی‌گیرد.
 
-### ۲. ساخت سرویس و Postgres
+---
 
-1. در Railway یک **New Project → Deploy from GitHub Repo** بسازید و repository را انتخاب کنید.
-2. در همان Project یک **PostgreSQL** اضافه کنید.
-3. در سرویس Django، بخش **Variables**، متغیر `DATABASE_URL` را به متغیر Postgres وصل کنید:
-   ```text
-   DATABASE_URL=${{Postgres.DATABASE_URL}}
-   ```
-   اگر Railway هنگام اتصال خودکار آن را ایجاد کرده، فقط از درست بودن اتصال مطمئن شوید.
-4. در Settings سرویس، یک Public Domain بسازید. پس از آن Railway مقدار `RAILWAY_PUBLIC_DOMAIN` را فراهم می‌کند.
+## تنظیم Render برای سرویس فعلی شما
 
-### ۳. متغیرهای ضروری Railway
-
-این متغیرها را در سرویس Django ثبت کنید:
+چون شما از قبل یک Render Web Service دارید، پس از Push جدید در داشبورد Render مسیر **Service → Settings** را باز کنید و این مقادیر را ثبت کنید:
 
 ```text
-DJANGO_SECRET_KEY=<یک کلید تصادفی طولانی و محرمانه>
+Runtime:       Python
+Build Command: bash build.sh
+Start Command: gunicorn config.wsgi:application --bind 0.0.0.0:$PORT --workers ${WEB_CONCURRENCY:-2} --timeout 120 --access-logfile - --error-logfile -
+Health Check:  /
+```
+
+سپس **Manual Deploy → Deploy latest commit** را بزنید یا Auto Deploy را فعال کنید.
+
+> اگر به‌جای سرویس فعلی، یک سرویس جدید از گزینهٔ **New → Blueprint** بسازید، Render فایل `render.yaml` را می‌خواند و این تنظیمات را خودکار اعمال می‌کند.
+
+---
+
+## متغیرهای محیطی Render
+
+شما گفته‌اید `DATABASE_URL` نئون را در Render تنظیم کرده‌اید؛ آن را نگه دارید. رشتهٔ Neon معمولاً باید `sslmode=require` داشته باشد.
+
+در **Environment** سرویس Render این موارد را بررسی یا اضافه کنید:
+
+```text
+DATABASE_URL=<Neon connection string>
+DJANGO_SECRET_KEY=<کلید تصادفی بلند و محرمانه>
 DJANGO_DEBUG=0
-DJANGO_ALLOWED_HOSTS=${{RAILWAY_PUBLIC_DOMAIN}}
-DJANGO_CSRF_TRUSTED_ORIGINS=https://${{RAILWAY_PUBLIC_DOMAIN}}
 DJANGO_SECURE_SSL_REDIRECT=1
 ```
 
-برای ساخت یک کلید امن روی سیستم خود:
+برای ساخت کلید امن روی سیستم خود:
 
 ```bash
 python -c "from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())"
 ```
 
-> بدون `DJANGO_SECRET_KEY`، build یا startup در حالت production عمداً متوقف می‌شود تا سایت ناامن Deploy نشود.
+### دامنهٔ پیش‌فرض Render
 
-برای دامنهٔ اختصاصی، پس از اتصال دامنه این دو مقدار را با دامنهٔ واقعی جایگزین یا کامل کنید:
+تا زمانی که از دامنهٔ خود Render مانند `your-service.onrender.com` استفاده می‌کنید، لازم نیست `DJANGO_ALLOWED_HOSTS` یا `DJANGO_CSRF_TRUSTED_ORIGINS` را دستی تنظیم کنید. کد، متغیر خودکار `RENDER_EXTERNAL_HOSTNAME` را تشخیص می‌دهد و دامنه را به هر دو فهرست اضافه می‌کند.
+
+### برای دامنهٔ اختصاصی در آینده
+
+وقتی دامنهٔ شخصی اضافه کردید، هر دو مقدار را اضافه کنید:
 
 ```text
 DJANGO_ALLOWED_HOSTS=shop.example.com,www.shop.example.com
 DJANGO_CSRF_TRUSTED_ORIGINS=https://shop.example.com,https://www.shop.example.com
 ```
 
-در صورت استفاده از زرین‌پال، این‌ها را هم در Variables ثبت کنید و هرگز در GitHub قرار ندهید:
+در صورت استفاده از زرین‌پال، آن‌ها را نیز فقط در Environment قرار دهید:
 
 ```text
 ZARINPAL_MERCHANT_ID=<merchant-id واقعی>
 ZARINPAL_SANDBOX=False
 ```
 
-### ۴. Deploy
+---
 
-Railway به صورت خودکار موارد زیر را از `railway.toml` اجرا می‌کند:
+## ساخت مدیر سایت
 
-```text
-Build:  python manage.py collectstatic --noinput
-Start:  migrate → ensure_catalog → gunicorn
-```
-
-Health check مسیر `/` است. در اولین Deploy به PostgreSQL خالی، fixture کاتالوگ بارگذاری می‌شود. در Deployهای بعدی، چون محصولات از قبل وجود دارند، داده‌ها دوباره‌نویسی نمی‌شوند.
-
-### ۵. ساخت مدیر سایت
-
-پس از Deploy، از Railway CLI یا Shell سرویس اجرا کنید:
+پس از Deploy، از Shell سرویس Render یا از Render CLI اجرا کنید:
 
 ```bash
 python manage.py createsuperuser
 ```
 
-پنل مدیریت در مسیر `/admin/` قرار دارد.
+پنل مدیریت در مسیر `/admin/` است.
 
-## مدیا و ماندگاری داده
+## تصاویر و فایل‌های آینده
 
-تصاویر فعلیِ کاتالوگ جزو repository هستند و از مسیر `/media/products/catalog/` توسط WhiteNoise سرو می‌شوند؛ بنابراین برای تصاویر موجود نیازی به Volume ندارید.
+تصاویر فعلی کاتالوگ همراه repository هستند و از مسیر `/media/products/catalog/` سرو می‌شوند؛ برای آن‌ها نیاز به Volume ندارید.
 
-اما فایل‌هایی که بعداً از پنل ادمین Upload شوند، روی فایل‌سیستم موقت Railway باقی می‌مانند و با redeploy ممکن است از بین بروند. برای آپلودهای آینده یکی از این گزینه‌ها را اضافه کنید:
-
-- Railway Volume متصل به مسیر `media/`
-- Object Storage سازگار با S3 / Cloudinary
+اما آپلود جدید از پنل ادمین روی دیسک موقت Render ذخیره می‌شود و ممکن است با Deploy بعدی از بین برود. برای فایل‌های جدید در آینده، Render Disk یا فضای S3/Cloudinary اضافه کنید.
 
 ## اجرای محلی
 
@@ -123,5 +154,3 @@ python manage.py migrate
 python manage.py ensure_catalog
 python manage.py runserver
 ```
-
-اگر از SQLite محلی خالی استفاده کنید، `ensure_catalog` کاتالوگ را فقط یک‌بار بارگذاری می‌کند.

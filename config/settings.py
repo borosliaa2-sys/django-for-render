@@ -1,7 +1,7 @@
 """Production-ready Django settings for Attarbashi.
 
-Local development uses SQLite when DATABASE_URL is unset.  Railway uses its
-PostgreSQL DATABASE_URL automatically once the service variable is connected.
+Local development uses SQLite when DATABASE_URL is unset. Render can connect
+to Neon through the same standard PostgreSQL DATABASE_URL environment variable.
 """
 from __future__ import annotations
 
@@ -36,15 +36,21 @@ if not DEBUG and SECRET_KEY == _DEFAULT_SECRET_KEY:
         "Add it in Railway Variables before deploying."
     )
 
-# Railway makes RAILWAY_PUBLIC_DOMAIN available after a public domain is added.
+# Render sets RENDER_EXTERNAL_HOSTNAME to the service's onrender.com host.
+# RAILWAY_PUBLIC_DOMAIN is retained as a harmless fallback for local migration
+# from the previous deployment bundle.
+render_external_hostname = os.environ.get("RENDER_EXTERNAL_HOSTNAME", "").strip()
 railway_public_domain = os.environ.get("RAILWAY_PUBLIC_DOMAIN", "").strip()
+deployment_domains = [domain for domain in (render_external_hostname, railway_public_domain) if domain]
+
 configured_hosts = csv_env("DJANGO_ALLOWED_HOSTS")
 if DEBUG:
     ALLOWED_HOSTS = ["*"]
 else:
     ALLOWED_HOSTS = configured_hosts or ["localhost", "127.0.0.1", "testserver"]
-    if railway_public_domain and railway_public_domain not in ALLOWED_HOSTS:
-        ALLOWED_HOSTS.append(railway_public_domain)
+    for domain in deployment_domains:
+        if domain not in ALLOWED_HOSTS:
+            ALLOWED_HOSTS.append(domain)
 
 configured_csrf_origins = csv_env("DJANGO_CSRF_TRUSTED_ORIGINS")
 if configured_csrf_origins:
@@ -56,8 +62,10 @@ else:
         "http://127.0.0.1",
         "http://localhost",
     ]
-    if railway_public_domain:
-        CSRF_TRUSTED_ORIGINS.append(f"https://{railway_public_domain}")
+    for domain in deployment_domains:
+        origin = f"https://{domain}"
+        if origin not in CSRF_TRUSTED_ORIGINS:
+            CSRF_TRUSTED_ORIGINS.append(origin)
 
 
 # ----- Applications -----
