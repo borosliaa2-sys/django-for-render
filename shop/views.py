@@ -32,6 +32,36 @@ class HomeView(TemplateView):
         else:
             popular = popular[:6]
         ctx["popular_products"] = popular
+
+        # چهار کاروسل دسته‌ایِ صفحهٔ خانه؛ هرکدام حداکثر ده محصول نخست
+        # دسته را بر اساس ترتیب ورود/نمایش نشان می‌دهد.
+        carousel_categories = (
+            ("ادویه و چاشنی", "spices"),
+            ("نوشیدنی و عرقیات", "drinks"),
+            ("گیاهان دارویی", "herbs"),
+            ("سبزیجات خشک", "vegetables"),
+        )
+        category_carousels = []
+        for index, (category_name, theme) in enumerate(carousel_categories, start=1):
+            category = Category.objects.filter(name=category_name, is_active=True).first()
+            if not category:
+                continue
+            products = list(
+                Product.objects.filter(category=category, is_active=True)
+                .select_related("category")
+                .prefetch_related("variants", "reviews")
+                .order_by("sort_order", "name")[:10]
+            )
+            if products:
+                category_carousels.append(
+                    {
+                        "category": category,
+                        "products": products,
+                        "carousel_id": f"home-category-slider-{index}",
+                        "theme": theme,
+                    }
+                )
+        ctx["category_carousels"] = category_carousels
         return ctx
 
 

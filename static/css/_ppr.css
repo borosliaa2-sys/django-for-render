@@ -21,6 +21,242 @@
     position: relative;
 }
 
+/* ========================================================
+   کاروسل‌های دسته‌بندی صفحهٔ خانه — نسخهٔ مینیمال
+   سفید، بدون گرادینت و بدون رنگ زمینهٔ دسته‌ای؛ عمداً سبک‌تر از
+   «محصولات پرفروش و پیشنهادی» طراحی شده است.
+   ======================================================== */
+.category-ppr {
+    background: #fff;
+    margin: 32px auto;
+    max-width: 1180px;
+    width: 94%;
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    box-shadow: none;
+    box-sizing: border-box;
+    position: relative;
+    overflow: visible;
+}
+
+.category-ppr::before {
+    display: none;
+}
+
+.category-ppr .ppr-top-header {
+    position: relative;
+    z-index: 1;
+    padding: 0 4px 12px;
+    margin: 0 0 14px;
+    border: 0;
+    border-bottom: 1px solid #e9e9e9;
+    border-radius: 0;
+    background: transparent;
+}
+
+.category-carousel-kicker {
+    display: none;
+}
+
+.category-ppr .ppr-title-link h2 {
+    color: #252525 !important;
+    font-size: 1.08rem;
+    font-weight: 800;
+    margin: 0 0 2px;
+}
+
+.category-ppr .ppr-title-link:hover h2 {
+    color: #111 !important;
+}
+
+.category-ppr .section-header-title p {
+    color: #858585;
+    font-size: 0.72rem;
+}
+
+.category-ppr .ppr-header-more-btn {
+    background: transparent;
+    color: #555;
+    border: 0;
+    border-bottom: 1px solid #aaa;
+    border-radius: 0;
+    padding: 3px 0;
+    font-size: 0.76rem;
+    font-weight: 700;
+    box-shadow: none;
+}
+
+.category-ppr .ppr-header-more-btn:hover {
+    background: transparent;
+    color: #111;
+    border-color: #111;
+    box-shadow: none;
+}
+
+.category-ppr .ppr-carousel-wrapper,
+.category-ppr .ppr-pro-container {
+    position: relative;
+    z-index: 1;
+}
+
+.category-ppr .ppr-pro-container {
+    gap: 9px;
+    padding: 2px 2px 8px;
+}
+
+.category-ppr .pro-box {
+    flex: 0 0 190px !important;
+    width: 190px !important;
+    min-width: 190px !important;
+    max-width: 190px !important;
+    border-radius: 10px;
+    border: 1px solid #ebebeb;
+    box-shadow: none;
+    background: #fff;
+}
+
+.category-ppr .pro-box:hover {
+    transform: none;
+    border-color: #cfcfcf;
+    box-shadow: none;
+}
+
+.category-ppr .pro-box-img {
+    height: 126px;
+    padding: 10px;
+    background: #fff;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.category-ppr .pro-box-img img {
+    max-height: 104px;
+}
+
+.category-ppr .quick-view-btn {
+    display: none;
+}
+
+.category-ppr .fav-btn {
+    top: 4px;
+    left: 4px;
+    width: 25px;
+    height: 25px;
+    background: rgba(255,255,255,0.75);
+    border: 0;
+    box-shadow: none;
+    font-size: 0.85rem;
+}
+
+.category-ppr .pro-box-text {
+    padding: 9px 10px 10px;
+}
+
+.category-ppr .pro-title-wrap {
+    margin-bottom: 2px;
+}
+
+.category-ppr .pro-text-title {
+    font-size: 0.79rem;
+    font-weight: 700;
+}
+
+.category-ppr .pro-tag,
+.category-ppr .pro-rating {
+    display: none;
+}
+
+.category-ppr .price-continer {
+    margin: 6px 0 7px;
+}
+
+.category-ppr .price {
+    font-size: 0.84rem;
+    font-weight: 800;
+}
+
+.category-ppr .old-price {
+    display: none;
+}
+
+.category-ppr .pro-cart-btn {
+    background: #2f2f2f;
+    border-radius: 7px;
+    padding: 6px 8px;
+    font-size: 0.72rem;
+    box-shadow: none;
+}
+
+.category-ppr .pro-cart-btn:hover {
+    background: #111;
+    transform: none;
+    box-shadow: none;
+}
+
+.category-ppr .pro-box.pro-box-more {
+    flex-basis: 170px !important;
+    width: 170px !important;
+    min-width: 170px !important;
+    max-width: 170px !important;
+    background: #fff !important;
+    border: 1px dashed #cfcfcf !important;
+    border-radius: 10px !important;
+    box-shadow: none;
+}
+
+.category-ppr .pro-box.pro-box-more:hover {
+    background: #fafafa !important;
+    border-color: #888 !important;
+    transform: none !important;
+    box-shadow: none !important;
+}
+
+.category-ppr .more-card-content {
+    gap: 5px;
+    padding: 16px 12px;
+}
+
+.category-ppr .more-icon-circle {
+    width: 38px;
+    height: 38px;
+    background: #fff;
+    color: #333;
+    border: 1px solid #d7d7d7;
+    box-shadow: none;
+    font-size: 1.15rem;
+}
+
+.category-ppr .more-card-content strong {
+    font-size: 0.86rem;
+    font-weight: 700;
+}
+
+.category-ppr .more-card-content span {
+    font-size: 0.7rem;
+}
+
+.category-ppr .more-badge {
+    display: none;
+}
+
+.category-ppr .btn-carousel-side {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    color: #444;
+    border-color: #dedede;
+    background: #fff;
+    opacity: 1;
+    box-shadow: 0 2px 7px rgba(0,0,0,0.08);
+}
+
+.category-ppr .btn-carousel-side:hover {
+    color: #111;
+    background: #fff;
+    border-color: #999;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.12);
+}
+
 /* هدر کاروسل */
 .ppr-top-header {
     display: flex;
@@ -488,6 +724,47 @@
         border-left: none;
         border-right: none;
     }
+    .category-ppr {
+        width: calc(100% - 20px);
+        margin: 18px auto;
+        padding: 10px;
+        border-radius: 18px;
+    }
+    .category-ppr .ppr-top-header {
+        padding: 11px 12px;
+        border-radius: 13px;
+        margin-bottom: 10px;
+    }
+    .category-ppr .ppr-title-link h2 {
+        font-size: 1.08rem;
+    }
+    .category-ppr .section-header-title p {
+        font-size: 0.72rem;
+    }
+    .category-ppr .ppr-pro-container {
+        gap: 9px;
+        padding-bottom: 7px;
+    }
+    .category-ppr .pro-box {
+        flex-basis: 170px !important;
+        width: 170px !important;
+        min-width: 170px !important;
+        max-width: 170px !important;
+        border-radius: 15px;
+    }
+    .category-ppr .pro-box-img {
+        height: 122px;
+    }
+    .category-ppr .pro-box-img img {
+        max-height: 98px;
+    }
+    .category-ppr .pro-box.pro-box-more {
+        flex-basis: 170px !important;
+        width: 170px !important;
+        min-width: 170px !important;
+        max-width: 170px !important;
+        border-radius: 15px !important;
+    }
     .ppr-top-header {
         padding: 0 4px 8px;
     }
@@ -504,6 +781,7 @@
         gap: 6px;
         padding: 2px 2px 6px;
     }
+    /* کاروسل محصولات پیشنهادی با ابعاد اصلی و کارت‌های کامل خود باقی می‌ماند. */
     .pro-box {
         flex: 0 0 158px !important;
         width: 158px !important;
@@ -556,5 +834,91 @@
     }
     .btn-carousel-side {
         display: none; /* در موبایل‌های کوچک اسکرول لمسی مستقیم است */
+    }
+    .category-ppr {
+        width: calc(100% - 16px);
+        padding: 8px;
+        border-radius: 16px;
+    }
+    .category-ppr .ppr-top-header {
+        padding: 10px;
+    }
+    .category-ppr .pro-box,
+    .category-ppr .pro-box.pro-box-more {
+        flex-basis: 154px !important;
+        width: 154px !important;
+        min-width: 154px !important;
+        max-width: 154px !important;
+    }
+    .category-ppr .pro-box-img {
+        height: 112px;
+    }
+    .category-ppr .pro-box-img img {
+        max-height: 88px;
+    }
+    .category-ppr .pro-text-title {
+        font-size: 0.78rem;
+    }
+    .category-ppr .category-carousel-kicker {
+        font-size: 0.65rem;
+    }
+}
+
+/* مینیمال‌سازی کاروسل‌های دسته‌ای در موبایل */
+@media (max-width: 768px) {
+    .category-ppr {
+        width: calc(100% - 24px);
+        margin: 24px auto;
+        padding: 0;
+        border: 0;
+        border-radius: 0;
+    }
+    .category-ppr .ppr-top-header {
+        padding: 0 2px 10px;
+        margin-bottom: 10px;
+        background: transparent;
+        border-radius: 0;
+    }
+    .category-ppr .ppr-title-link h2 {
+        font-size: 0.94rem;
+    }
+    .category-ppr .section-header-title p {
+        font-size: 0.67rem;
+    }
+    .category-ppr .pro-box,
+    .category-ppr .pro-box.pro-box-more {
+        flex-basis: 142px !important;
+        width: 142px !important;
+        min-width: 142px !important;
+        max-width: 142px !important;
+        border-radius: 9px !important;
+    }
+    .category-ppr .pro-box-img {
+        height: 100px;
+    }
+    .category-ppr .pro-box-img img {
+        max-height: 82px;
+    }
+}
+
+@media (max-width: 480px) {
+    .category-ppr {
+        width: calc(100% - 16px);
+    }
+    .category-ppr .pro-box,
+    .category-ppr .pro-box.pro-box-more {
+        flex-basis: 130px !important;
+        width: 130px !important;
+        min-width: 130px !important;
+        max-width: 130px !important;
+    }
+    .category-ppr .pro-box-img {
+        height: 94px;
+    }
+    .category-ppr .pro-box-img img {
+        max-height: 76px;
+    }
+    .category-ppr .pro-text-title {
+        font-size: 0.75rem;
     }
 }

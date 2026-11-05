@@ -138,6 +138,11 @@
     </div>
 </section>
 
+<!-- CATEGORY CAROUSELS: اولین ۱۰ محصول هر دسته -->
+{% for carousel in category_carousels %}
+  {% include 'includes/category_product_carousel.html' with carousel=carousel %}
+{% endfor %}
+
 <!-- QUICK PREVIEW MODAL -->
 <div id="quickPreviewModal" class="quick-modal hidden" aria-hidden="true">
   <div class="quick-modal-bg" onclick="closeQuickPreview()"></div>

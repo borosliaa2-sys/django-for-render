@@ -24,14 +24,7 @@
         <div class="gallery-main">
           <img src="{{ product.image_url }}" alt="{{ product.name }}" id="mainImage">
         </div>
-        <div class="gallery-thumbs" id="thumbs">
-          <img src="{{ product.image_url }}" alt="{{ product.name }}" class="thumb-item active" data-main="{{ product.image_url }}">
-          {% for v in variants %}
-            {% if forloop.counter <= 4 %}
-              <img src="{{ product.image_url }}" alt="{{ v.display_weight }}" class="thumb-item" data-main="{{ product.image_url }}">
-            {% endif %}
-          {% endfor %}
-        </div>
+        {# هر محصول فعلاً یک تصویر اصلی دارد؛ نمایش تکراری تصویر برای واریانت‌ها حذف شد. #}
       </div>
 
       <!-- PRODUCT INFO -->

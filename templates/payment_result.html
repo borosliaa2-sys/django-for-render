@@ -58,21 +58,21 @@
           <tbody>
             {% for item in order.items.all %}
             <tr>
-              <td><strong>{{ item.product_name }}</strong></td>
-              <td>{{ item.variant_weight|default:"استاندارد" }}</td>
-              <td>{{ item.quantity }}</td>
-              <td>{{ item.price|intcomma }} تومان</td>
-              <td>{{ item.total_price|intcomma }} تومان</td>
+              <td data-label="محصول"><strong>{{ item.product_name }}</strong></td>
+              <td data-label="وزن / مشخصات">{{ item.variant_weight|default:"استاندارد" }}</td>
+              <td data-label="تعداد">{{ item.quantity }}</td>
+              <td data-label="قیمت واحد">{{ item.price|intcomma }} تومان</td>
+              <td data-label="جمع کل">{{ item.total_price|intcomma }} تومان</td>
             </tr>
             {% endfor %}
           </tbody>
           <tfoot>
             <tr>
-              <td colspan="4" style="text-align:left; font-weight:700;">هزینه ارسال:</td>
+              <td colspan="4" class="invoice-summary-label" style="text-align:left; font-weight:700;">هزینه ارسال:</td>
               <td>{{ order.shipping_cost|intcomma }} تومان</td>
             </tr>
             <tr class="total-row">
-              <td colspan="4" style="text-align:left; font-weight:800;">مبلغ کل فاکتور:</td>
+              <td colspan="4" class="invoice-summary-label" style="text-align:left; font-weight:800;">مبلغ کل فاکتور:</td>
               <td style="color:#dc2626; font-weight:900;">{{ order.grand_total|intcomma }} تومان</td>
             </tr>
           </tfoot>
@@ -147,21 +147,21 @@
           <tbody>
             {% for item in order.items.all %}
             <tr>
-              <td><strong>{{ item.product_name }}</strong></td>
-              <td>{{ item.variant_weight|default:"استاندارد" }}</td>
-              <td>{{ item.quantity }}</td>
-              <td>{{ item.price|intcomma }} تومان</td>
-              <td>{{ item.total_price|intcomma }} تومان</td>
+              <td data-label="محصول"><strong>{{ item.product_name }}</strong></td>
+              <td data-label="وزن / مشخصات">{{ item.variant_weight|default:"استاندارد" }}</td>
+              <td data-label="تعداد">{{ item.quantity }}</td>
+              <td data-label="قیمت واحد">{{ item.price|intcomma }} تومان</td>
+              <td data-label="جمع کل">{{ item.total_price|intcomma }} تومان</td>
             </tr>
             {% endfor %}
           </tbody>
           <tfoot>
             <tr>
-              <td colspan="4" style="text-align:left; font-weight:700;">هزینه ارسال پیشتاز:</td>
+              <td colspan="4" class="invoice-summary-label" style="text-align:left; font-weight:700;">هزینه ارسال پیشتاز:</td>
               <td>{{ order.shipping_cost|intcomma }} تومان</td>
             </tr>
             <tr class="total-row">
-              <td colspan="4" style="text-align:left; font-weight:800;">مبلغ کل پرداخت شده:</td>
+              <td colspan="4" class="invoice-summary-label" style="text-align:left; font-weight:800;">مبلغ کل پرداخت شده:</td>
               <td style="color:var(--secondary-color); font-weight:900;">{{ order.grand_total|intcomma }} تومان</td>
             </tr>
           </tfoot>
@@ -358,6 +358,123 @@
   display: inline-flex;
   align-items: center;
   gap: 6px;
+}
+
+
+/* Mobile invoice: rows become readable cards instead of a five-column table. */
+@media (max-width: 600px) {
+  .payment-result-wrap {
+    padding: 20px 8px 42px;
+  }
+  .payment-card {
+    padding: 22px 12px;
+    border-radius: 14px;
+    overflow: hidden;
+  }
+  .result-status-header h1 {
+    font-size: 1.12rem;
+    line-height: 1.6;
+  }
+  .status-subtitle {
+    font-size: 0.82rem;
+  }
+  .receipt-summary-box {
+    grid-template-columns: 1fr;
+    gap: 9px;
+    padding: 13px;
+  }
+  .delivery-info-box {
+    padding: 12px;
+  }
+  .delivery-info-box p {
+    font-size: 0.8rem;
+    overflow-wrap: anywhere;
+  }
+  .invoice-items-table {
+    margin: 0 -2px 20px;
+    border: 1px solid #faece1;
+    border-radius: 12px;
+    overflow: hidden;
+  }
+  .invoice-items-table h3 {
+    padding: 11px 12px 8px;
+    margin: 0;
+    font-size: 0.9rem;
+  }
+  .table-invoice,
+  .table-invoice tbody,
+  .table-invoice tfoot {
+    display: block;
+    width: 100%;
+  }
+  .table-invoice thead {
+    display: none;
+  }
+  .table-invoice tbody tr {
+    display: block;
+    padding: 9px 12px;
+    border-top: 1px solid #f3ebe5;
+  }
+  .table-invoice tbody td {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 4px 0;
+    border: 0;
+    text-align: left;
+    font-size: 0.8rem;
+    overflow-wrap: anywhere;
+  }
+  .table-invoice tbody td::before {
+    content: attr(data-label);
+    flex: 0 0 42%;
+    color: #8c7b6c;
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-align: right;
+  }
+  .table-invoice tbody td strong {
+    color: #2b1f15;
+    text-align: left;
+  }
+  .table-invoice tfoot {
+    border-top: 1px solid #f3ebe5;
+  }
+  .table-invoice tfoot tr {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 10px 12px;
+    background: #fdfaf7;
+    border-bottom: 1px solid #f3ebe5;
+  }
+  .table-invoice tfoot td {
+    padding: 0;
+    border: 0;
+    text-align: left !important;
+    font-size: 0.8rem;
+  }
+  .table-invoice tfoot .invoice-summary-label {
+    flex: 1;
+    text-align: right !important;
+    color: #6b5a4a;
+  }
+  .table-invoice .total-row {
+    background: #fff8f4;
+  }
+  .table-invoice .total-row td {
+    font-size: 0.86rem;
+  }
+  .result-actions {
+    margin-top: 18px;
+  }
+  .result-actions a,
+  .result-actions button {
+    width: 100%;
+    justify-content: center;
+  }
 }
 
 @media print {

@@ -9,9 +9,9 @@
     <link rel="stylesheet" href="{% static 'css/css.css' %}">
     <link rel="stylesheet" href="{% static 'css/header.css' %}">
     <link rel="stylesheet" href="{% static 'css/header-fix.css' %}">
-    <link rel="stylesheet" href="{% static 'css/_main.css' %}">
+    <link rel="stylesheet" href="{% static 'css/_main.css' %}?v=20261105-featured-original">
     <link rel="stylesheet" href="{% static 'css/_category.css' %}">
-    <link rel="stylesheet" href="{% static 'css/_ppr.css' %}">
+    <link rel="stylesheet" href="{% static 'css/_ppr.css' %}?v=20261105-featured-original">
     <link href="https://cdn.jsdelivr.net/npm/remixicon@4.9.0/fonts/remixicon.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
     {% block extra_css %}{% endblock extra_css %}
@@ -120,7 +120,7 @@
                         <a href="#" title="اینستاگرام"><i class="ri-instagram-line"></i></a>
                         <a href="#" title="تلگرام"><i class="ri-telegram-line"></i></a>
                         <a href="#" title="واتساپ"><i class="ri-whatsapp-line"></i></a>
-                        <a href="#" title="تماس"><i class="ri-phone-line"></i></a>
+                        <a href="tel:+989960555789" title="تماس با پشتیبانی"><i class="ri-phone-line"></i></a>
                     </div>
                 </div>
 
@@ -150,11 +150,11 @@
                     <h4>ارتباط با ما</h4>
                     <div class="contact-item">
                         <i class="ri-map-pin-line"></i>
-                        <span>تهران، بازار سنتی، راسته عطاران، پلاک ۱۲</span>
+                        <span>اصفهان، نجف آباد، امیرآباد، خیابان طالقانی، کوچه خزائلی، پلاک 16</span>
                     </div>
                     <div class="contact-item">
                         <i class="ri-phone-line"></i>
-                        <span dir="ltr">021 - 8877 6655</span>
+                        <a href="tel:+989960555789" dir="ltr">09960555789</a>
                     </div>
                     <div class="contact-item">
                         <i class="ri-time-line"></i>
@@ -162,7 +162,7 @@
                     </div>
                     <div class="contact-item">
                         <i class="ri-mail-line"></i>
-                        <span>info@attarbashi.ir</span>
+                        <a href="mailto:info@attarbashiesf.ir" dir="ltr">info@attarbashiesf.ir</a>
                     </div>
                 </div>
             </div>
@@ -320,6 +320,12 @@
         color: var(--secondary-color);
         font-size: 1.1rem;
         flex-shrink: 0;
+    }
+    .footer-contact .contact-item span,
+    .footer-contact .contact-item a {
+        color: #b5a89b;
+        text-decoration: none;
+        overflow-wrap: anywhere;
     }
 
     /* FEATURES BAR */

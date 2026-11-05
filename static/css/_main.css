@@ -97,7 +97,7 @@
     align-items: center;
     justify-content: center;
     gap: 8px;
-    border-radius: 50px;
+    border-radius: 25px;
     font-weight: 700;
     font-size: 0.95rem;
     text-decoration: none;
@@ -271,8 +271,17 @@
     #main{
         padding: calc(var(--site-header-height, 58px) + 12px) 0 20px;
     }
+    /* در موبایل هیرو جمع‌وجور می‌شود: تصویر و تقویم نمایش داده نمی‌شوند. */
+    .main-content-img,
+    #shamsi-date{
+        display: none;
+    }
+    .main-content-text strong{
+        font-size: 0.65rem;
+        font-weight: bold;
+    }
     .main-content-text h1{
-        font-size: 1.35rem;
+        font-size: 0.8rem;
         line-height: 1.3;
     }
     .main-content-text p{

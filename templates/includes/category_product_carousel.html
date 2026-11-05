@@ -1,0 +1,86 @@
+{% load l10n shop_tags %}
+<section class="category-ppr category-ppr--{{ carousel.theme }}" aria-labelledby="{{ carousel.carousel_id }}-title">
+    <div class="ppr-top-header">
+        <div class="section-header-title">
+            <span class="category-carousel-kicker"><i class="ri-leaf-line"></i> ویترین دسته‌بندی</span>
+            <a href="{% url 'shop:category' carousel.category.slug %}" class="ppr-title-link" title="مشاهده همه محصولات {{ carousel.category.name }}">
+                <h2 id="{{ carousel.carousel_id }}-title">{{ carousel.category.name }}</h2>
+            </a>
+            <p>۱۰ محصول نخست و منتخب این دسته‌بندی</p>
+        </div>
+        <a href="{% url 'shop:category' carousel.category.slug %}" class="ppr-header-more-btn" title="مشاهده همه محصولات {{ carousel.category.name }}">
+            <span>مشاهده همه</span>
+            <i class="ri-arrow-left-line"></i>
+        </a>
+    </div>
+
+    <div class="ppr-carousel-wrapper">
+        <button type="button" class="btn-carousel-side btn-prev" onclick="slideCarousel('{{ carousel.carousel_id }}', 1)" aria-label="محصول قبلی"><i class="ri-arrow-right-s-line"></i></button>
+        <button type="button" class="btn-carousel-side btn-next" onclick="slideCarousel('{{ carousel.carousel_id }}', -1)" aria-label="محصول بعدی"><i class="ri-arrow-left-s-line"></i></button>
+
+        <div class="ppr-pro-container" id="{{ carousel.carousel_id }}">
+            {% for product in carousel.products %}
+            {% with product.primary_variant as variant %}
+            <div class="pro-box" data-product-id="{{ product.id }}" data-variant-id="{{ variant.id|default:''|unlocalize }}" data-product-name="{{ product.name }}" data-product-price="{% if variant %}{{ variant.price|unlocalize }}{% endif %}" data-product-img="{{ product.image_url }}" data-product-href="{{ product.get_absolute_url }}" style="cursor:pointer;" onclick="location.href=this.dataset.productHref">
+                <div class="pro-box-img">
+                    <img src="{{ product.image_url }}" alt="{{ product.name }}" loading="lazy">
+                    <button type="button" class="quick-view-btn" aria-label="پیش‌نمایش سریع {{ product.name }}" title="مشاهده سریع" onclick="event.stopPropagation(); openQuickPreview(this);"><i class="ri-eye-line"></i></button>
+                    <button type="button" class="fav-btn {% if product.id in wishlist_ids %}active{% endif %}" data-url="{% url 'shop:wishlist_toggle' product.id %}" data-product-id="{{ product.id }}" onclick="event.stopPropagation(); toggleWishlistAjax(event, this);" title="افزودن به علاقه‌مندی"><i class="{% if product.id in wishlist_ids %}ri-heart-3-fill{% else %}ri-heart-3-line{% endif %}"></i></button>
+                </div>
+                <div class="pro-box-text">
+                    <div class="pro-title-wrap">
+                        <span class="pro-text-title" title="{{ product.name }}">{{ product.name }}</span>
+                        {% if not variant or variant.stock == 0 %}
+                            <span class="pro-tag out-tag">ناموجود</span>
+                        {% elif product.best_discount_percent %}
+                            <span class="pro-tag discount-tag">%{{ product.best_discount_percent }} تخفیف</span>
+                        {% elif forloop.counter <= 3 %}
+                            <span class="pro-tag new-tag">جدید</span>
+                        {% endif %}
+                    </div>
+                    <div class="pro-rating">
+                        {% if product.avg_rating %}
+                        <div class="rating-stars">
+                            <span style="color:#f9b74a">{% if product.avg_rating >= 1 %}★{% endif %}{% if product.avg_rating >= 2 %}★{% endif %}{% if product.avg_rating >= 3 %}★{% endif %}{% if product.avg_rating >= 4 %}★{% endif %}{% if product.avg_rating >= 5 %}★{% else %}☆{% endif %}</span>
+                            <span class="rating-count">({{ product.avg_rating }})</span>
+                        </div>
+                        {% else %}
+                        <div class="rating-stars" style="color:#ccc"><span>☆☆☆☆☆</span><span class="rating-count">(–)</span></div>
+                        {% endif %}
+                    </div>
+                    <div class="price-continer">
+                        {% if variant and variant.price %}
+                            <div class="current-prise">
+                                <span class="price">{{ variant.price|format_price }} <small style="font-size:0.75rem; font-weight:700;">تومان</small></span>
+                                {% if variant.compare_price and variant.compare_price > variant.price %}<span class="old-price">{{ variant.compare_price|format_price }} تومان</span>{% endif %}
+                            </div>
+                        {% else %}
+                            <div class="current-prise"><span class="price">تماس بگیرید</span></div>
+                        {% endif %}
+                    </div>
+                    {% if variant and variant.id and variant.stock > 0 %}
+                    <form method="post" action="{% url 'shop:cart_add' variant.id %}" class="cart-add-form" onclick="event.stopPropagation();">
+                        {% csrf_token %}
+                        <input type="hidden" name="qty" value="1">
+                        <input type="hidden" name="next" value="{{ request.get_full_path }}">
+                        <button type="submit" class="pro-cart-btn"><i class="ri-shopping-bag-4-line"></i><span>افزودن به سبد</span></button>
+                    </form>
+                    {% else %}
+                    <button type="button" class="pro-cart-btn" disabled style="background:#e5e7eb; color:#9ca3af; cursor:not-allowed;"><i class="ri-close-circle-line"></i><span>ناموجود</span></button>
+                    {% endif %}
+                </div>
+            </div>
+            {% endwith %}
+            {% endfor %}
+
+            <a href="{% url 'shop:category' carousel.category.slug %}" class="pro-box pro-box-more" title="مشاهده همه محصولات {{ carousel.category.name }}">
+                <div class="more-card-content">
+                    <div class="more-icon-circle"><i class="ri-arrow-left-line"></i></div>
+                    <strong>مشاهده بیشتر</strong>
+                    <span>همه {{ carousel.category.name }}</span>
+                    <span class="more-badge"><i class="ri-grid-fill"></i> آرشیو دسته</span>
+                </div>
+            </a>
+        </div>
+    </div>
+</section>
