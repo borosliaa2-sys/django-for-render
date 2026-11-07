@@ -128,7 +128,7 @@
             {% endwith %}
           </form>
 
-          <button type="button" class="btn-wishlist-detail fav-btn {% if product.id in wishlist_ids %}active{% endif %}" data-url="{% url 'shop:wishlist_toggle' product.id %}" data-product-id="{{ product.id }}" onclick="toggleWishlistAjax(event, this)" title="افزودن به علاقه‌مندی">
+          <button type="button" class="btn-wishlist-detail {% if product.id in wishlist_ids %}active{% endif %}" data-url="{% url 'shop:wishlist_toggle' product.id %}" data-product-id="{{ product.id }}" onclick="toggleWishlistAjax(event, this)" title="افزودن به علاقه‌مندی">
             <i class="{% if product.id in wishlist_ids %}fas fa-heart{% else %}far fa-heart{% endif %}"></i>
             <span>{% if product.id in wishlist_ids %}در علاقه‌مندی‌ها{% else %}علاقه‌مندی{% endif %}</span>
           </button>
@@ -728,6 +728,13 @@
   }
 
   .btn-wishlist-detail {
+    /* This is a normal action button, not the absolute heart icon used by
+       home-page carousel cards. Keeping it out of that selector prevents
+       an invisible positioned element from widening the RTL document. */
+    position: static;
+    inset: auto;
+    width: auto;
+    height: auto;
     display: inline-flex;
     align-items: center;
     gap: 6px;
