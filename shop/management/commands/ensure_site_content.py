@@ -1,8 +1,12 @@
 """Keep deployment-owned icons and starter editorial content available."""
 
+import hashlib
+import json
+
 from django.core.management.base import BaseCommand
 
-from shop.models import Article, Category
+from shop.editorial_content import MANAGED_ARTICLES
+from shop.models import Article, Category, Product
 
 
 CATEGORY_ICONS = {
@@ -24,95 +28,55 @@ CATEGORY_ICONS = {
     "سایر": "categories/category-16.webp",
 }
 
-EXISTING_ARTICLE_IMAGES = {
-    "خواص-دمنوش-آرامش-اعصاب": "images/articles/herbal-tea-calm.webp",
-    "شناخت-طبع-و-مزاج-طب-سنتی": "images/articles/persian-temperament.webp",
-    "خواص-سیر-ترشی-هفت-ساله": "images/articles/aged-garlic-pickle.webp",
-    "فواید-میوه-خشک-و-خشکبار": "images/articles/dried-fruit-nuts.webp",
+# These are fingerprints of the eight supplied articles before the editorial
+# revision. An existing article is refined only when its stored source still
+# exactly matches this known version. Admin-written edits are never replaced.
+PREVIOUS_ARTICLE_FINGERPRINTS = {
+    "خواص-دمنوش-آرامش-اعصاب": "b6c8bc885ad6b38e9a8706fed7118318a1c44ecf33d54ecdd34597b765050e40",
+    "شناخت-طبع-و-مزاج-طب-سنتی": "57f176d9326b67a5c050edeebdf7f0a1c86e5e5f5b3d02003ebc67719d92fe00",
+    "خواص-سیر-ترشی-هفت-ساله": "feb3337581adc41ff640202a9dec7c655200d81131f91cca481d0993ee03eac0",
+    "فواید-میوه-خشک-و-خشکبار": "4daf8ac9d1a1644c9714d1ab0bf03dd74d123f676abd3cfd3f317ed2f19d4b22",
+    "نگهداری-گیاهان-دارویی-و-ادویه": "372137eac2e24b768e09efff09de779c81365dc0c0e119612304e9191b1f9833",
+    "دمنوش-به-لیمو-برای-عصرهای-آرام": "921410a4eb8c2ffa540a79396688b5bbfac5065694d5b3df41c470673204bd3e",
+    "راهنمای-مصرف-عرقیات-گیاهی": "a5efca15c055deeb16ff38693c056d83a7c500d12b05760ae1733aef6eeece39",
+    "هفت-ادویه-برای-آشپزی-سالم": "ca69a16ae91227e7213aa013b5728afda93eb05afdc3e0700f013d171e340ebb",
 }
 
-NEW_ARTICLES = [
-    {
-        "slug": "نگهداری-گیاهان-دارویی-و-ادویه",
-        "title": "راهنمای نگهداری گیاهان دارویی و ادویه‌ها در خانه",
-        "category_name": "آموزش نگهداری",
-        "summary": "با چند نکته ساده می‌توان عطر، رنگ و کیفیت گیاهان دارویی و ادویه‌های پرمصرف را برای مدت بیشتری حفظ کرد.",
-        "image": "images/articles/storing-herbs-spices.webp",
-        "author_name": "تحریریه عطارباشی",
-        "reading_time": 4,
-        "views_count": 0,
-        "is_published": True,
-        "content": """
-<h2>دور از نور، گرما و رطوبت</h2>
-<p>بیشترین دشمن عطر و کیفیت ادویه‌ها، نور مستقیم، گرمای اجاق و رطوبت است. ظرف‌ها را در کابینتی خنک و خشک، دور از پنجره و اجاق نگه دارید تا رنگ و رایحه گیاهان دیرتر تغییر کند.</p>
-<h2>ظرف مناسب انتخاب کنید</h2>
-<p>شیشه‌های دردار یا قوطی‌های فلزی تمیز و کاملاً خشک انتخاب خوبی هستند. پیش از پر کردن ظرف، مطمئن شوید هیچ رطوبتی در آن باقی نمانده است؛ رطوبت می‌تواند گیاه خشک را کدر و کم‌بو کند.</p>
-<h2>خرید به اندازه مصرف</h2>
-<p>گیاهان و ادویه‌های معطر را بهتر است در حجم مناسب مصرف چند ماه تهیه کنید. پودرها نسبت به دانه و برگ کامل سریع‌تر عطر خود را از دست می‌دهند؛ بنابراین تا جای ممکن ادویه را نزدیک زمان مصرف آسیاب کنید.</p>
-""",
-    },
-    {
-        "slug": "دمنوش-به-لیمو-برای-عصرهای-آرام",
-        "title": "دمنوش به‌لیمو؛ انتخابی خوش‌عطر برای عصرهای آرام",
-        "category_name": "دمنوش و گیاهان دارویی",
-        "summary": "به‌لیمو با رایحه مرکباتی و طعم ملایم خود، یکی از محبوب‌ترین انتخاب‌ها برای یک استراحت کوتاه و دلپذیر است.",
-        "image": "images/articles/lemon-verbena-tea.webp",
-        "author_name": "تحریریه عطارباشی",
-        "reading_time": 4,
-        "views_count": 0,
-        "is_published": True,
-        "content": """
-<h2>رایحه‌ای تازه و دلنشین</h2>
-<p>برگ به‌لیمو هنگام دم کشیدن رایحه‌ای لطیف و مرکباتی آزاد می‌کند. این دمنوش انتخابی خوش‌طعم برای زمانی است که می‌خواهید از نوشیدنی‌های شیرین فاصله بگیرید و چند دقیقه آرام‌تر باشید.</p>
-<h2>روش دم کردن ساده</h2>
-<p>برای یک فنجان، یک تا دو قاشق چای‌خوری برگ خشک به‌لیمو را با آب نزدیک به جوش ترکیب کنید و درپوش بگذارید. پس از حدود هفت تا ده دقیقه، نوشیدنی را صاف کنید. افزودن چند قطره لیموی تازه یا اندکی عسل، طعم آن را کامل‌تر می‌کند.</p>
-<h2>یک نکته برای مصرف متعادل</h2>
-<p>هر دمنوش گیاهی را متعادل مصرف کنید. در صورت بارداری، بیماری زمینه‌ای یا مصرف داروی ثابت، برای مصرف منظم گیاهان دارویی بهتر است با پزشک یا متخصص مشورت شود.</p>
-""",
-    },
-    {
-        "slug": "راهنمای-مصرف-عرقیات-گیاهی",
-        "title": "عرقیات گیاهی را چگونه و چه زمانی مصرف کنیم؟",
-        "category_name": "نوشیدنی و عرقیات",
-        "summary": "کیفیت، روش نگهداری و مقدار مصرف، سه نکته کلیدی برای استفاده آگاهانه‌تر از عرقیات گیاهی هستند.",
-        "image": "images/articles/herbal-distillates.webp",
-        "author_name": "تحریریه عطارباشی",
-        "reading_time": 5,
-        "views_count": 0,
-        "is_published": True,
-        "content": """
-<h2>انتخاب محصول شفاف و خوش‌بو</h2>
-<p>عرقیات گیاهی باکیفیت معمولاً رایحه طبیعی گیاه را دارند و در بطری تمیز و دربسته نگهداری می‌شوند. برچسب محصول، تاریخ تولید و شرایط نگهداری را پیش از خرید بررسی کنید.</p>
-<h2>نگهداری صحیح در خانه</h2>
-<p>بطری را بعد از باز شدن در جای خنک و دور از نور مستقیم قرار دهید و همیشه در آن را محکم ببندید. استفاده از لیوان تمیز و پرهیز از برگرداندن باقی‌مانده نوشیدنی به بطری، به حفظ کیفیت کمک می‌کند.</p>
-<h2>مصرف مسئولانه</h2>
-<p>میزان مصرف هر عرق گیاهی یکسان نیست و به نوع گیاه، شرایط فرد و توصیه تولیدکننده بستگی دارد. برای کودکان، دوران بارداری، بیماری‌های زمینه‌ای یا مصرف دارو، پیش از مصرف منظم حتماً از پزشک یا داروساز مشورت بگیرید.</p>
-""",
-    },
-    {
-        "slug": "هفت-ادویه-برای-آشپزی-سالم",
-        "title": "هفت ادویه کاربردی برای آشپزی سالم و خوش‌عطر",
-        "category_name": "ادویه و چاشنی",
-        "summary": "با شناخت چند ادویه ساده می‌توانید بدون افزودن چاشنی‌های آماده، طعم غذاهای روزمره را کامل‌تر و متنوع‌تر کنید.",
-        "image": "images/articles/everyday-spices.webp",
-        "author_name": "تحریریه عطارباشی",
-        "reading_time": 5,
-        "views_count": 0,
-        "is_published": True,
-        "content": """
-<h2>ادویه را مرحله‌به‌مرحله اضافه کنید</h2>
-<p>زردچوبه، دارچین، زیره، فلفل سیاه، هل، گلپر و لیموعمانی از ادویه‌های کاربردی آشپزخانه ایرانی هستند. مقدار کم و متعادل، بهترین راه برای شناخت ترکیب‌های دلخواه شماست.</p>
-<h2>زمان مناسب افزودن ادویه</h2>
-<p>ادویه‌های معطر مانند هل و دارچین را معمولاً در مراحل پایانی اضافه کنید تا رایحه‌شان حفظ شود. زردچوبه و زیره می‌توانند در ابتدای پخت و همراه پیاز یا روغن ملایم، عطر خود را بهتر آزاد کنند.</p>
-<h2>ترکیب‌های ساده و خوش‌طعم</h2>
-<p>زیره با حبوبات و برنج، دارچین با خوراک‌های شیرین یا گوشت، و لیموعمانی با خورش‌ها هماهنگی خوبی دارند. ادویه را در ظرف دربسته نگه دارید و از قرار دادن آن کنار حرارت مستقیم اجتناب کنید.</p>
-""",
-    },
-]
+FINGERPRINT_FIELDS = ("title", "category_name", "summary", "content", "image", "reading_time")
+REFINABLE_FIELDS = (
+    "title",
+    "category_name",
+    "summary",
+    "content",
+    "image",
+    "image_file",
+    "author_name",
+    "reading_time",
+)
+
+
+def article_fingerprint(article):
+    payload = {field: getattr(article, field) for field in FINGERPRINT_FIELDS}
+    encoded = json.dumps(payload, ensure_ascii=False, sort_keys=True, separators=(",", ":"))
+    return hashlib.sha256(encoded.encode("utf-8")).hexdigest()
+
+
+def article_defaults(item):
+    return {key: value for key, value in item.items() if key != "product_slugs"}
+
+
+def article_matches_managed_values(article, item):
+    for field in REFINABLE_FIELDS:
+        value = getattr(article, field)
+        if field == "image_file":
+            value = getattr(value, "name", value) or ""
+        if value != item[field]:
+            return False
+    return True
 
 
 class Command(BaseCommand):
-    help = "Repair deployment-owned category icons and seed only missing editorial articles."
+    help = "Repair category assets and safely seed curated articles and verified related products."
 
     def handle(self, *args, **options):
         repaired_icons = 0
@@ -121,23 +85,69 @@ class Command(BaseCommand):
                 icon_image=icon_path
             ).update(icon_image=icon_path)
 
-        repaired_article_images = 0
-        for slug, image_path in EXISTING_ARTICLE_IMAGES.items():
-            repaired_article_images += Article.objects.filter(slug=slug).exclude(
-                image=image_path
-            ).update(image=image_path, image_file="")
-
         created_articles = 0
-        for values in NEW_ARTICLES:
-            slug = values["slug"]
-            _, created = Article.objects.get_or_create(slug=slug, defaults=values)
+        refined_articles = 0
+        linked_articles = 0
+        preserved_articles = 0
+        missing_product_slugs = set()
+
+        for item in MANAGED_ARTICLES:
+            defaults = article_defaults(item)
+            article, created = Article.objects.get_or_create(
+                slug=item["slug"], defaults=defaults
+            )
             created_articles += int(created)
 
-        self.stdout.write(
-            self.style.SUCCESS(
-                "Site content ready: "
-                f"{repaired_icons} category icon(s) repaired, "
-                f"{repaired_article_images} article banner(s) repaired, "
-                f"{created_articles} article(s) created."
-            )
+            # Apply this editorial revision once, but only to an unchanged
+            # previous starter article. Content changed in the admin is kept.
+            expected_fingerprint = PREVIOUS_ARTICLE_FINGERPRINTS.get(article.slug)
+            if not created and expected_fingerprint:
+                if article_fingerprint(article) == expected_fingerprint:
+                    for field in REFINABLE_FIELDS:
+                        setattr(article, field, item[field])
+                    article.save(update_fields=[*REFINABLE_FIELDS, "updated_at"])
+                    refined_articles += 1
+                elif not article_matches_managed_values(article, item):
+                    preserved_articles += 1
+
+            # Curated relations are seeded only when no editor has selected
+            # products manually. This prevents unrelated fallback products.
+            if not article.related_products.exists():
+                wanted_slugs = item["product_slugs"]
+                products_by_slug = {
+                    product.slug: product
+                    for product in Product.objects.filter(
+                        slug__in=wanted_slugs, is_active=True
+                    )
+                }
+                missing_product_slugs.update(set(wanted_slugs) - set(products_by_slug))
+                selected_products = [
+                    products_by_slug[slug]
+                    for slug in wanted_slugs
+                    if slug in products_by_slug
+                ]
+                if selected_products:
+                    article.related_products.set(selected_products)
+                    linked_articles += 1
+
+        message = (
+            "Site content ready: "
+            f"{repaired_icons} category icon(s) repaired, "
+            f"{created_articles} article(s) created, "
+            f"{refined_articles} starter article(s) refined, "
+            f"{linked_articles} curated product group(s) linked."
         )
+        self.stdout.write(self.style.SUCCESS(message))
+        if preserved_articles:
+            self.stdout.write(
+                self.style.WARNING(
+                    f"Kept {preserved_articles} article(s) that no longer match the old starter text."
+                )
+            )
+        if missing_product_slugs:
+            self.stdout.write(
+                self.style.WARNING(
+                    "Unlinked missing product slug(s): "
+                    + ", ".join(sorted(missing_product_slugs))
+                )
+            )

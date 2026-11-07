@@ -63,6 +63,28 @@
     border: 1px solid rgba(255,128,93,0.25);
 }
 
+/* نام عطارباشی در پیام خوش‌آمدگویی؛ رنگ‌ها از پالت قیمت محصول گرفته شده‌اند. */
+.main-content-text .hero-brand-statement{
+    color: #2b1f15;
+    font-size: 1rem;
+    font-weight: 800;
+    gap: 2px;
+    background: rgba(255,255,255,.72);
+    border-color: rgba(225,29,72,.18);
+    box-shadow: 0 4px 13px rgba(43,31,21,.05);
+}
+.hero-brand-name{
+    display: inline-flex;
+    align-items: baseline;
+    font-size: 1.28em;
+    font-weight: 950;
+    letter-spacing: -.035em;
+    margin-inline-start: 2px;
+}
+.hero-brand-dark{ color: #0f172a; }
+.hero-brand-accent{ color: #e11d48; }
+.hero-brand-separator{ color: #e11d48; font-weight: 900; }
+
 .main-content-text h1{
     color: #2b1f15;
     font-size: 1.85rem;
@@ -279,6 +301,10 @@
     .main-content-text strong{
         font-size: 0.65rem;
         font-weight: bold;
+    }
+    .main-content-text .hero-brand-statement{
+        font-size: .82rem;
+        padding: 6px 12px;
     }
     .main-content-text h1{
         font-size: 0.8rem;

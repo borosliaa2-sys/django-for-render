@@ -428,8 +428,12 @@ header.site-header.header-scrolled .logo img{
         width: min(280px, 85vw);
         height: 100vh;
         background: #ffffff;
-        box-shadow: -6px 0 30px rgba(0, 0, 0, 0.2);
-        transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        /* Drawer is truly hidden while closed: its old left-facing shadow
+           must not leak as a white strip along the right side of a page. */
+        box-shadow: none;
+        visibility: hidden;
+        pointer-events: none;
+        transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), visibility 0s linear 0.3s, box-shadow 0.2s ease;
         padding: 65px 18px 24px;
         z-index: 1001;
         margin: 0;
@@ -441,6 +445,10 @@ header.site-header.header-scrolled .logo img{
     }
     .menu-btn:checked ~ .navigation{
         transform: translateX(0);
+        visibility: visible;
+        pointer-events: auto;
+        box-shadow: -6px 0 30px rgba(0, 0, 0, 0.2);
+        transition-delay: 0s;
     }
     .menu{
         flex-direction: column;

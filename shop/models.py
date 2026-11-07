@@ -318,6 +318,50 @@ class Review(models.Model):
         return "★" * self.rating + "☆" * (5 - self.rating)
 
 
+class ContactMessage(models.Model):
+    """پیام‌های ثبت‌شده از فرم تماس؛ قابل پیگیری در پنل مدیریت."""
+
+    CATEGORY_CHOICES = [
+        ("order", "پیگیری سفارش و ارسال"),
+        ("product", "پرسش درباره محصول"),
+        ("support", "پشتیبانی سایت"),
+        ("suggestion", "پیشنهاد یا انتقاد"),
+        ("cooperation", "همکاری"),
+        ("other", "سایر"),
+    ]
+    STATUS_CHOICES = [
+        ("new", "جدید"),
+        ("in_progress", "در حال پیگیری"),
+        ("answered", "پاسخ داده شد"),
+        ("closed", "بسته شد"),
+    ]
+
+    full_name = models.CharField("نام و نام خانوادگی", max_length=120)
+    phone = models.CharField("شماره تماس", max_length=24)
+    email = models.EmailField("ایمیل", blank=True)
+    category = models.CharField(
+        "دسته‌بندی پیام", max_length=20, choices=CATEGORY_CHOICES, default="support"
+    )
+    message = models.TextField("متن پیام", max_length=3000)
+    status = models.CharField(
+        "وضعیت رسیدگی", max_length=20, choices=STATUS_CHOICES, default="new"
+    )
+    created_at = models.DateTimeField("زمان ثبت", auto_now_add=True)
+    updated_at = models.DateTimeField("آخرین به‌روزرسانی", auto_now=True)
+
+    class Meta:
+        verbose_name = "پیام تماس"
+        verbose_name_plural = "پیام‌های تماس و پشتیبانی"
+        ordering = ["status", "-created_at"]
+        indexes = [
+            models.Index(fields=["status", "-created_at"], name="contact_status_created_idx"),
+            models.Index(fields=["category", "-created_at"], name="contact_category_created_idx"),
+        ]
+
+    def __str__(self):
+        return f"{self.get_category_display()} — {self.full_name}"
+
+
 class Wishlist(models.Model):
     """لیست علاقه‌مندی — هر کاربر حداکثر یک سوژه‌ی محصول"""
 
@@ -379,6 +423,12 @@ class Article(models.Model):
     content = models.TextField("متن کامل مقاله")
     image = models.CharField("تصویر شاخص (مسیر استاتیک)", max_length=200, blank=True)
     image_file = models.FileField("تصویر شاخص (MEDIA)", upload_to="articles/%Y/%m/", blank=True, null=True)
+    related_products = models.ManyToManyField(
+        Product,
+        verbose_name="محصولات مرتبط",
+        related_name="related_articles",
+        blank=True,
+    )
     author_name = models.CharField("نویسنده", max_length=100, default="تحریریه عطارباشی")
     reading_time = models.PositiveIntegerField("مدت مطالعه (دقیقه)", default=5)
     views_count = models.PositiveIntegerField("تعداد بازدید", default=0)

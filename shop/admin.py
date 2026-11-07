@@ -2,7 +2,7 @@
 from django.contrib import admin
 from django.utils.html import format_html
 from django.utils.safestring import mark_safe
-from .models import Article, CartItem, Category, Order, OrderItem, Product, ProductVariant, Review, Wishlist
+from .models import Article, CartItem, Category, ContactMessage, Order, OrderItem, Product, ProductVariant, Review, Wishlist
 
 
 class OrderItemInline(admin.TabularInline):
@@ -145,6 +145,29 @@ class ReviewAdmin(admin.ModelAdmin):
     list_select_related = ("product__category",)
 
 
+@admin.register(ContactMessage)
+class ContactMessageAdmin(admin.ModelAdmin):
+    list_display = (
+        "full_name",
+        "phone",
+        "category",
+        "status",
+        "message_preview",
+        "created_at",
+    )
+    list_filter = ("category", "status", "created_at")
+    search_fields = ("full_name", "phone", "email", "message")
+    list_editable = ("status",)
+    readonly_fields = ("full_name", "phone", "email", "category", "message", "created_at", "updated_at")
+    ordering = ("status", "-created_at")
+    date_hierarchy = "created_at"
+
+    def message_preview(self, obj):
+        text = obj.message.replace("\n", " ")
+        return text[:72] + ("…" if len(text) > 72 else "")
+    message_preview.short_description = "خلاصه پیام"
+
+
 @admin.register(Wishlist)
 class WishlistAdmin(admin.ModelAdmin):
     list_display = ("user", "product", "created_at")
@@ -170,6 +193,7 @@ class ArticleAdmin(admin.ModelAdmin):
     search_fields = ("title", "summary", "content", "author_name")
     prepopulated_fields = {"slug": ("title",)}
     list_editable = ("is_published",)
+    filter_horizontal = ("related_products",)
     readonly_fields = ("thumb_preview", "views_count", "created_at", "updated_at")
     ordering = ("-created_at",)
 

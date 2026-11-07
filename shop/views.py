@@ -8,7 +8,7 @@ from django.utils.decorators import method_decorator
 from django.views.decorators.cache import never_cache
 from django.views.generic import DetailView, ListView, TemplateView
 
-from .forms import ReviewForm
+from .forms import ContactMessageForm, ReviewForm
 from .models import Article, Category, Product
 
 MAX_Q_LENGTH = 100
@@ -356,6 +356,23 @@ class AboutView(TemplateView):
 class ContactView(TemplateView):
     template_name = "contact.html"
 
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context.setdefault("form", ContactMessageForm())
+        return context
+
+    def post(self, request, *args, **kwargs):
+        form = ContactMessageForm(request.POST)
+        if form.is_valid():
+            form.save()
+            messages.success(
+                request,
+                "پیام شما ثبت شد. همکاران عطارباشی پس از بررسی با شما تماس می‌گیرند.",
+            )
+            return redirect("shop:contact")
+        messages.error(request, "لطفاً بخش‌های مشخص‌شده در فرم تماس را بررسی کنید.")
+        return self.render_to_response(self.get_context_data(form=form))
+
 
 class TermsView(TemplateView):
     template_name = "terms.html"
@@ -465,21 +482,23 @@ class ArticleDetailView(DetailView):
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
         article = self.object
-        ctx["related_articles"] = (
-            Article.objects.filter(is_published=True)
-            .exclude(pk=article.pk)
-            .order_by("-created_at")[:4]
+        related_articles = Article.objects.filter(
+            is_published=True, category_name=article.category_name
+        ).exclude(pk=article.pk).order_by("-created_at")[:4]
+        if not related_articles.exists():
+            related_articles = Article.objects.filter(is_published=True).exclude(
+                pk=article.pk
+            ).order_by("-created_at")[:4]
+        ctx["related_articles"] = related_articles
+
+        # محصولات مرتبط به‌صورت انتخاب‌شده در پنل/seed ذخیره می‌شوند؛ بنابراین
+        # دیگر محصولات تصادفی یا صرفاً هم‌نام، به مقاله وصل نمی‌شوند.
+        ctx["related_products"] = (
+            article.related_products.filter(is_active=True)
+            .select_related("category")
+            .prefetch_related("variants")
+            .order_by("category__sort_order", "sort_order", "name")[:4]
         )
-        # محصولات مرتبط با مقاله
-        words = [w for w in article.title.split() if len(w) > 2]
-        prod_q = Q(is_active=True)
-        sub_q = Q(name__icontains=article.title) | Q(category__name__icontains=article.category_name) | Q(description__icontains=article.title)
-        for w in words:
-            sub_q |= Q(name__icontains=w) | Q(description__icontains=w)
-        rel_prods = Product.objects.filter(prod_q & sub_q).select_related("category").prefetch_related("variants").distinct()[:4]
-        if not rel_prods.exists():
-            rel_prods = Product.objects.filter(is_active=True).select_related("category").prefetch_related("variants")[:4]
-        ctx["related_products"] = rel_prods
         return ctx
 
 
