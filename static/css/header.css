@@ -371,22 +371,32 @@ header.site-header.header-scrolled .logo img{
     .nav-location{
         display: none;
     }
+    /* A three-column grid keeps the header inside the viewport. The wide
+       group of round actions stays on the left, the menu stays on the right,
+       and the logo occupies only the space between them. */
     .header-top{
-        display: flex;
-        justify-content: space-between;
+        display: grid;
+        grid-template-columns: 38px minmax(42px, 1fr) max-content;
         align-items: center;
         padding: 10px 14px;
         width: 100%;
+        min-width: 0;
         box-sizing: border-box;
-        gap: 8px;
+        gap: 0;
     }
+    .menu-icon { grid-column: 1; justify-self: center; }
+    .logo { grid-column: 2; justify-self: center; min-width: 0; }
     .logo img{
         max-height: 36px;
         max-width: 120px;
     }
     .nav-btns{
+        grid-column: 3;
+        justify-self: start;
         gap: 8px;
         margin: 0;
+        min-width: 0;
+        flex-wrap: nowrap;
     }
     .nav-btns > a,
     .nav-btns > form > .nav-logout,
@@ -443,7 +453,11 @@ header.site-header.header-scrolled .logo img{
         overflow-y: auto;
         -webkit-overflow-scrolling: touch;
     }
+    /* display:none is deliberate: a transformed off-canvas panel can still
+       paint a thin shadow at the viewport edge on some Android browsers. */
+    .menu-btn:not(:checked) ~ .navigation { display: none; }
     .menu-btn:checked ~ .navigation{
+        display: block;
         transform: translateX(0);
         visibility: visible;
         pointer-events: auto;

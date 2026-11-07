@@ -900,8 +900,19 @@
 
   /* RESPONSIVE PRODUCT DETAIL */
   @media (max-width: 850px) {
+    /* Do not let any grid child, fixed header child, or drawer create a
+       draggable horizontal strip on product pages. */
+    html, body { width: 100%; max-width: 100%; overflow-x: clip !important; }
+    .site-header, .all-content, .product-detail-page, .detail-container {
+      width: 100%;
+      max-width: 100vw;
+      overflow-x: clip;
+    }
+    .detail-container, .product-main-grid, .gallery-col, .info-col, .product-extra-details {
+      min-width: 0;
+    }
     .product-main-grid {
-      grid-template-columns: 1fr;
+      grid-template-columns: minmax(0, 1fr);
       gap: 20px;
     }
     .gallery-main {
