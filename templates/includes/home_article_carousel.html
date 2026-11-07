@@ -1,0 +1,100 @@
+{% load static %}
+{% if home_articles %}
+<section id="home-articles" class="home-articles" data-home-article-carousel aria-labelledby="home-articles-title">
+  <div class="home-articles__header">
+    <div>
+      <span class="home-articles__eyebrow"><i class="ri-quill-pen-line"></i> از مجله عطارباشی</span>
+      <h2 id="home-articles-title">خواندنی‌های سلامت و طبیعت</h2>
+      <p>راهنماهای کوتاه و کاربردی برای انتخاب بهتر و سبک زندگی سالم‌تر</p>
+    </div>
+    <a href="{% url 'shop:article_list' %}" class="home-articles__more">
+      همه مقاله‌ها <i class="ri-arrow-left-line"></i>
+    </a>
+  </div>
+
+  <div class="home-articles__stage" aria-roledescription="carousel" aria-label="مقالات منتخب">
+    {% for article in home_articles %}
+    <article class="home-article-slide{% if forloop.first %} is-active{% endif %}" data-home-article-slide aria-hidden="{% if forloop.first %}false{% else %}true{% endif %}">
+      <img src="{{ article.image_url }}" alt="" {% if forloop.first %}fetchpriority="high"{% else %}loading="lazy"{% endif %}>
+      <div class="home-article-slide__shade"></div>
+      <a href="{{ article.get_absolute_url }}" class="home-article-slide__link" {% if not forloop.first %}tabindex="-1"{% endif %}>
+        <span class="home-article-slide__category">{{ article.category_name }}</span>
+        <div class="home-article-slide__content">
+          <span class="home-article-slide__meta"><i class="ri-time-line"></i> {{ article.reading_time }} دقیقه مطالعه</span>
+          <h3>{{ article.title }}</h3>
+          <p>{{ article.summary|truncatechars:150 }}</p>
+          <span class="home-article-slide__cta">مطالعه مقاله <i class="ri-arrow-left-line"></i></span>
+        </div>
+      </a>
+    </article>
+    {% endfor %}
+
+    {% if home_articles|length > 1 %}
+    <div class="home-articles__controls" aria-label="کنترل کاروسل مقاله">
+      <button type="button" class="home-articles__arrow home-articles__arrow--prev" data-home-article-prev aria-label="مقاله قبلی"><i class="ri-arrow-right-s-line"></i></button>
+      <button type="button" class="home-articles__arrow home-articles__arrow--next" data-home-article-next aria-label="مقاله بعدی"><i class="ri-arrow-left-s-line"></i></button>
+    </div>
+    <div class="home-articles__dots" role="tablist" aria-label="انتخاب مقاله">
+      {% for article in home_articles %}
+      <button type="button" class="home-articles__dot{% if forloop.first %} is-active{% endif %}" data-home-article-dot="{{ forloop.counter0 }}" role="tab" aria-label="نمایش مقاله {{ forloop.counter }}" aria-selected="{% if forloop.first %}true{% else %}false{% endif %}"></button>
+      {% endfor %}
+    </div>
+    {% endif %}
+  </div>
+</section>
+
+<script>
+(function () {
+  const carousel = document.querySelector('[data-home-article-carousel]');
+  if (!carousel || carousel.dataset.ready === 'true') return;
+  carousel.dataset.ready = 'true';
+
+  const slides = Array.from(carousel.querySelectorAll('[data-home-article-slide]'));
+  const dots = Array.from(carousel.querySelectorAll('[data-home-article-dot]'));
+  const previous = carousel.querySelector('[data-home-article-prev]');
+  const next = carousel.querySelector('[data-home-article-next]');
+  const reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  let activeIndex = 0;
+  let timer = null;
+
+  function show(index) {
+    activeIndex = (index + slides.length) % slides.length;
+    slides.forEach(function (slide, slideIndex) {
+      const active = slideIndex === activeIndex;
+      slide.classList.toggle('is-active', active);
+      slide.setAttribute('aria-hidden', active ? 'false' : 'true');
+      const link = slide.querySelector('.home-article-slide__link');
+      if (link) link.tabIndex = active ? 0 : -1;
+    });
+    dots.forEach(function (dot, dotIndex) {
+      const active = dotIndex === activeIndex;
+      dot.classList.toggle('is-active', active);
+      dot.setAttribute('aria-selected', active ? 'true' : 'false');
+    });
+  }
+
+  function stop() {
+    if (timer) window.clearInterval(timer);
+    timer = null;
+  }
+  function start() {
+    if (reduceMotion || slides.length < 2 || timer) return;
+    timer = window.setInterval(function () { show(activeIndex + 1); }, 5200);
+  }
+
+  if (previous) previous.addEventListener('click', function () { stop(); show(activeIndex - 1); start(); });
+  if (next) next.addEventListener('click', function () { stop(); show(activeIndex + 1); start(); });
+  dots.forEach(function (dot) {
+    dot.addEventListener('click', function () { stop(); show(Number(dot.dataset.homeArticleDot)); start(); });
+  });
+  carousel.addEventListener('mouseenter', stop);
+  carousel.addEventListener('mouseleave', start);
+  carousel.addEventListener('focusin', stop);
+  carousel.addEventListener('focusout', function () {
+    window.setTimeout(function () { if (!carousel.contains(document.activeElement)) start(); }, 0);
+  });
+  document.addEventListener('visibilitychange', function () { if (document.hidden) stop(); else start(); });
+  start();
+}());
+</script>
+{% endif %}

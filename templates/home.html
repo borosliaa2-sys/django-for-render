@@ -1,6 +1,9 @@
 {% extends 'base.html' %}
 {% load static humanize l10n shop_tags %}
 {% block body_class %}is-home{% endblock body_class %}
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/_home_articles.css' %}?v=20261107">
+{% endblock extra_css %}
 {% block content %}
 <!-- HERO -->
 <section id="main">
@@ -21,7 +24,7 @@
             <div id="shamsi-date"><i class="ri-calendar-2-line"></i><span>امروز؛ درحال بارگذاری...</span></div>
         </div>
         <div class="main-content-img">
-            <img src="{% static 'images/dam.jpg' %}" alt="عطاری عطارباشی">
+            <img src="{% static 'images/home-hero.webp' %}" alt="عطاری عطارباشی">
             <div class="floating-element floating-1"><i class="ri-truck-line"></i><span>ارسال سریع</span></div>
             <div class="floating-element floating-2"><i class="ri-vip-crown-2-line"></i><span>تضمین اصالت</span></div>
         </div>
@@ -38,7 +41,7 @@
         {% for cat in categories %}
         <a href="{% url 'shop:category' cat.slug %}" class="category-box">
             <div class="category-box-img">
-                {% if cat.icon_image %}<img src="{% static 'images/'|add:cat.icon_image %}" alt="{{ cat.name }}">{% else %}<img src="{% static 'images/سایر.png' %}" alt="{{ cat.name }}">{% endif %}
+                {% if cat.icon_image %}<img src="{% static 'images/'|add:cat.icon_image %}" alt="{{ cat.name }}">{% else %}<img src="{% static 'images/categories/category-16.webp' %}" alt="{{ cat.name }}">{% endif %}
             </div>
             <strong class="category-name">{{ cat.name }}</strong>
             <span class="category-count">{{ cat.product_count }} محصول</span>
@@ -142,6 +145,9 @@
 {% for carousel in category_carousels %}
   {% include 'includes/category_product_carousel.html' with carousel=carousel %}
 {% endfor %}
+
+<!-- HOME MAGAZINE / ARTICLE CAROUSEL -->
+{% include 'includes/home_article_carousel.html' %}
 
 <!-- QUICK PREVIEW MODAL -->
 <div id="quickPreviewModal" class="quick-modal hidden" aria-hidden="true">

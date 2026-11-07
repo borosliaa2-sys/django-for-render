@@ -2,7 +2,7 @@
 ویوهای فروشگاه — خانه، جستجو (امن، صفحه‌بندی، اعتبارسنجی)، جزئیات و دسته
 """
 from django.contrib import messages
-from django.db.models import Avg, Case, Count, IntegerField, Max, Q, QuerySet, Value, When
+from django.db.models import Avg, Case, Count, F, IntegerField, Max, Q, QuerySet, Value, When
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils.decorators import method_decorator
 from django.views.decorators.cache import never_cache
@@ -32,6 +32,12 @@ class HomeView(TemplateView):
         else:
             popular = popular[:6]
         ctx["popular_products"] = popular
+
+        # چهار مقالهٔ تازه برای کاروسل خودکارِ صفحهٔ خانه.
+        ctx["home_articles"] = list(
+            Article.objects.filter(is_published=True)
+            .order_by("-created_at", "-id")[:4]
+        )
 
         # چهار کاروسل دسته‌ایِ صفحهٔ خانه؛ هرکدام حداکثر ده محصول نخست
         # دسته را بر اساس ترتیب ورود/نمایش نشان می‌دهد.
@@ -449,8 +455,11 @@ class ArticleDetailView(DetailView):
 
     def get_object(self, queryset=None):
         obj = super().get_object(queryset)
-        # افزایش بازدید
-        Article.objects.filter(pk=obj.pk).update(views_count=obj.views_count + 1)
+        # بازدید با F-expression به‌صورت اتمیک افزایش می‌یابد تا دو بازدید
+        # همزمان باعث از دست رفتن شمارش نشوند. سپس مقدار تازه در همان پاسخ
+        # نمایش داده می‌شود.
+        Article.objects.filter(pk=obj.pk).update(views_count=F("views_count") + 1)
+        obj.refresh_from_db(fields=["views_count"])
         return obj
 
     def get_context_data(self, **kwargs):

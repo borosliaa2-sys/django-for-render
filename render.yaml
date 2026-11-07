@@ -4,9 +4,15 @@ services:
     runtime: python
     buildCommand: "bash build.sh"
     startCommand: "gunicorn config.wsgi:application --bind 0.0.0.0:$PORT --workers ${WEB_CONCURRENCY:-2} --timeout 120 --access-logfile - --error-logfile -"
-    healthCheckPath: /
+    healthCheckPath: /healthz/
     autoDeploy: true
     envVars:
+      - key: DJANGO_CANONICAL_HOST
+        value: "attarbashiesf.ir"
+      - key: DJANGO_ALLOWED_HOSTS
+        value: "attarbashiesf.ir,www.attarbashiesf.ir"
+      - key: DJANGO_CSRF_TRUSTED_ORIGINS
+        value: "https://attarbashiesf.ir,https://www.attarbashiesf.ir"
       - key: PYTHON_VERSION
         value: "3.12.8"
       - key: DJANGO_SECRET_KEY

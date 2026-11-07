@@ -11,22 +11,22 @@ from django.utils.text import slugify
 from shop.models import Category, Product, ProductVariant
 
 CATEGORY_DEFS = [
-    ("آرد و مواد اولیه", "آرد_و_مواد_اولیه.png", 10),
-    ("مربا", "مربا.png", 20),
-    ("دمنوش", "دمنوش.png", 30),
-    ("لواشک", "لواشک.png", 40),
-    ("ترشی و شور", "ترشی_و_شور.png", 50),
-    ("روغن ها", "روغن_ها.png", 60),
-    ("سبزیجات خشک", "سبزیجات_خشک.png", 70),
-    ("سویق و پودرهای خاص", "سویق_و_پودرهای_خاص.png", 80),
-    ("نوشیدنی و عرقیات", "نوشیدنی_و_عرقیات.png", 90),
-    ("میوه خشک و آجیلی", "میوه_خشک_و_آجیلی.png", 100),
-    ("خشکبار و مغزیجات", "خشکبار_و_مغزیجات.png", 110),
-    ("محصولات بهداشتی", "محصولات_بهداشتی.png", 120),
-    ("گیاهان دارویی", "گیاهان_دارویی.png", 130),
-    ("ادویه و چاشنی", "ادویه_و_چاشنی.png", 140),
-    ("شیرینی و تنقلات", "شیرینی_و_تنقلات.png", 150),
-    ("سایر", "سایر.png", 999),
+    ("آرد و مواد اولیه", "categories/category-1.webp", 10),
+    ("مربا", "categories/category-2.webp", 20),
+    ("دمنوش", "categories/category-3.webp", 30),
+    ("لواشک", "categories/category-4.webp", 40),
+    ("ترشی و شور", "categories/category-5.webp", 50),
+    ("روغن ها", "categories/category-6.webp", 60),
+    ("سبزیجات خشک", "categories/category-7.webp", 70),
+    ("سویق و پودرهای خاص", "categories/category-8.webp", 80),
+    ("نوشیدنی و عرقیات", "categories/category-9.webp", 90),
+    ("میوه خشک و آجیلی", "categories/category-10.webp", 100),
+    ("خشکبار و مغزیجات", "categories/category-11.webp", 110),
+    ("محصولات بهداشتی", "categories/category-12.webp", 120),
+    ("گیاهان دارویی", "categories/category-13.webp", 130),
+    ("ادویه و چاشنی", "categories/category-14.webp", 140),
+    ("شیرینی و تنقلات", "categories/category-15.webp", 150),
+    ("سایر", "categories/category-16.webp", 999),
 ]
 CATEGORY_KEYWORDS = {
     "ترشی و شور": ["ترشی", "خیارشور", "سیر ترشی", "شوری"],
@@ -222,7 +222,7 @@ class Command(BaseCommand):
                     media_rel = f"products/{slug}.jpg"
                     image_field = f"پرو/img/{name}.jpg"
                 else:
-                    image_field = "images/thing.jpg"
+                    image_field = "images/logo.jpg"
                 existing = Product.objects.filter(slug=slug).first() or Product.objects.filter(name=name, category=category).first()
                 if existing and not clear:
                     product = existing

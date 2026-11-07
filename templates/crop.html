@@ -935,11 +935,36 @@
   }
 
   @media (max-width: 480px) {
-    .product-detail-page { padding: 6px; }
+    .product-detail-page { padding: 6px; overflow-x: clip; }
     .detail-container { padding: 14px 12px; }
     .price-box { padding: 10px 12px; }
+    /* The packaging/weight navigator must never make a narrow product page wider. */
+    .info-col, .variant-section, .weight-selector { min-width: 0; max-width: 100%; }
+    .variant-section { padding: 10px; overflow: hidden; }
+    .weight-selector { gap: 7px; align-items: stretch; }
+    .variant-pill {
+      width: 100%;
+      max-width: 100%;
+      min-width: 0;
+      box-sizing: border-box;
+      justify-content: space-between;
+      gap: 5px;
+      padding: 8px 10px;
+      flex-wrap: wrap;
+      overflow-wrap: anywhere;
+    }
+    .pill-price { margin-inline-start: auto; }
+    .pill-disc { flex: 0 0 auto; }
+    .add-to-cart-form { min-width: 0; }
+    /* Product specifications keep their cells inside the card on narrow screens. */
+    .specs-grid { grid-template-columns: minmax(0, 1fr); padding: 10px 12px; }
+    .spec-row { min-width: 0; gap: 10px; align-items: flex-start; }
+    .spec-name { flex: 0 0 42%; }
+    .spec-val { min-width: 0; text-align: left; overflow-wrap: anywhere; }
+    .btn-add-cart { padding: 9px 13px; font-size: 0.84rem; min-height: 40px; }
+    .qty-btn { padding: 6px 11px; font-size: 1rem; }
     .form-row { grid-template-columns: 1fr; }
-    .related-grid { grid-template-columns: repeat(2, 1fr); }
+    .related-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   }
 </style>
 

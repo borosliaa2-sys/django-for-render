@@ -13,6 +13,8 @@ from django.dispatch import receiver
 from django.urls import reverse
 from django.utils.text import slugify
 
+from .image_optimization import optimize_new_upload
+
 
 class CategoryManager(models.Manager):
     def with_product_counts(self):
@@ -85,7 +87,7 @@ class Product(models.Model):
     description = models.TextField("توضیحات کامل", blank=True)
     short_description = models.TextField("توضیح کوتاه", max_length=300, blank=True)
     image = models.CharField("عکس اصلی (مسیر قدیمی)", max_length=200, blank=True)
-    # مهاجرت به MEDIA — تا نصب Pillow از FileField استفاده می‌کنیم
+    # MEDIA upload; new admin uploads are optimized to WebP before storage.
     image_file = models.FileField("عکس (MEDIA)", upload_to="products/%Y/%m/", blank=True, null=True)
     TEMPERAMENT_CHOICES = [
         ("hot", "گرم"),
@@ -117,6 +119,9 @@ class Product(models.Model):
         return self.name
 
     def save(self, *args, **kwargs):
+        # Files uploaded from Django admin are converted to oriented WebP and
+        # constrained to 1600px before storage. Bundled/fixture media stays as-is.
+        optimize_new_upload(self.image_file)
         if not self.slug:
             base = slugify(self.name, allow_unicode=True)
             self.slug = self._unique_slug(base)
@@ -178,7 +183,7 @@ class Product(models.Model):
             from django.templatetags.static import static
             return static(self.image)
         from django.templatetags.static import static
-        return static("images/thing.jpg")
+        return static("images/logo.jpg")
 
 
 class ProductVariant(models.Model):
@@ -419,9 +424,12 @@ class Article(models.Model):
             if img.startswith("products/"):
                 return f"/media/{img}"
             return f"/static/images/{img}"
-        return "/static/images/dam.jpg"
+        return "/static/images/articles/herbal-tea-calm.webp"
 
     def save(self, *args, **kwargs):
+        # Images uploaded through the admin are automatically converted to a
+        # correctly oriented WebP at a web-friendly maximum size.
+        optimize_new_upload(self.image_file)
         if not self.slug:
             base = slugify(self.title, allow_unicode=True)
             self.slug = self._unique_slug(base)

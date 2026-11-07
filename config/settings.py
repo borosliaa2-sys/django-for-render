@@ -37,11 +37,18 @@ if not DEBUG and SECRET_KEY == _DEFAULT_SECRET_KEY:
     )
 
 # Render sets RENDER_EXTERNAL_HOSTNAME to the service's onrender.com host.
-# RAILWAY_PUBLIC_DOMAIN is retained as a harmless fallback for local migration
-# from the previous deployment bundle.
+# Custom public hosts are supplied through DJANGO_ALLOWED_HOSTS below.
 render_external_hostname = os.environ.get("RENDER_EXTERNAL_HOSTNAME", "").strip()
-railway_public_domain = os.environ.get("RAILWAY_PUBLIC_DOMAIN", "").strip()
-deployment_domains = [domain for domain in (render_external_hostname, railway_public_domain) if domain]
+deployment_domains = [domain for domain in (render_external_hostname,) if domain]
+
+# The public shop uses the root domain as its primary address. Set this to an
+# empty value to disable canonical-host redirects in another environment.
+CANONICAL_HOST = os.environ.get("DJANGO_CANONICAL_HOST", "attarbashiesf.ir").strip().lower().rstrip(".")
+# Capture the production/debug choice at settings-import time. Django's test
+# runner temporarily changes DEBUG later, which must not enable redirects in
+# the isolated test host.
+CANONICAL_REDIRECT_ENABLED = not DEBUG and bool(CANONICAL_HOST)
+CANONICAL_REDIRECT_EXEMPT_PATHS = {"/healthz/"}
 
 configured_hosts = csv_env("DJANGO_ALLOWED_HOSTS")
 if DEBUG:
@@ -84,6 +91,7 @@ INSTALLED_APPS = [
 AUTH_USER_MODEL = "account.CustomUser"
 
 MIDDLEWARE = [
+    "config.middleware.CanonicalHostMiddleware",
     "django.middleware.security.SecurityMiddleware",
     "whitenoise.middleware.WhiteNoiseMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
