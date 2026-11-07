@@ -1,8 +1,13 @@
+from pathlib import Path
+
 from django import template
+from django.conf import settings
+from django.templatetags.static import static
 
 register = template.Library()
 
 _FA_DIGITS = str.maketrans("0123456789,", "۰۱۲۳۴۵۶۷۸۹٬")
+_DEFAULT_CATEGORY_ICON = "images/categories/category-16.webp"
 
 
 def _format_fa_price(value):
@@ -13,6 +18,30 @@ def _format_fa_price(value):
         return f"{int(value):,}".translate(_FA_DIGITS)
     except (ValueError, TypeError):
         return value
+
+
+def _static_source_exists(relative_path: str) -> bool:
+    """Check the committed source before asking manifest storage for a URL."""
+    for root in getattr(settings, "STATICFILES_DIRS", []):
+        if (Path(root) / relative_path).is_file():
+            return True
+    return False
+
+
+@register.simple_tag(name="category_icon_url")
+def category_icon_url(icon_path):
+    """Return a manifest-safe category icon URL with a bundled fallback.
+
+    This keeps pages live even if an older database still references an icon
+    file that was replaced by a newer deployment.
+    """
+    clean = str(icon_path or "").strip().lstrip("/")
+    if clean.startswith("images/"):
+        clean = clean[len("images/"):]
+    candidate = f"images/{clean}" if clean else _DEFAULT_CATEGORY_ICON
+    if not _static_source_exists(candidate):
+        candidate = _DEFAULT_CATEGORY_ICON
+    return static(candidate)
 
 
 @register.filter(name="format_price")

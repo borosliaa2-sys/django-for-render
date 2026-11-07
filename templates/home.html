@@ -41,7 +41,8 @@
         {% for cat in categories %}
         <a href="{% url 'shop:category' cat.slug %}" class="category-box">
             <div class="category-box-img">
-                {% if cat.icon_image %}<img src="{% static 'images/'|add:cat.icon_image %}" alt="{{ cat.name }}">{% else %}<img src="{% static 'images/categories/category-16.webp' %}" alt="{{ cat.name }}">{% endif %}
+                {% category_icon_url cat.icon_image as category_icon %}
+                <img src="{{ category_icon }}" alt="{{ cat.name }}">
             </div>
             <strong class="category-name">{{ cat.name }}</strong>
             <span class="category-count">{{ cat.product_count }} محصول</span>

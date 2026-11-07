@@ -30,11 +30,12 @@
 | `requirements.txt` | Django، Gunicorn، WhiteNoise، PostgreSQL driver و وابستگی‌ها |
 | `shop/fixtures/catalog.json` | کاتالوگ اولیه برای Neon خالی |
 | `shop/management/commands/ensure_catalog.py` | Fixture را فقط زمانی وارد می‌کند که هیچ محصولی در دیتابیس نیست |
+| `shop/management/commands/ensure_site_content.py` | مسیر آیکون‌های دسته‌بندی را در Neon قدیمی اصلاح و فقط مقاله‌های شروعیِ ناقص را ایجاد می‌کند |
 
 در اولین Deploy روی دیتابیس خالی، `build.sh` این ترتیب را اجرا می‌کند:
 
 ```text
-pip install → collectstatic → migrate → ensure_catalog
+pip install → collectstatic → migrate → ensure_catalog → ensure_site_content
 ```
 
 در Deployهای بعدی، اگر در Neon محصولی وجود داشته باشد، کاتالوگ دوباره‌نویسی نمی‌شود.

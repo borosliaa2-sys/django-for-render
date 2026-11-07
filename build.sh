@@ -7,6 +7,9 @@ pip install -r requirements.txt
 python manage.py collectstatic --noinput
 python manage.py migrate --noinput
 python manage.py ensure_catalog
+# Repairs versioned category assets in an existing Neon DB and creates only
+# missing starter articles; safe to run at every deploy.
+python manage.py ensure_site_content
 # Creates the first admin only when secure DJANGO_SUPERUSER_* variables exist.
 # It is idempotent, so ordinary deploys never overwrite an admin password.
 python manage.py ensure_superuser
