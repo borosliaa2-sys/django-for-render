@@ -1,12 +1,23 @@
-{% load l10n %}
-{# Reusable card action. Successful AJAX adds are upgraded by main.js into qty-control. #}
+{% load l10n shop_tags %}
+{# Reusable card action. It renders the persisted stepper again after refresh. #}
 {% if variant and variant.id and variant.stock > 0 %}
-<form method="post" action="{% url 'shop:cart_add' variant.id %}" class="cart-add-form cart-action-form" data-cart-action-form data-variant-id="{{ variant.id|unlocalize }}" data-stock="{{ variant.stock|unlocalize }}" data-button-class="{{ button_class|default:'pro-cart-btn' }}" data-button-text="{{ button_text|default:'افزودن به سبد' }}" data-update-url="{% url 'shop:cart_update' variant.id %}" onclick="event.stopPropagation();">
+{% with saved_qty=cart_quantities|cart_quantity:variant.id %}
+<form method="post" action="{% url 'shop:cart_add' variant.id %}" class="cart-add-form cart-action-form" data-cart-action-form data-variant-id="{{ variant.id|unlocalize }}" data-stock="{{ variant.stock|unlocalize }}" data-quantity="{{ saved_qty }}" data-button-class="{{ button_class|default:'pro-cart-btn' }}" data-button-text="{{ button_text|default:'افزودن به سبد' }}" data-update-url="{% url 'shop:cart_update' variant.id %}" onclick="event.stopPropagation();">
     {% csrf_token %}
-    <input type="hidden" name="qty" value="1">
-    <input type="hidden" name="next" value="{{ request.get_full_path }}">
-    <button type="submit" class="{{ button_class|default:'pro-cart-btn' }}"><i class="ri-shopping-bag-4-line"></i><span>{{ button_text|default:'افزودن به سبد' }}</span></button>
+    {% if saved_qty %}
+        <div class="cart-stepper" role="group" aria-label="تعداد محصول در سبد">
+            <button type="button" class="cart-stepper__button" data-cart-qty-action="increase" aria-label="افزایش تعداد">+</button>
+            <output class="cart-stepper__count" data-cart-qty-count>{{ saved_qty|intcomma_fa }}</output>
+            <button type="button" class="cart-stepper__button" data-cart-qty-action="decrease" aria-label="کاهش تعداد">−</button>
+        </div>
+        <span class="cart-stock-warning" role="status">حداکثر موجودی انتخاب شده</span>
+    {% else %}
+        <input type="hidden" name="qty" value="1">
+        <input type="hidden" name="next" value="{{ request.get_full_path }}">
+        <button type="submit" class="{{ button_class|default:'pro-cart-btn' }}"><i class="ri-shopping-bag-4-line"></i><span>{{ button_text|default:'افزودن به سبد' }}</span></button>
+    {% endif %}
 </form>
+{% endwith %}
 {% else %}
 <button type="button" class="{{ button_class|default:'pro-cart-btn' }}" disabled aria-disabled="true" style="background:#e5e7eb; color:#9ca3af; cursor:not-allowed;"><i class="ri-close-circle-line"></i><span>ناموجود</span></button>
 {% endif %}

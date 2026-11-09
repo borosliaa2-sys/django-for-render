@@ -285,6 +285,9 @@ class ShopFullFlowTests(TestCase):
         self.assertEqual(update.status_code, 200)
         self.assertEqual(update.json()["item_qty"], 2)
         self.assertEqual(update.json()["stock"], 2)
+        # A refresh must render the same stepper, not return to an add button.
+        refreshed = self.client.get(reverse("shop:home"))
+        self.assertEqual(refreshed.context["cart_quantities"][str(self.variant.id)], 2)
 
     def test_custom_404_view(self):
         res = self.client.get("/a-page-that-definitely-does-not-exist/")

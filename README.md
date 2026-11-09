@@ -175,9 +175,11 @@ CLOUDINARY_URL=cloudinary://API_KEY:API_SECRET@CLOUD_NAME
 CLOUDINARY_FOLDER=attarbashi
 ```
 
-3. Deploy جدید انجام دهید. در Build Log، وابستگی‌ها نصب می‌شوند و از آن پس تصویر جدید محصول یا مقاله مستقیماً و با HTTPS در Cloudinary ذخیره خواهد شد.
+3. Deploy جدید انجام دهید. در Build Log، وابستگی‌ها نصب می‌شوند و از آن پس تصویر جدید محصول یا مقاله مستقیماً و با HTTPS در Cloudinary ذخیره خواهد شد. همان Deploy دستور `sync_bundled_media_to_cloudinary` را نیز اجرا می‌کند: این دستور ۳۷۷ تصویر کاتالوگ موجود در repository را یک‌بار به Cloudinary می‌فرستد و در Deployهای بعدی فقط وجودشان را بررسی می‌کند.
 
-به‌جای `CLOUDINARY_URL` می‌توانید سه متغیر `CLOUDINARY_CLOUD_NAME`، `CLOUDINARY_API_KEY` و `CLOUDINARY_API_SECRET` را جداگانه وارد کنید. تنظیم `CLOUDINARY_FOLDER` اختیاری است و پیش‌فرض آن `attarbashi` است. برای توسعهٔ محلی یا وقتی این متغیرها خالی‌اند، پروژه خودکار به ذخیره‌سازی محلی `MEDIA` برمی‌گردد.
+> فقط واردکردن **Cloud name / Cloudinary ID** کافی نیست. پروژه برای فعال‌کردن Cloudinary به `API_KEY` و `API_SECRET` هم نیاز دارد؛ در غیر این صورت عمداً به MEDIA محلی برمی‌گردد. روی Render تولیدی، MEDIA محلی آدرس پایدار برای تصاویر کاتالوگ نیست.
+
+به‌جای `CLOUDINARY_URL` می‌توانید سه متغیر `CLOUDINARY_CLOUD_NAME`، `CLOUDINARY_API_KEY` و `CLOUDINARY_API_SECRET` را جداگانه وارد کنید. تنظیم `CLOUDINARY_FOLDER` اختیاری است، پوشهٔ Cloudinary را مشخص می‌کند و پیش‌فرض آن `attarbashi` است. برای توسعهٔ محلی یا وقتی این متغیرها خالی‌اند، پروژه خودکار به ذخیره‌سازی محلی `MEDIA` برمی‌گردد.
 
 > کلیدهای Cloudinary را فقط در Render Environment یا فایل `.env` خصوصی وارد کنید؛ هرگز آن‌ها را در GitHub، screenshot یا ticket عمومی قرار ندهید.
 

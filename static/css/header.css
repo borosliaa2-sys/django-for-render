@@ -389,9 +389,11 @@ header.site-header.header-scrolled .logo img{
 .nav-category-arrow { font-size: 1rem; transition: transform .2s ease; }
 .nav-category-menu {
     position: absolute;
-    top: calc(100% + 9px);
+    /* Keep it directly attached to its trigger. The former 9px gap broke
+       hover when the pointer travelled down into the menu. */
+    top: 100%;
     right: 50%;
-    transform: translateX(50%) translateY(6px);
+    transform: translateX(50%) translateY(0);
     width: 430px;
     padding: 11px;
     border: 1px solid rgba(255,128,93,.26);
@@ -610,7 +612,14 @@ header.site-header.header-scrolled .logo img{
         pointer-events: auto;
         display: none;
     }
-    .nav-category-item.is-open .nav-category-menu { display: block; }
+    /* :focus-within has a more specific desktop transform; reset it here so
+       the expanded list stays inside the right-hand mobile drawer. */
+    .nav-category-item:hover .nav-category-menu,
+    .nav-category-item:focus-within .nav-category-menu,
+    .nav-category-item.is-open .nav-category-menu {
+        display: block;
+        transform: none;
+    }
     .nav-category-item.is-open .nav-category-arrow { transform: rotate(180deg); }
     .nav-category-all { margin: 8px 0 5px; }
     .nav-category-links { grid-template-columns: 1fr; gap: 1px; }

@@ -7,6 +7,10 @@ pip install -r requirements.txt
 python manage.py collectstatic --noinput
 python manage.py migrate --noinput
 python manage.py ensure_catalog
+# On the first Cloudinary-enabled build, uploads bundled catalogue files whose
+# database names existed locally before Cloudinary was configured. It is a
+# no-op when Cloudinary is not configured and skips resources already uploaded.
+python manage.py sync_bundled_media_to_cloudinary
 # Repairs versioned category assets in an existing Neon DB and creates only
 # missing starter articles; safe to run at every deploy.
 python manage.py ensure_site_content

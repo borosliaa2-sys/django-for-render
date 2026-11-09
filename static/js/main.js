@@ -143,10 +143,10 @@ function showToast(message, type = 'success') {
         container.id = 'toast-container';
         container.style.cssText = `
             position: fixed;
-            bottom: 24px;
+            bottom: max(20px, env(safe-area-inset-bottom));
             left: 50%;
             transform: translateX(-50%);
-            z-index: 10000;
+            z-index: 2147483000;
             display: flex;
             flex-direction: column;
             gap: 8px;
@@ -235,14 +235,14 @@ function cartUpdateUrlFor(form) {
 }
 
 function showStockLimit(form, stock) {
-    const warning = form.querySelector('.cart-stock-warning');
-    if (warning && stock !== undefined) {
-        warning.textContent = `حداکثر موجودی انتخاب شده (${formatPersianNumber(stock)} عدد)`;
-    }
+    const message = `حداکثر موجودی انتخاب شده (${formatPersianNumber(stock)} عدد)`;
+    // Shake the compact control in place, but keep the explanatory notice in
+    // the fixed toast layer so it cannot be cropped by a product card.
     form.classList.remove('is-at-stock');
     void form.offsetWidth;
     form.classList.add('is-at-stock');
-    window.setTimeout(() => form.classList.remove('is-at-stock'), 2600);
+    window.setTimeout(() => form.classList.remove('is-at-stock'), 600);
+    showToast(message, 'warning');
 }
 
 function upgradeToQuantityStepper(form, quantity, stock) {

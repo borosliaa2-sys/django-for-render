@@ -54,3 +54,12 @@ def format_price(value):
 def intcomma_fa(value):
     """نمایش عدد با رقم و جداکنندهٔ فارسی."""
     return _format_fa_price(value)
+
+
+@register.filter(name="cart_quantity")
+def cart_quantity(cart_quantities, variant_id):
+    """Look up a persisted cart quantity by a dynamic variant id in templates."""
+    try:
+        return int((cart_quantities or {}).get(str(variant_id), 0))
+    except (AttributeError, TypeError, ValueError):
+        return 0

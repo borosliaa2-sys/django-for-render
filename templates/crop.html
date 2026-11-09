@@ -112,7 +112,6 @@
               <input type="hidden" name="qty" id="qtyInput" value="1">
               <button type="button" id="inc" class="qty-btn" aria-label="افزایش">+</button>
             </div>
-            <span id="detailStockWarning" class="detail-stock-warning" role="status">حداکثر موجودی انتخاب شده</span>
             <input type="hidden" name="next" value="{{ request.get_full_path }}">
             {% with product.primary_variant as pv %}
             {% if pv and pv.stock > 0 %}
@@ -710,22 +709,10 @@
     font-weight: 800;
     font-size: 0.95rem;
   }
-  .detail-stock-warning {
-    display: none;
-    position: absolute;
-    margin-top: -42px;
-    margin-right: 4px;
-    padding: 5px 9px;
-    border: 1px solid #fecaca;
-    border-radius: 8px;
-    background: #fff1f2;
-    color: #b42318;
-    font-size: .72rem;
-    font-weight: 800;
-    box-shadow: 0 4px 10px rgba(127,29,29,.14);
-  }
-  .detail-stock-warning.is-visible { display: inline-block; animation: detailStockShake .42s ease-in-out both; }
-  @keyframes detailStockShake { 0%,100%{transform:translateX(0)} 25%,75%{transform:translateX(5px)} 50%{transform:translateX(-5px)} }
+  /* The stock-limit text is shown as a fixed global toast, never clipped by
+     the product card. The local control still gives a short visual shake. */
+  .qty-control.is-at-stock { animation: detailQtyShake .42s ease-in-out both; outline: 2px solid #fca5a5; }
+  @keyframes detailQtyShake { 0%,100%{transform:translateX(0)} 25%,75%{transform:translateX(5px)} 50%{transform:translateX(-5px)} }
   .btn-add-cart {
     flex: 1;
     background: linear-gradient(135deg, var(--secondary-color) 0%, #ff6b4a 100%);
@@ -751,33 +738,48 @@
   }
 
   .btn-wishlist-detail {
-    /* This is a normal action button, not the absolute heart icon used by
-       home-page carousel cards. Keeping it out of that selector prevents
-       an invisible positioned element from widening the RTL document. */
+    /* Deliberately separate from the absolute .fav-btn used on carousel cards. */
     position: static;
     inset: auto;
+    min-height: 46px;
     width: auto;
-    height: auto;
     display: inline-flex;
     align-items: center;
-    gap: 6px;
-    border: 1.5px solid #ebd0bc;
-    background: #fff;
-    border-radius: 30px;
-    padding: 10px 16px;
-    text-decoration: none;
-    color: var(--text-dark);
-    font-weight: 700;
-    font-size: 0.88rem;
-    transition: all 0.2s ease;
+    justify-content: center;
+    gap: 8px;
+    border: 1px solid #f3b9aa;
+    background: linear-gradient(135deg, #fff 0%, #fff5f2 100%);
+    border-radius: 15px;
+    padding: 9px 14px;
+    color: #533127;
+    font: 800 .86rem/1 inherit;
+    box-shadow: 0 4px 12px rgba(143, 62, 42, .10);
+    transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease, background .18s ease;
     cursor: pointer;
   }
-  .btn-wishlist-detail:hover, .btn-wishlist-detail.active {
-    border-color: #fca5a5;
-    color: #e74c3c;
-    background: #fff5f5;
+  .btn-wishlist-detail i {
+    display: grid;
+    place-items: center;
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    background: #fff;
+    color: #d74e4e;
+    font-size: 1.05rem;
+    box-shadow: 0 2px 5px rgba(143, 62, 42, .12);
   }
-  .btn-wishlist-detail i { font-size: 1rem; }
+  .btn-wishlist-detail:hover {
+    border-color: #e77970;
+    background: #fff0ed;
+    box-shadow: 0 6px 16px rgba(143, 62, 42, .16);
+    transform: translateY(-1px);
+  }
+  .btn-wishlist-detail.active {
+    border-color: #ef8f8a;
+    background: linear-gradient(135deg, #fff0f0, #ffe4e2);
+    color: #b4232d;
+  }
+  .btn-wishlist-detail.active i { background: #d94d53; color: #fff; }
 
   /* TRUST BADGES */
   .trust-grid {
@@ -969,6 +971,8 @@
       width: 100%;
     }
     .btn-wishlist-detail {
+      width: 100%;
+      min-height: 44px;
       justify-content: center;
     }
   }
@@ -1024,15 +1028,19 @@
   const qtyInput = document.getElementById('qtyInput');
   const decBtn = document.getElementById('dec');
   const incBtn = document.getElementById('inc');
-  const detailStockWarning = document.getElementById('detailStockWarning');
+  const detailQtyControl = document.querySelector('#addToCartForm .qty-control');
   function selectedStock() { return parseSafeInt(addForm && addForm.dataset.currentStock, 0); }
   function showDetailStockLimit() {
-    if (!detailStockWarning) return;
-    detailStockWarning.textContent = 'حداکثر موجودی انتخاب شده' + (selectedStock() ? ' (' + formatFaNumber(selectedStock()) + ' عدد)' : '');
-    detailStockWarning.classList.remove('is-visible');
-    void detailStockWarning.offsetWidth;
-    detailStockWarning.classList.add('is-visible');
-    window.setTimeout(() => detailStockWarning.classList.remove('is-visible'), 2600);
+    const stock = selectedStock();
+    const message = 'حداکثر موجودی انتخاب شده' + (stock ? ' (' + formatFaNumber(stock) + ' عدد)' : '');
+    if (detailQtyControl) {
+      detailQtyControl.classList.remove('is-at-stock');
+      void detailQtyControl.offsetWidth;
+      detailQtyControl.classList.add('is-at-stock');
+      window.setTimeout(() => detailQtyControl.classList.remove('is-at-stock'), 600);
+    }
+    // A fixed toast sits above the page, rather than inside this product box.
+    if (typeof showToast === 'function') showToast(message, 'warning');
   }
   if (decBtn && incBtn) {
     decBtn.addEventListener('click', () => {

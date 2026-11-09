@@ -143,6 +143,11 @@ class Cart:
         return sum(int(q) for q in self._cart.values())
 
     @property
+    def quantities(self) -> dict[str, int]:
+        """A copy for templates/API helpers: variant id → current cart quantity."""
+        return {str(variant_id): int(quantity) for variant_id, quantity in self._cart.items()}
+
+    @property
     def total_price(self) -> int:
         total = 0
         vids = [int(k) for k in self._cart.keys()]

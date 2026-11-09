@@ -10,10 +10,14 @@ def cart(request):
         wcount = len(wids)
     except Exception:
         wids, wcount = set(), 0
+    # The per-variant map lets product cards render the quantity control again
+    # after a refresh instead of falling back to «افزودن به سبد».
+    cart_quantities = c.quantities
     return {
         "cart": c,
         "cart_total": c.total_price,
         "cart_count": len(c),
+        "cart_quantities": cart_quantities,
         "wishlist_ids": wids,
         "wishlist_count": wcount,
     }

@@ -99,10 +99,13 @@ def cloudinary_config_from_env() -> dict[str, str]:
 CLOUDINARY_STORAGE = cloudinary_config_from_env()
 CLOUDINARY_ENABLED = bool(CLOUDINARY_STORAGE)
 if CLOUDINARY_ENABLED:
+    # django-cloudinary-storage uses PREFIX (not FOLDER) as the Cloudinary
+    # public-id directory. Keep every storefront upload in one namespace.
+    cloudinary_prefix = os.environ.get("CLOUDINARY_FOLDER", "attarbashi").strip().strip("/") or "attarbashi"
     CLOUDINARY_STORAGE.update(
         {
             "SECURE": True,
-            "FOLDER": os.environ.get("CLOUDINARY_FOLDER", "attarbashi").strip() or "attarbashi",
+            "PREFIX": f"{cloudinary_prefix}/",
         }
     )
 
