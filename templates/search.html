@@ -142,7 +142,7 @@
             
             <!-- IMAGE CONTAINER -->
             <div class="card-img-box">
-              <img src="{{ product.image_url }}" alt="{{ product.name }}" loading="lazy">
+              <img src="{{ product.image_url|cloudinary_thumbnail:480 }}" srcset="{{ product.image_url|cloudinary_thumbnail:320 }} 320w, {{ product.image_url|cloudinary_thumbnail:480 }} 480w, {{ product.image_url|cloudinary_thumbnail:640 }} 640w" sizes="(max-width: 680px) 46vw, (max-width: 1100px) 30vw, 260px" alt="{{ product.name }}" loading="lazy" decoding="async">
               <!-- WISHLIST BUTTON (AJAX NO RELOAD) -->
               <button type="button" class="btn-wishlist-toggle {% if product.id in wishlist_ids %}active{% endif %}" data-url="{% url 'shop:wishlist_toggle' product.id %}" data-product-id="{{ product.id }}" title="علاقه‌مندی" onclick="toggleWishlistAjax(event, this)">
                 <i class="{% if product.id in wishlist_ids %}fas fa-heart{% else %}far fa-heart{% endif %}"></i>

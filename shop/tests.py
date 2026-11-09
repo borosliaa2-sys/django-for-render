@@ -288,6 +288,11 @@ class ShopFullFlowTests(TestCase):
         # A refresh must render the same stepper, not return to an add button.
         refreshed = self.client.get(reverse("shop:home"))
         self.assertEqual(refreshed.context["cart_quantities"][str(self.variant.id)], 2)
+        # The popular-products carousel uses the same server-backed quantity
+        # control as the category carousels, including after a page refresh.
+        self.assertContains(refreshed, 'data-cart-action-form')
+        self.assertContains(refreshed, 'data-update-url')
+        self.assertContains(refreshed, 'cart-stepper')
 
     def test_custom_404_view(self):
         res = self.client.get("/a-page-that-definitely-does-not-exist/")

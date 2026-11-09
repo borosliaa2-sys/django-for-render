@@ -7,6 +7,7 @@ pip install -r requirements.txt
 python manage.py collectstatic --noinput
 python manage.py migrate --noinput
 python manage.py ensure_catalog
+python manage.py apply_managed_catalog_media
 # On the first Cloudinary-enabled build, uploads bundled catalogue files whose
 # database names existed locally before Cloudinary was configured. It is a
 # no-op when Cloudinary is not configured and skips resources already uploaded.

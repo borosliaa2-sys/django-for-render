@@ -1,5 +1,5 @@
 {% extends 'base.html' %}
-{% load static humanize %}
+{% load static humanize shop_tags %}
 {% block title %}لیست علاقه‌مندی‌ها | عطارباشی{% endblock title %}
 {% block content %}
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
@@ -40,7 +40,7 @@
           
           <div class="wish-prod-img">
             <a href="{{ p.get_absolute_url }}">
-              <img src="{{ p.image_url }}" alt="{{ p.name }}" loading="lazy">
+              <img src="{{ p.image_url|cloudinary_thumbnail:360 }}" srcset="{{ p.image_url|cloudinary_thumbnail:240 }} 240w, {{ p.image_url|cloudinary_thumbnail:360 }} 360w, {{ p.image_url|cloudinary_thumbnail:480 }} 480w" sizes="(max-width: 680px) 42vw, 200px" alt="{{ p.name }}" loading="lazy" decoding="async">
             </a>
           </div>
 

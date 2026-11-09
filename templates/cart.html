@@ -1,5 +1,5 @@
 {% extends 'base.html' %}
-{% load static humanize %}
+{% load static humanize shop_tags %}
 {% block title %}سبد خرید | عطارباشی{% endblock title %}
 {% block content %}
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
@@ -36,7 +36,7 @@
             
             <div class="cart-prod-image">
               <a href="{{ row.product.get_absolute_url }}">
-                <img src="{{ row.product.image_url }}" alt="{{ row.product.name }}">
+                <img src="{{ row.product.image_url|cloudinary_thumbnail:240 }}" srcset="{{ row.product.image_url|cloudinary_thumbnail:160 }} 160w, {{ row.product.image_url|cloudinary_thumbnail:240 }} 240w" sizes="96px" alt="{{ row.product.name }}" loading="lazy" decoding="async">
               </a>
             </div>
 

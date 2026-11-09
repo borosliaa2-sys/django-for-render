@@ -236,7 +236,7 @@
             {% with rel.primary_variant as rv %}
             <div class="related-card">
               <a href="{{ rel.get_absolute_url }}" class="related-card-link">
-                <div class="related-img"><img src="{{ rel.image_url }}" alt="{{ rel.name }}" loading="lazy"></div>
+                <div class="related-img"><img src="{{ rel.image_url|cloudinary_thumbnail:360 }}" srcset="{{ rel.image_url|cloudinary_thumbnail:240 }} 240w, {{ rel.image_url|cloudinary_thumbnail:360 }} 360w, {{ rel.image_url|cloudinary_thumbnail:480 }} 480w" sizes="(max-width: 680px) 42vw, 180px" alt="{{ rel.name }}" loading="lazy" decoding="async"></div>
                 <div class="related-title">{{ rel.name }}</div>
                 {% if rv and rv.price %}
                   <div class="related-price">{{ rv.price|format_price }} تومان</div>

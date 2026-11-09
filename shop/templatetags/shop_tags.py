@@ -63,3 +63,26 @@ def cart_quantity(cart_quantities, variant_id):
         return int((cart_quantities or {}).get(str(variant_id), 0))
     except (AttributeError, TypeError, ValueError):
         return 0
+
+
+@register.filter(name="cloudinary_thumbnail")
+def cloudinary_thumbnail(url, width=480):
+    """Return a responsive, CDN-transformed Cloudinary URL for product cards.
+
+    Bundled/local/static URLs are intentionally left untouched. Cloudinary uses
+    the original as its master; this URL asks the CDN for only the size needed
+    by a list/card, with automatic WebP/AVIF selection and quality.
+    """
+    raw_url = str(url or "")
+    marker = "/image/upload/"
+    if "res.cloudinary.com" not in raw_url or marker not in raw_url:
+        return raw_url
+    try:
+        target_width = max(80, min(int(width), 1600))
+    except (TypeError, ValueError):
+        target_width = 480
+    prefix, suffix = raw_url.split(marker, 1)
+    if suffix.startswith("f_auto,"):
+        return raw_url
+    transforms = f"f_auto,q_auto,c_limit,w_{target_width}"
+    return f"{prefix}{marker}{transforms}/{suffix}"
