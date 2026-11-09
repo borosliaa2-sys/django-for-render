@@ -188,14 +188,14 @@ class CartItemAdmin(admin.ModelAdmin):
 
 @admin.register(Article)
 class ArticleAdmin(admin.ModelAdmin):
-    list_display = ("thumb", "title", "category_name", "author_name", "reading_time", "views_count", "is_published", "created_at")
+    list_display = ("thumb", "title", "category_name", "sort_order", "author_name", "reading_time", "views_count", "is_published", "created_at")
     list_filter = ("category_name", "is_published", "created_at")
     search_fields = ("title", "summary", "content", "author_name")
     prepopulated_fields = {"slug": ("title",)}
-    list_editable = ("is_published",)
+    list_editable = ("sort_order", "is_published")
     filter_horizontal = ("related_products",)
     readonly_fields = ("thumb_preview", "views_count", "created_at", "updated_at")
-    ordering = ("-created_at",)
+    ordering = ("sort_order", "-created_at")
 
     def thumb(self, obj):
         if obj.image_url:

@@ -72,20 +72,28 @@
           </div>
           <div class="arp-grid">
             {% for p in related_products %}
-            <a href="{{ p.get_absolute_url }}" class="arp-card">
-              <div class="arp-img">
-                <img src="{{ p.image_url }}" alt="{{ p.name }}">
+            {% with p.primary_variant as variant %}
+            <div class="arp-card">
+              <a href="{{ p.get_absolute_url }}" class="arp-card-link">
+                <div class="arp-img">
+                  <img src="{{ p.image_url }}" alt="{{ p.name }}">
+                </div>
+                <div class="arp-info">
+                  <h4>{{ p.name }}</h4>
+                  <span class="arp-cat">{{ p.category.name }}</span>
+                  {% if p.min_price %}
+                    <span class="arp-price">{{ p.min_price|intcomma }} تومان</span>
+                  {% else %}
+                    <span class="arp-price">مشاهده محصول</span>
+                  {% endif %}
+                </div>
+              </a>
+              <div class="arp-actions">
+                {% include 'includes/cart_action.html' with variant=variant button_class='arp-cart-btn' button_text='افزودن به سبد' %}
+                <button type="button" class="btn-heart arp-heart {% if p.id in wishlist_ids %}active{% endif %}" data-url="{% url 'shop:wishlist_toggle' p.id %}" data-product-id="{{ p.id }}" title="افزودن {{ p.name }} به علاقه‌مندی" onclick="toggleWishlistAjax(event, this)"><i class="{% if p.id in wishlist_ids %}ri-heart-3-fill{% else %}ri-heart-3-line{% endif %}"></i></button>
               </div>
-              <div class="arp-info">
-                <h4>{{ p.name }}</h4>
-                <span class="arp-cat">{{ p.category.name }}</span>
-                {% if p.min_price %}
-                  <span class="arp-price">{{ p.min_price|intcomma }} تومان</span>
-                {% else %}
-                  <span class="arp-price">مشاهده محصول</span>
-                {% endif %}
-              </div>
-            </a>
+            </div>
+            {% endwith %}
             {% endfor %}
           </div>
         </div>
@@ -256,8 +264,11 @@
 
   .art-cat-pill {
     display: inline-block;
-    background: #faece1;
-    color: var(--secondary-color);
+    background: rgba(255,255,255,.9);
+    color: #24180f;
+    border: 1px solid rgba(94,68,46,.24);
+    box-shadow: 0 3px 10px rgba(43,31,21,.10);
+    backdrop-filter: blur(8px);
     font-size: 0.8rem;
     font-weight: 800;
     padding: 3px 12px;
@@ -349,13 +360,12 @@
   }
   .arp-card {
     display: flex;
-    align-items: center;
-    gap: 10px;
+    flex-direction: column;
+    gap: 9px;
     background: #fdfaf7;
     border: 1px solid #ebd0bc;
     border-radius: 12px;
-    padding: 8px 10px;
-    text-decoration: none;
+    padding: 8px 10px 10px;
     transition: all 0.2s ease;
   }
   .arp-card:hover {
@@ -364,6 +374,12 @@
     transform: translateY(-2px);
     box-shadow: 0 4px 14px rgba(255, 128, 93, 0.15);
   }
+  .arp-card-link { display: flex; align-items: center; gap: 10px; text-decoration: none; min-width: 0; width: 100%; }
+  .arp-actions { display: flex; align-items: center; gap: 7px; width: 100%; }
+  .arp-actions form { flex: 1; min-width: 0; }
+  .arp-cart-btn { width: 100%; border: 0; border-radius: 20px; padding: 7px 9px; color: #fff; background: var(--secondary-color); font: 800 .76rem inherit; cursor: pointer; }
+  .arp-heart { width: 34px; height: 34px; flex: 0 0 34px; border: 1px solid #ebd0bc; background: #fff; border-radius: 50%; color: #7c6c5d; cursor: pointer; }
+  .arp-heart.active { color: #e74c3c; border-color: #fecaca; background: #fff5f5; }
   .arp-img {
     width: 50px;
     height: 50px;

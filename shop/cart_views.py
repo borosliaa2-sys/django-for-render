@@ -87,6 +87,13 @@ def cart_update(request, variant_id: int):
         qty = 1
 
     cart = Cart(request)
+    if qty > 0 and variant.stock <= 0:
+        msg = f"متأسفانه «{variant.product.name}» اکنون در انبار موجود نیست."
+        if is_ajax:
+            return JsonResponse({"success": False, "message": msg, "stock": 0}, status=400)
+        messages.error(request, msg)
+        return redirect("shop:cart_detail")
+
     if qty == 0:
         cart.remove(variant)
         msg = f"«{variant.product.name}» از سبد حذف شد."

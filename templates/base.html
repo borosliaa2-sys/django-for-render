@@ -21,6 +21,7 @@
     <link rel="stylesheet" href="{% static 'css/header-fix.css' %}">
     <link rel="stylesheet" href="{% static 'css/_main.css' %}?v=20261105-featured-original">
     <link rel="stylesheet" href="{% static 'css/_category.css' %}">
+    <link rel="stylesheet" href="{% static 'css/cart_actions.css' %}">
     <link rel="stylesheet" href="{% static 'css/_ppr.css' %}?v=20261105-featured-original">
     <link href="https://cdn.jsdelivr.net/npm/remixicon@4.9.0/fonts/remixicon.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
@@ -89,7 +90,19 @@
         <nav class="navigation">
             <ul class="menu">
                 <li><a href="{% url 'shop:home' %}"><i class="ri-home-4-line"></i> صفحه اصلی</a></li>
-                <li><a href="{% url 'shop:home' %}#category"><i class="ri-apps-2-line"></i> دسته‌بندی محصولات</a></li>
+                <li class="nav-category-item">
+                    <button type="button" class="nav-category-trigger" data-category-menu-trigger aria-expanded="false" aria-controls="category-nav-menu">
+                        <i class="ri-apps-2-line"></i><span>دسته‌بندی محصولات</span><i class="ri-arrow-down-s-line nav-category-arrow" aria-hidden="true"></i>
+                    </button>
+                    <div class="nav-category-menu" id="category-nav-menu" data-category-menu>
+                        <a href="{% url 'shop:home' %}#category" class="nav-category-all"><i class="ri-grid-fill"></i> مشاهده همه دسته‌بندی‌ها</a>
+                        <div class="nav-category-links">
+                            {% for category in nav_categories %}
+                            <a href="{% url 'shop:category' category.slug %}"><i class="ri-arrow-left-s-line"></i>{{ category.name }}</a>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </li>
                 <li><a href="{% url 'shop:search' %}"><i class="ri-store-2-line"></i> همه محصولات</a></li>
                 <li><a href="{% url 'shop:suggested' %}"><i class="ri-star-smile-line"></i> محصولات پیشنهادی</a><span class="nav-lable">ویژه</span></li>
                 <li><a href="{% url 'shop:article_list' %}"><i class="ri-article-line"></i> مقالات و وبلاگ</a></li>
@@ -121,10 +134,10 @@
         <div class="footer-top">
             <div class="footer-container">
                 <div class="footer-col footer-about">
-                    <div class="footer-logo">
+                    <a href="{% url 'shop:home' %}" class="footer-logo" aria-label="بازگشت به صفحه اصلی عطارباشی">
                         <img src="{% static 'images/logo.jpg' %}" alt="عطارباشی">
                         <span>عطارباشی</span>
-                    </div>
+                    </a>
                     <p>فروشگاه آنلاین محصولات طبیعی و سنتی عطارباشی؛ ارائه‌دهنده مرغوب‌ترین گیاهان دارویی، دمنوش‌ها، خشکبار اعلا و فرآورده‌های سنتی با تضمین کیفیت و اصالت.</p>
                     <div class="footer-socials">
                         <a href="#" title="اینستاگرام"><i class="ri-instagram-line"></i></a>
@@ -241,6 +254,7 @@
     }
     .footer-logo {
         display: flex;
+        text-decoration: none;
         align-items: center;
         gap: 10px;
         margin-bottom: 12px;

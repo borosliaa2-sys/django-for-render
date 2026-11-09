@@ -1,0 +1,12 @@
+{% load l10n %}
+{# Reusable card action. Successful AJAX adds are upgraded by main.js into qty-control. #}
+{% if variant and variant.id and variant.stock > 0 %}
+<form method="post" action="{% url 'shop:cart_add' variant.id %}" class="cart-add-form cart-action-form" data-cart-action-form data-variant-id="{{ variant.id|unlocalize }}" data-stock="{{ variant.stock|unlocalize }}" data-button-class="{{ button_class|default:'pro-cart-btn' }}" data-button-text="{{ button_text|default:'افزودن به سبد' }}" data-update-url="{% url 'shop:cart_update' variant.id %}" onclick="event.stopPropagation();">
+    {% csrf_token %}
+    <input type="hidden" name="qty" value="1">
+    <input type="hidden" name="next" value="{{ request.get_full_path }}">
+    <button type="submit" class="{{ button_class|default:'pro-cart-btn' }}"><i class="ri-shopping-bag-4-line"></i><span>{{ button_text|default:'افزودن به سبد' }}</span></button>
+</form>
+{% else %}
+<button type="button" class="{{ button_class|default:'pro-cart-btn' }}" disabled aria-disabled="true" style="background:#e5e7eb; color:#9ca3af; cursor:not-allowed;"><i class="ri-close-circle-line"></i><span>ناموجود</span></button>
+{% endif %}

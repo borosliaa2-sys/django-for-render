@@ -36,7 +36,7 @@ class HomeView(TemplateView):
         # چهار مقالهٔ تازه برای کاروسل خودکارِ صفحهٔ خانه.
         ctx["home_articles"] = list(
             Article.objects.filter(is_published=True)
-            .order_by("-created_at", "-id")[:4]
+            .order_by("sort_order", "-created_at", "-id")[:4]
         )
 
         # چهار کاروسل دسته‌ایِ صفحهٔ خانه؛ هرکدام حداکثر ده محصول نخست
@@ -438,10 +438,12 @@ class ArticleListView(ListView):
     model = Article
     template_name = "blog/article_list.html"
     context_object_name = "articles"
-    paginate_by = 9
+    # آرشیو منتشرشده را تا ظرفیت مناسب در یک صفحه نگه می‌داریم؛ صفحه‌بندی
+    # فقط برای رشد آینده به کار می‌رود و مقاله‌های قدیمی پنهان نمی‌شوند.
+    paginate_by = 48
 
     def get_queryset(self):
-        qs = Article.objects.filter(is_published=True).order_by("-created_at")
+        qs = Article.objects.filter(is_published=True).order_by("sort_order", "-created_at")
         q = self.request.GET.get("q", "").strip()[:MAX_Q_LENGTH]
         category = self.request.GET.get("category", "").strip()
         if q:

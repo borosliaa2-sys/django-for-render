@@ -42,6 +42,16 @@ PREVIOUS_ARTICLE_FINGERPRINTS = {
     "هفت-ادویه-برای-آشپزی-سالم": "ca69a16ae91227e7213aa013b5728afda93eb05afdc3e0700f013d171e340ebb",
 }
 
+# Later revisions use the same protection: update only the exact starter copy
+# shipped before this revision, never an article changed by the administrator.
+EDITORIAL_REVISION_FINGERPRINTS = {
+    "خواص-دمنوش-آرامش-اعصاب": "d8f2f067bab4238d388b55ead786a7469c4ed08dd9ff3e1eed54bb819fdd312a",
+    "خواص-سیر-ترشی-هفت-ساله": "6a143a57356d75fb945584abc64e33a9bd20c0c94a0bb48c98d3cfbb4259fdb7",
+    "دمنوش-به-لیمو-برای-عصرهای-آرام": "0f045deac1401a0b75f917285b05d9bdb7e0791afa576b5f96d8894b93ab9da1",
+    "ترشی-و-زیتون-کنار-غذا": "bc5759b64249ba3ff5e2967f6363222bc7a0951a0db6704caf685b64ca73a33d",
+    "راهنمای-انتخاب-مربا-برای-صبحانه": "e71739a9f3448a5caa9e28b1a25a7e2d11d50885bc5c2e29b72dd95025ce2658",
+}
+
 FINGERPRINT_FIELDS = ("title", "category_name", "summary", "content", "image", "reading_time")
 REFINABLE_FIELDS = (
     "title",
@@ -97,22 +107,31 @@ class Command(BaseCommand):
                 slug=item["slug"], defaults=defaults
             )
             created_articles += int(created)
+            article_was_refined = False
 
             # Apply this editorial revision once, but only to an unchanged
             # previous starter article. Content changed in the admin is kept.
-            expected_fingerprint = PREVIOUS_ARTICLE_FINGERPRINTS.get(article.slug)
-            if not created and expected_fingerprint:
-                if article_fingerprint(article) == expected_fingerprint:
+            expected_fingerprints = {
+                fingerprint
+                for fingerprint in (
+                    PREVIOUS_ARTICLE_FINGERPRINTS.get(article.slug),
+                    EDITORIAL_REVISION_FINGERPRINTS.get(article.slug),
+                )
+                if fingerprint
+            }
+            if not created and expected_fingerprints:
+                if article_fingerprint(article) in expected_fingerprints:
                     for field in REFINABLE_FIELDS:
                         setattr(article, field, item[field])
                     article.save(update_fields=[*REFINABLE_FIELDS, "updated_at"])
                     refined_articles += 1
+                    article_was_refined = True
                 elif not article_matches_managed_values(article, item):
                     preserved_articles += 1
 
             # Curated relations are seeded only when no editor has selected
             # products manually. This prevents unrelated fallback products.
-            if not article.related_products.exists():
+            if article_was_refined or not article.related_products.exists():
                 wanted_slugs = item["product_slugs"]
                 products_by_slug = {
                     product.slug: product

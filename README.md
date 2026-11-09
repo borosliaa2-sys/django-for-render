@@ -161,7 +161,25 @@ DJANGO_SUPERUSER_PASSWORD=<رمز طولانی و یکتا>
 
 هر تصویر **جدیدی** که از پنل ادمین برای محصول یا مقاله بارگذاری شود، پیش از ذخیره به WebP با کیفیت وب و حداکثر اندازهٔ ۱۶۰۰×۱۶۰۰ پیکسل تبدیل و جهت EXIF آن اصلاح می‌شود. گزارش فعلی بهینه‌سازی در `reports/image-optimization-report-fa.md` است.
 
-اما آپلود جدید از پنل ادمین روی دیسک موقت Render ذخیره می‌شود و ممکن است با Deploy بعدی از بین برود. برای حفظ فایل‌های جدید در آینده، Render Disk یا فضای S3/Cloudinary اضافه کنید.
+اما آپلود جدید از پنل ادمین روی دیسک موقت Render ذخیره می‌شود و ممکن است با Deploy بعدی از بین برود.
+
+### اتصال اختیاری Cloudinary برای آپلودهای جدید
+
+این نسخه `cloudinary` و `cloudinary-storage` را دارد، اما **فقط زمانی فعال می‌شود که متغیرهای محیطی آن را در Render وارد کنید**. هیچ کلید یا آدرس محرمانه‌ای در Git یا ZIP ثبت نشده است. فایل‌های استاتیک و تصاویر فعلی کاتالوگ همچنان با WhiteNoise/Repository سرو می‌شوند؛ Cloudinary فقط مقصد `MEDIA` برای آپلودهای تازهٔ پنل ادمین است.
+
+1. در Cloudinary از صفحهٔ **Dashboard → API Keys** مقدار API Environment variable را کپی کنید.
+2. در Render → سرویس → **Environment** یک متغیر با این قالب بسازید:
+
+```text
+CLOUDINARY_URL=cloudinary://API_KEY:API_SECRET@CLOUD_NAME
+CLOUDINARY_FOLDER=attarbashi
+```
+
+3. Deploy جدید انجام دهید. در Build Log، وابستگی‌ها نصب می‌شوند و از آن پس تصویر جدید محصول یا مقاله مستقیماً و با HTTPS در Cloudinary ذخیره خواهد شد.
+
+به‌جای `CLOUDINARY_URL` می‌توانید سه متغیر `CLOUDINARY_CLOUD_NAME`، `CLOUDINARY_API_KEY` و `CLOUDINARY_API_SECRET` را جداگانه وارد کنید. تنظیم `CLOUDINARY_FOLDER` اختیاری است و پیش‌فرض آن `attarbashi` است. برای توسعهٔ محلی یا وقتی این متغیرها خالی‌اند، پروژه خودکار به ذخیره‌سازی محلی `MEDIA` برمی‌گردد.
+
+> کلیدهای Cloudinary را فقط در Render Environment یا فایل `.env` خصوصی وارد کنید؛ هرگز آن‌ها را در GitHub، screenshot یا ticket عمومی قرار ندهید.
 
 ## اجرای محلی
 

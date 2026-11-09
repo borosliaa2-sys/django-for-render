@@ -119,14 +119,16 @@
   min-height: 30px;
   box-sizing: border-box;
   padding: 6px 12px;
-  border: 1px solid rgba(255,255,255,.48);
-  background: rgba(43, 31, 21, .84);
+  /* A nearly-opaque glass base keeps the deliberately dark type readable on
+     both very light and very dark article photos. */
+  border: 1px solid rgba(255,255,255,.82);
+  background: rgba(255,255,255,.88);
   box-shadow: 0 5px 15px rgba(0,0,0,.30);
   backdrop-filter: blur(10px) saturate(135%);
   -webkit-backdrop-filter: blur(10px) saturate(135%);
   border-radius: 999px;
-  color: #fff !important;
-  text-shadow: 0 1px 3px rgba(0,0,0,.58);
+  color: #24180f !important;
+  text-shadow: none;
   font-size: .75rem;
   font-weight: 900;
   line-height: 1.25;

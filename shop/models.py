@@ -432,6 +432,7 @@ class Article(models.Model):
     author_name = models.CharField("نویسنده", max_length=100, default="تحریریه عطارباشی")
     reading_time = models.PositiveIntegerField("مدت مطالعه (دقیقه)", default=5)
     views_count = models.PositiveIntegerField("تعداد بازدید", default=0)
+    sort_order = models.PositiveIntegerField("ترتیب نمایش", default=0)
     is_published = models.BooleanField("منتشر شده", default=True)
     created_at = models.DateTimeField("تاریخ انتشار", auto_now_add=True)
     updated_at = models.DateTimeField("به‌روزرسانی", auto_now=True)
@@ -439,10 +440,10 @@ class Article(models.Model):
     class Meta:
         verbose_name = "مقاله"
         verbose_name_plural = "مقالات و وبلاگ"
-        ordering = ["-created_at"]
+        ordering = ["sort_order", "-created_at"]
         indexes = [
             models.Index(fields=["slug"], name="art_slug_idx"),
-            models.Index(fields=["is_published", "-created_at"], name="art_pub_idx"),
+            models.Index(fields=["is_published", "sort_order", "-created_at"], name="art_pub_sort_idx"),
         ]
 
     def __str__(self):

@@ -44,6 +44,34 @@ navLinks.forEach((link) => {
     });
 });
 
+// زیرمنوی دسته‌بندی‌ها: در موبایل فقط با لمس دکمه باز می‌شود؛ در دسکتاپ
+// CSS آن را با hover نمایش می‌دهد.
+const categoryMenuTrigger = document.querySelector('[data-category-menu-trigger]');
+const categoryMenu = document.querySelector('[data-category-menu]');
+const categoryMenuItem = categoryMenuTrigger ? categoryMenuTrigger.closest('.nav-category-item') : null;
+if (categoryMenuTrigger && categoryMenuItem) {
+    categoryMenuTrigger.addEventListener('click', function (event) {
+        if (window.innerWidth > 768) return;
+        event.preventDefault();
+        event.stopPropagation();
+        const open = categoryMenuItem.classList.toggle('is-open');
+        categoryMenuTrigger.setAttribute('aria-expanded', open ? 'true' : 'false');
+    });
+}
+
+// بستن منوی موبایل با لمس هر نقطه بیرون پنل (و نه فقط ضربدر همبرگری).
+const navigation = document.querySelector('.navigation');
+const menuIcon = document.querySelector('.menu-icon');
+document.addEventListener('click', function (event) {
+    if (window.innerWidth > 768 || !menuBtn || !menuBtn.checked || !navigation) return;
+    // A label activation dispatches a follow-up click on the hidden checkbox;
+    // that checkbox is part of opening the drawer, not an outside click.
+    if (navigation.contains(event.target) || event.target === menuBtn || (menuIcon && menuIcon.contains(event.target))) return;
+    menuBtn.checked = false;
+    if (categoryMenuItem) categoryMenuItem.classList.remove('is-open');
+    if (categoryMenuTrigger) categoryMenuTrigger.setAttribute('aria-expanded', 'false');
+});
+
 // ۲. مدیریت اسکرول هدر
 const header = document.querySelector('header');
 let lastScroll = 0;
@@ -185,6 +213,115 @@ function getCsrfToken() {
     return cookie ? cookie.split('=')[1] : '';
 }
 
+function formatPersianNumber(value) {
+    return Number(value || 0).toLocaleString('fa-IR');
+}
+
+function updateCartBadge(cartCount) {
+    const cartLink = document.querySelector('.nav-cart');
+    if (!cartLink) return;
+    let badge = cartLink.querySelector('span');
+    if (!badge) {
+        badge = document.createElement('span');
+        cartLink.appendChild(badge);
+    }
+    badge.textContent = cartCount || 0;
+    window.addToCartAnim();
+}
+
+function cartUpdateUrlFor(form) {
+    if (form.dataset.updateUrl) return form.dataset.updateUrl;
+    return (form.action || '').replace('/cart/add/', '/cart/update/');
+}
+
+function showStockLimit(form, stock) {
+    const warning = form.querySelector('.cart-stock-warning');
+    if (warning && stock !== undefined) {
+        warning.textContent = `حداکثر موجودی انتخاب شده (${formatPersianNumber(stock)} عدد)`;
+    }
+    form.classList.remove('is-at-stock');
+    void form.offsetWidth;
+    form.classList.add('is-at-stock');
+    window.setTimeout(() => form.classList.remove('is-at-stock'), 2600);
+}
+
+function upgradeToQuantityStepper(form, quantity, stock) {
+    if (!form || !form.hasAttribute('data-cart-action-form')) return;
+    const safeQty = Math.max(1, Number(quantity) || 1);
+    const safeStock = Math.max(0, Number(stock) || 0);
+    form.dataset.stock = safeStock;
+    form.dataset.quantity = safeQty;
+    form.innerHTML = `
+        <div class="cart-stepper" role="group" aria-label="تعداد محصول در سبد">
+            <button type="button" class="cart-stepper__button" data-cart-qty-action="increase" aria-label="افزایش تعداد">+</button>
+            <output class="cart-stepper__count" data-cart-qty-count>${formatPersianNumber(safeQty)}</output>
+            <button type="button" class="cart-stepper__button" data-cart-qty-action="decrease" aria-label="کاهش تعداد">−</button>
+        </div>
+        <span class="cart-stock-warning" role="status">حداکثر موجودی انتخاب شده</span>`;
+}
+
+function restoreAddButton(form) {
+    const csrf = getCsrfToken();
+    const buttonClass = form.dataset.buttonClass || 'pro-cart-btn';
+    const buttonText = form.dataset.buttonText || 'افزودن به سبد';
+    form.dataset.quantity = '0';
+    form.innerHTML = `${csrf ? `<input type="hidden" name="csrfmiddlewaretoken" value="${csrf}">` : ''}
+        <input type="hidden" name="qty" value="1">
+        <button type="submit" class="${buttonClass}"><i class="ri-shopping-bag-4-line"></i><span>${buttonText}</span></button>`;
+}
+
+function updateStepperCount(form, quantity) {
+    form.dataset.quantity = quantity;
+    const count = form.querySelector('[data-cart-qty-count]');
+    if (count) count.textContent = formatPersianNumber(quantity);
+}
+
+// Quantity changes are server-validated as well as clamped in the UI. This
+// covers a second tab, stale stock, or a manually altered request.
+document.addEventListener('click', function (event) {
+    const button = event.target.closest('[data-cart-qty-action]');
+    if (!button) return;
+    const form = button.closest('form[data-cart-action-form]');
+    if (!form || button.disabled) return;
+    event.preventDefault();
+    event.stopPropagation();
+
+    const current = Math.max(1, Number(form.dataset.quantity) || 1);
+    const stock = Math.max(0, Number(form.dataset.stock) || 0);
+    const increasing = button.dataset.cartQtyAction === 'increase';
+    if (increasing && current >= stock) {
+        showStockLimit(form, stock);
+        return;
+    }
+    const targetQuantity = increasing ? current + 1 : current - 1;
+    button.disabled = true;
+
+    fetch(cartUpdateUrlFor(form), {
+        method: 'POST',
+        headers: { 'X-Requested-With': 'XMLHttpRequest', 'X-CSRFToken': getCsrfToken() },
+        body: new URLSearchParams({ qty: String(Math.max(0, targetQuantity)), ajax: '1' })
+    })
+    .then(response => response.json().then(data => ({ status: response.status, data })))
+    .then(({ status, data }) => {
+        if (status >= 200 && status < 300 && data.success) {
+            updateCartBadge(data.cart_count);
+            if (data.action === 'removed' || targetQuantity <= 0) {
+                restoreAddButton(form);
+            } else {
+                const actualQty = Number(data.item_qty) || targetQuantity;
+                form.dataset.stock = Number(data.stock) || stock;
+                updateStepperCount(form, actualQty);
+                if (increasing && actualQty >= Number(form.dataset.stock)) showStockLimit(form, form.dataset.stock);
+            }
+        } else {
+            showToast(data.message || 'تغییر تعداد انجام نشد.', 'error');
+            if (increasing && data.stock !== undefined) showStockLimit(form, data.stock);
+        }
+    })
+    .catch(() => showToast('خطا در برقراری ارتباط با سرور.', 'error'))
+    .finally(() => { button.disabled = false; });
+}, true);
+
 // ۶. هندلر سراسری AJAX برای سبد خرید
 document.addEventListener('submit', function (e) {
     const form = e.target;
@@ -218,17 +355,9 @@ document.addEventListener('submit', function (e) {
             if (status >= 200 && status < 300 && data.success) {
                 showToast(data.message || 'به سبد خرید اضافه شد.', 'success');
                 
-                // به‌روزرسانی تعداد سبد در هدر
-                const cartLink = document.querySelector('.nav-cart');
-                if (cartLink) {
-                    let badge = cartLink.querySelector('span');
-                    if (!badge) {
-                        badge = document.createElement('span');
-                        cartLink.appendChild(badge);
-                    }
-                    badge.textContent = data.cart_count || 0;
-                    window.addToCartAnim();
-                }
+                // به‌روزرسانی تعداد سبد در هدر و تبدیل دکمه کارت به کنترل تعداد.
+                updateCartBadge(data.cart_count);
+                upgradeToQuantityStepper(form, data.item_qty, data.stock);
 
                 // اگر مودال پیش‌نمایش باز بود، ببندیم
                 if (typeof closeQuickPreview === 'function') closeQuickPreview();

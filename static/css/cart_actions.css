@@ -1,0 +1,65 @@
+/* Shared AJAX cart action: a successful add becomes the same compact quantity
+   control used on the product page. */
+.cart-action-form,
+.cart-add-form { position: relative; }
+.cart-stepper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  min-height: 39px;
+  padding: 3px;
+  border: 1px solid #ead7c9;
+  border-radius: 999px;
+  background: #f0ece8;
+  box-sizing: border-box;
+}
+.cart-stepper__button {
+  width: 31px;
+  height: 31px;
+  border: 0;
+  border-radius: 50%;
+  background: #fff;
+  color: #3e2c1b;
+  box-shadow: 0 1px 3px rgba(43,31,21,.14);
+  font: 900 1.16rem/1 inherit;
+  cursor: pointer;
+  transition: background .16s ease, color .16s ease, transform .16s ease;
+}
+.cart-stepper__button:hover:not(:disabled) { background: #ff805d; color: #fff; transform: translateY(-1px); }
+.cart-stepper__button:disabled { opacity: .48; cursor: wait; }
+.pro-box .cart-stepper,
+.btn-wrap .cart-stepper,
+.wish-prod-actions .cart-stepper,
+.related-card-actions .cart-stepper,
+.arp-actions .cart-stepper { width: 100%; }
+.cart-stepper__count { min-width: 28px; text-align: center; color: #2b1f15; font-weight: 900; font-size: .9rem; }
+.cart-stock-warning {
+  display: none;
+  position: absolute;
+  z-index: 3;
+  right: 50%;
+  bottom: calc(100% + 6px);
+  transform: translateX(50%);
+  min-width: max-content;
+  padding: 6px 9px;
+  border: 1px solid #fecaca;
+  border-radius: 8px;
+  background: #fff1f2;
+  color: #b42318;
+  box-shadow: 0 5px 12px rgba(127,29,29,.16);
+  font-size: .72rem;
+  font-weight: 800;
+  white-space: nowrap;
+}
+.cart-action-form.is-at-stock .cart-stock-warning { display: block; animation: cartStockShake .42s ease-in-out both; }
+@keyframes cartStockShake {
+  0%,100% { transform: translateX(50%); }
+  20%,60% { transform: translateX(calc(50% + 5px)); }
+  40%,80% { transform: translateX(calc(50% - 5px)); }
+}
+@media (max-width: 480px) {
+  .cart-stepper { min-height: 37px; }
+  .cart-stepper__button { width: 29px; height: 29px; }
+  .cart-stock-warning { font-size: .67rem; }
+}

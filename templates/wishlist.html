@@ -74,15 +74,7 @@
 
           <div class="wish-prod-actions">
             {% if v and v.id and v.stock > 0 %}
-              <form method="post" action="{% url 'shop:cart_add' v.id %}" class="cart-add-form" style="display:inline;">
-                {% csrf_token %}
-                <input type="hidden" name="qty" value="1">
-                <input type="hidden" name="next" value="{{ request.get_full_path }}">
-                <button type="submit" class="btn-wish-cart">
-                  <i class="ri-shopping-bag-4-line"></i>
-                  <span>افزودن به سبد</span>
-                </button>
-              </form>
+              {% include 'includes/cart_action.html' with variant=v button_class='btn-wish-cart' button_text='افزودن به سبد' %}
             {% else %}
               <button type="button" class="btn-wish-cart disabled" disabled>ناموجود</button>
             {% endif %}

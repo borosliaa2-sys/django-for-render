@@ -1,7 +1,7 @@
 from django.test import TestCase, Client
 from django.urls import reverse
 from account.models import CustomUser
-from shop.models import Category, Product, ProductVariant, Order, OrderItem
+from shop.models import Article, Category, Product, ProductVariant, Order, OrderItem
 from shop.cart import Cart
 
 class ShopFullFlowTests(TestCase):
@@ -253,6 +253,38 @@ class ShopFullFlowTests(TestCase):
         res = self.client.get(reverse("shop:wishlist_list"))
         self.assertEqual(res.status_code, 200)
         self.assertContains(res, "عرق نعناع دو آتیشه")
+
+    def test_article_archive_honours_admin_display_order(self):
+        later = Article.objects.create(
+            title="مقاله با ترتیب دیرتر", slug="article-later", category_name="آموزش",
+            summary="خلاصه", content="متن", sort_order=8,
+        )
+        first = Article.objects.create(
+            title="مقاله با ترتیب اول", slug="article-first", category_name="آموزش",
+            summary="خلاصه", content="متن", sort_order=1,
+        )
+        res = self.client.get(reverse("shop:article_list"))
+        self.assertEqual(res.status_code, 200)
+        self.assertLess(res.content.find(first.title.encode()), res.content.find(later.title.encode()))
+        self.client.force_login(self.admin_user)
+        admin_res = self.client.get("/admin/shop/article/")
+        self.assertContains(admin_res, "ترتیب نمایش")
+
+    def test_cart_update_never_exceeds_live_stock(self):
+        self.variant.stock = 2
+        self.variant.save(update_fields=["stock"])
+        add = self.client.post(
+            reverse("shop:cart_add", kwargs={"variant_id": self.variant.id}),
+            {"qty": 1, "ajax": 1}, HTTP_X_REQUESTED_WITH="XMLHttpRequest",
+        )
+        self.assertEqual(add.status_code, 200)
+        update = self.client.post(
+            reverse("shop:cart_update", kwargs={"variant_id": self.variant.id}),
+            {"qty": 9, "ajax": 1}, HTTP_X_REQUESTED_WITH="XMLHttpRequest",
+        )
+        self.assertEqual(update.status_code, 200)
+        self.assertEqual(update.json()["item_qty"], 2)
+        self.assertEqual(update.json()["stock"], 2)
 
     def test_custom_404_view(self):
         res = self.client.get("/a-page-that-definitely-does-not-exist/")

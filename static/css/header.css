@@ -354,6 +354,97 @@ header.site-header.header-scrolled .logo img{
     z-index: 2;
 }
 
+/* زیرمنوی دسته‌بندی‌ها: هاور در دسکتاپ و لمس در موبایل */
+.nav-category-item { z-index: 30; }
+.nav-category-trigger {
+    appearance: none;
+    border: 0;
+    background: transparent;
+    color: #3e2c1b;
+    font: inherit;
+    font-size: .92rem;
+    font-weight: 600;
+    padding: 6px 2px;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    position: relative;
+    cursor: pointer;
+}
+.nav-category-trigger::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    width: 0;
+    height: 2px;
+    background: var(--secondary-color);
+    border-radius: 2px;
+    transition: width .2s ease;
+}
+.nav-category-trigger:hover,
+.nav-category-item:focus-within .nav-category-trigger { color: var(--secondary-color); }
+.nav-category-item:hover .nav-category-trigger::after,
+.nav-category-item:focus-within .nav-category-trigger::after { width: 100%; }
+.nav-category-arrow { font-size: 1rem; transition: transform .2s ease; }
+.nav-category-menu {
+    position: absolute;
+    top: calc(100% + 9px);
+    right: 50%;
+    transform: translateX(50%) translateY(6px);
+    width: 430px;
+    padding: 11px;
+    border: 1px solid rgba(255,128,93,.26);
+    border-radius: 15px;
+    background: #fff;
+    box-shadow: 0 14px 35px rgba(43,31,21,.15);
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transition: opacity .18s ease, transform .18s ease, visibility .18s ease;
+    box-sizing: border-box;
+}
+.nav-category-item:hover .nav-category-menu,
+.nav-category-item:focus-within .nav-category-menu {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+    transform: translateX(50%) translateY(0);
+}
+.nav-category-item:hover .nav-category-arrow,
+.nav-category-item:focus-within .nav-category-arrow { transform: rotate(180deg); }
+.nav-category-all {
+    display: flex !important;
+    align-items: center;
+    gap: 7px;
+    padding: 8px 9px !important;
+    margin-bottom: 7px;
+    border-radius: 9px;
+    background: #fff3ed;
+    color: #d74e2c !important;
+    font-size: .8rem !important;
+    font-weight: 800 !important;
+}
+.nav-category-links {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 2px 7px;
+}
+.nav-category-links a {
+    display: flex !important;
+    align-items: center;
+    gap: 2px;
+    padding: 7px 8px !important;
+    border-radius: 8px;
+    color: #4a3b2c !important;
+    font-size: .8rem !important;
+    font-weight: 700 !important;
+    white-space: nowrap;
+}
+.nav-category-links a:hover { background: #fff5f0; color: var(--secondary-color) !important; }
+.nav-category-menu a::before { display: none !important; }
+.nav-category-links i { color: var(--secondary-color); font-size: .95rem; }
+
 /* ========================================================
    RESPONSIVE MOBILE
    ======================================================== */
@@ -491,6 +582,42 @@ header.site-header.header-scrolled .logo img{
     }
     .menu li a::before{
         display: none;
+    }
+    .nav-category-trigger {
+        width: 100%;
+        justify-content: flex-start;
+        padding: 13px 10px;
+        font-size: .95rem;
+        font-weight: 700;
+        border-bottom: 1px solid #faece1;
+        box-sizing: border-box;
+    }
+    .nav-category-trigger::after { display: none; }
+    .nav-category-trigger > .ri-apps-2-line { font-size: 1.15rem; color: var(--secondary-color); }
+    .nav-category-arrow { margin-right: auto; font-size: 1.2rem; }
+    .nav-category-menu {
+        position: static;
+        width: 100%;
+        margin: 0;
+        padding: 0 7px 8px;
+        transform: none;
+        border: 0;
+        border-radius: 0;
+        box-shadow: none;
+        background: #fffaf7;
+        opacity: 1;
+        visibility: visible;
+        pointer-events: auto;
+        display: none;
+    }
+    .nav-category-item.is-open .nav-category-menu { display: block; }
+    .nav-category-item.is-open .nav-category-arrow { transform: rotate(180deg); }
+    .nav-category-all { margin: 8px 0 5px; }
+    .nav-category-links { grid-template-columns: 1fr; gap: 1px; }
+    .nav-category-links a {
+        border-bottom: 0 !important;
+        padding: 8px 10px !important;
+        font-size: .82rem !important;
     }
     .nav-lable{
         top: 10px;

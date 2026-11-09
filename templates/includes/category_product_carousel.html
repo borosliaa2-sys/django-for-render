@@ -58,16 +58,7 @@
                             <div class="current-prise"><span class="price">تماس بگیرید</span></div>
                         {% endif %}
                     </div>
-                    {% if variant and variant.id and variant.stock > 0 %}
-                    <form method="post" action="{% url 'shop:cart_add' variant.id %}" class="cart-add-form" onclick="event.stopPropagation();">
-                        {% csrf_token %}
-                        <input type="hidden" name="qty" value="1">
-                        <input type="hidden" name="next" value="{{ request.get_full_path }}">
-                        <button type="submit" class="pro-cart-btn"><i class="ri-shopping-bag-4-line"></i><span>افزودن به سبد</span></button>
-                    </form>
-                    {% else %}
-                    <button type="button" class="pro-cart-btn" disabled style="background:#e5e7eb; color:#9ca3af; cursor:not-allowed;"><i class="ri-close-circle-line"></i><span>ناموجود</span></button>
-                    {% endif %}
+                    {% include 'includes/cart_action.html' with variant=variant button_class='pro-cart-btn' button_text='افزودن به سبد' %}
                 </div>
             </div>
             {% endwith %}

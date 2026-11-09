@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import os
 from pathlib import Path
+from urllib.parse import unquote, urlparse
 
 import dj_database_url
 from django.core.exceptions import ImproperlyConfigured
@@ -75,6 +76,37 @@ else:
             CSRF_TRUSTED_ORIGINS.append(origin)
 
 
+# ----- Optional Cloudinary media storage -----
+# Set CLOUDINARY_URL in Render (cloudinary://API_KEY:API_SECRET@CLOUD_NAME),
+# or provide the three individual CLOUDINARY_* values. Static files remain on
+# WhiteNoise; only fresh MEDIA uploads go to Cloudinary.
+def cloudinary_config_from_env() -> dict[str, str]:
+    cloud_name = os.environ.get("CLOUDINARY_CLOUD_NAME", "").strip()
+    api_key = os.environ.get("CLOUDINARY_API_KEY", "").strip()
+    api_secret = os.environ.get("CLOUDINARY_API_SECRET", "").strip()
+    cloudinary_url = os.environ.get("CLOUDINARY_URL", "").strip()
+    if cloudinary_url:
+        parsed = urlparse(cloudinary_url)
+        if parsed.scheme == "cloudinary":
+            cloud_name = cloud_name or parsed.hostname or ""
+            api_key = api_key or unquote(parsed.username or "")
+            api_secret = api_secret or unquote(parsed.password or "")
+    if cloud_name and api_key and api_secret:
+        return {"CLOUD_NAME": cloud_name, "API_KEY": api_key, "API_SECRET": api_secret}
+    return {}
+
+
+CLOUDINARY_STORAGE = cloudinary_config_from_env()
+CLOUDINARY_ENABLED = bool(CLOUDINARY_STORAGE)
+if CLOUDINARY_ENABLED:
+    CLOUDINARY_STORAGE.update(
+        {
+            "SECURE": True,
+            "FOLDER": os.environ.get("CLOUDINARY_FOLDER", "attarbashi").strip() or "attarbashi",
+        }
+    )
+
+
 # ----- Applications -----
 INSTALLED_APPS = [
     "django.contrib.admin",
@@ -84,6 +116,7 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     "django.contrib.humanize",
+    *(["cloudinary", "cloudinary_storage"] if CLOUDINARY_ENABLED else []),
     "shop",
     "account",
 ]
@@ -116,6 +149,7 @@ TEMPLATES = [
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
                 "shop.context_processors.cart",
+                "shop.context_processors.navigation_categories",
             ],
         },
     },
@@ -158,7 +192,13 @@ STATIC_ROOT = BASE_DIR / "staticfiles"
 
 # Compressed manifest assets are generated at build time by `collectstatic`.
 STORAGES = {
-    "default": {"BACKEND": "django.core.files.storage.FileSystemStorage"},
+    "default": {
+        "BACKEND": (
+            "cloudinary_storage.storage.MediaCloudinaryStorage"
+            if CLOUDINARY_ENABLED
+            else "django.core.files.storage.FileSystemStorage"
+        ),
+    },
     "staticfiles": {"BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage"},
 }
 
