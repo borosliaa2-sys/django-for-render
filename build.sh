@@ -7,10 +7,12 @@ pip install -r requirements.txt
 python manage.py collectstatic --noinput
 python manage.py migrate --noinput
 python manage.py ensure_catalog
+# Convert legacy Cloudinary public ids back to repository-local paths whenever
+# that exact bundled file is present. Browsers then stay on this site's /media/.
+python manage.py normalize_local_media_references
 python manage.py apply_managed_catalog_media
-# On the first Cloudinary-enabled build, uploads bundled catalogue files whose
-# database names existed locally before Cloudinary was configured. It is a
-# no-op when Cloudinary is not configured and skips resources already uploaded.
+# Cloudinary is a recovery backup only. It never becomes the visitor-facing
+# image URL and is used server-side only when a local file has disappeared.
 python manage.py sync_bundled_media_to_cloudinary
 # Repairs versioned category assets in an existing Neon DB and creates only
 # missing starter articles; safe to run at every deploy.

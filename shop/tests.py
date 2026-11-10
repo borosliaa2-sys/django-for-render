@@ -1,4 +1,8 @@
-from django.test import TestCase, Client
+from pathlib import Path
+from tempfile import TemporaryDirectory
+from unittest.mock import patch
+
+from django.test import TestCase, Client, override_settings
 from django.urls import reverse
 from account.models import CustomUser
 from shop.models import Article, Category, Product, ProductVariant, Order, OrderItem
@@ -293,6 +297,36 @@ class ShopFullFlowTests(TestCase):
         self.assertContains(refreshed, 'data-cart-action-form')
         self.assertContains(refreshed, 'data-update-url')
         self.assertContains(refreshed, 'cart-stepper')
+
+    def test_media_is_served_from_the_site_domain_and_recovers_only_on_a_local_miss(self):
+        # MEDIA URLs must stay /media/... even when Cloudinary credentials are
+        # configured; the browser must never receive a res.cloudinary.com URL.
+        image_name = "products/test-local-media.webp"
+        Product.objects.filter(pk=self.product.pk).update(image_file=image_name)
+        self.product.refresh_from_db()
+        self.assertEqual(self.product.image_url, f"/media/{image_name}")
+
+        with TemporaryDirectory() as media_root, override_settings(MEDIA_ROOT=media_root):
+            local_file = Path(media_root) / image_name
+            local_file.parent.mkdir(parents=True)
+            local_file.write_bytes(b"local-product-image")
+            local_response = self.client.get(f"/media/{image_name}")
+            self.assertEqual(local_response.status_code, 200)
+            self.assertEqual(b"".join(local_response.streaming_content), b"local-product-image")
+            self.assertIn("max-age=86400", local_response["Cache-Control"])
+
+            local_file.unlink()
+
+            def recover(_name, target):
+                target.parent.mkdir(parents=True, exist_ok=True)
+                target.write_bytes(b"recovered-product-image")
+                return True
+
+            with patch("shop.media_views._recover_from_cloudinary", side_effect=recover) as recovery:
+                recovered_response = self.client.get(f"/media/{image_name}")
+            self.assertEqual(recovered_response.status_code, 200)
+            self.assertEqual(b"".join(recovered_response.streaming_content), b"recovered-product-image")
+            recovery.assert_called_once()
 
     def test_custom_404_view(self):
         res = self.client.get("/a-page-that-definitely-does-not-exist/")

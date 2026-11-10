@@ -76,10 +76,11 @@ else:
             CSRF_TRUSTED_ORIGINS.append(origin)
 
 
-# ----- Optional Cloudinary media storage -----
+# ----- Optional Cloudinary recovery backup -----
 # Set CLOUDINARY_URL in Render (cloudinary://API_KEY:API_SECRET@CLOUD_NAME),
-# or provide the three individual CLOUDINARY_* values. Static files remain on
-# WhiteNoise; only fresh MEDIA uploads go to Cloudinary.
+# or provide the three individual CLOUDINARY_* values. Visitors never load a
+# Cloudinary URL: MEDIA remains local and the site uses Cloudinary only as a
+# server-side recovery copy after a reset/missing local file.
 def cloudinary_config_from_env() -> dict[str, str]:
     cloud_name = os.environ.get("CLOUDINARY_CLOUD_NAME", "").strip()
     api_key = os.environ.get("CLOUDINARY_API_KEY", "").strip()
@@ -193,20 +194,17 @@ STATIC_URL = "/static/"
 STATICFILES_DIRS = [BASE_DIR / "static"]
 STATIC_ROOT = BASE_DIR / "staticfiles"
 
-# Compressed manifest assets are generated at build time by `collectstatic`.
-STORAGES = {
-    "default": {
-        "BACKEND": (
-            "cloudinary_storage.storage.MediaCloudinaryStorage"
-            if CLOUDINARY_ENABLED
-            else "django.core.files.storage.FileSystemStorage"
-        ),
-    },
-    "staticfiles": {"BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage"},
-}
-
 MEDIA_URL = "/media/"
 MEDIA_ROOT = BASE_DIR / "media"
+
+# Compressed manifest assets are generated at build time by `collectstatic`.
+# Product/article bytes stay local and are served from this site's /media/
+# endpoint. The custom storage mirrors successful new uploads to Cloudinary as
+# a backup but never returns a Cloudinary URL to the browser.
+STORAGES = {
+    "default": {"BACKEND": "shop.media_storage.LocalMediaWithCloudinaryBackupStorage"},
+    "staticfiles": {"BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage"},
+}
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 

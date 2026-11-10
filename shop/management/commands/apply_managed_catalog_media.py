@@ -52,6 +52,46 @@ MANAGED_REPLACEMENTS = {
         "products/catalog/ai-qara-two-pack.webp",
         "existing-178-product",
     ),
+    "خلال-بادام-زمینی": (
+        "products/catalog/ai-peanut-slivers.webp",
+        "existing-174-product",
+    ),
+    "تخمه-سیاه": (
+        "products/catalog/ai-black-sunflower-seeds.webp",
+        "existing-184-product",
+    ),
+    "کشمش": (
+        "products/catalog/ai-raisins.webp",
+        "existing-185-product",
+    ),
+    "نخودچی": (
+        "products/catalog/ai-chickpeas.webp",
+        "existing-186-product",
+    ),
+    "پفیلا-خونگی": (
+        "products/catalog/ai-homemade-popcorn.webp",
+        "existing-187-product",
+    ),
+    "ارده": (
+        "products/catalog/ai-tahini.webp",
+        "345-tahini",
+    ),
+    "تمرهندی": (
+        "products/catalog/ai-tamarind.webp",
+        "261-tamarind",
+    ),
+    "گیلاس-خشک": (
+        "products/catalog/ai-dried-cherry.webp",
+        "62-dried-cherry",
+    ),
+    "توت-خشکه": (
+        "products/catalog/ai-dried-mulberries.webp",
+        "46-dried-mulberry",
+    ),
+    "پر-گلابی": (
+        "products/catalog/ai-dried-pear.webp",
+        "53-dried-pear",
+    ),
 }
 
 

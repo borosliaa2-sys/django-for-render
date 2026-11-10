@@ -14,11 +14,11 @@ Including another URLconf
     1. Import the include() function: from django.urls import include, path
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
-from django.conf import settings
-from django.conf.urls.static import static
 from django.contrib import admin
 from django.http import HttpResponse
 from django.urls import include, path
+
+from shop.media_views import serve_site_media
 
 
 def healthz(request):
@@ -28,6 +28,9 @@ def healthz(request):
 
 urlpatterns = [
     path("healthz/", healthz, name="healthz"),
+    # Always same-origin: this view serves a local image and recovers it from
+    # Cloudinary server-side only when the local file is absent.
+    path("media/<path:media_path>", serve_site_media, name="site_media"),
     path("admin/", admin.site.urls),
     path("", include("shop.urls", namespace="shop")),
     path("account/", include("django.contrib.auth.urls")),
@@ -36,7 +39,4 @@ urlpatterns = [
 
 handler404 = "shop.views.custom_404"
 handler500 = "shop.views.custom_500"
-
-if settings.DEBUG:
-    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 

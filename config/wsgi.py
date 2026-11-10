@@ -9,8 +9,8 @@ from whitenoise import WhiteNoise
 
 application = get_wsgi_application()
 
-# Product imagery is curated catalogue data committed with this repository, not
-# user-generated files.  Serving this fixed media directory through WhiteNoise
-# makes /media/products/catalog/... available on Railway without a second CDN.
-# For future user uploads, use a Railway Volume or object storage instead.
+# Serve every present MEDIA file from the Attarbashi domain. If an ephemeral
+# Render reset has removed a file, WhiteNoise falls through to Django's
+# /media/ view, which recovers its Cloudinary backup server-side and caches it
+# locally again. A browser is never redirected to Cloudinary.
 application = WhiteNoise(application, root=str(settings.MEDIA_ROOT), prefix="media/")

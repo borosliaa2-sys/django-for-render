@@ -161,25 +161,24 @@ DJANGO_SUPERUSER_PASSWORD=<رمز طولانی و یکتا>
 
 هر تصویر **جدیدی** که از پنل ادمین برای محصول یا مقاله بارگذاری شود، پیش از ذخیره به WebP با کیفیت وب و حداکثر اندازهٔ ۱۶۰۰×۱۶۰۰ پیکسل تبدیل و جهت EXIF آن اصلاح می‌شود. گزارش فعلی بهینه‌سازی در `reports/image-optimization-report-fa.md` است.
 
-اما آپلود جدید از پنل ادمین روی دیسک موقت Render ذخیره می‌شود و ممکن است با Deploy بعدی از بین برود.
+### اتصال اختیاری Cloudinary به‌عنوان نسخهٔ پشتیبان
 
-### اتصال اختیاری Cloudinary برای آپلودهای جدید
+در این نسخه، مرورگر مشتری **هرگز** تصویر را از دامنهٔ Cloudinary نمی‌خواند. تمام URLهای محصول و مقاله با مسیر هم‌دامنهٔ سایت، یعنی `/media/...`، نمایش داده می‌شوند؛ بنابراین فیلتر یا کندی Cloudinary در ایران به کاربر منتقل نمی‌شود.
 
-این نسخه `cloudinary` و `cloudinary-storage` را دارد، اما **فقط زمانی فعال می‌شود که متغیرهای محیطی آن را در Render وارد کنید**. هیچ کلید یا آدرس محرمانه‌ای در Git یا ZIP ثبت نشده است. فایل‌های استاتیک و تصاویر فعلی کاتالوگ همچنان با WhiteNoise/Repository سرو می‌شوند؛ Cloudinary فقط مقصد `MEDIA` برای آپلودهای تازهٔ پنل ادمین است.
+Cloudinary فقط یک نسخهٔ پشتیبان برای فایل‌های MEDIA است:
 
-1. در Cloudinary از صفحهٔ **Dashboard → API Keys** مقدار API Environment variable را کپی کنید.
-2. در Render → سرویس → **Environment** یک متغیر با این قالب بسازید:
+1. تصویر تازهٔ پنل ادمین ابتدا روی خود سایت ذخیره می‌شود و سپس به‌صورت best-effort در Cloudinary هم کپی می‌شود.
+2. در هر Build، `sync_bundled_media_to_cloudinary` فقط فایل‌های محلیِ فاقد نسخهٔ پشتیبان را همگام می‌کند.
+3. اگر دیسک موقت Render ریست شد و فایلی محلی نبود، نخستین درخواست `/media/...` آن را **سرور-به-سرور** از Cloudinary می‌گیرد، دوباره روی دیسک سایت cache می‌کند و سپس از همان دامنهٔ سایت به بازدیدکننده می‌دهد. مرورگر به Cloudinary ریدایرکت نمی‌شود.
+
+برای فعال کردن این نسخهٔ پشتیبان، در Cloudinary از **Dashboard → API Keys** مقدار API Environment variable را بردارید و در Render → **Environment** این مقادیر را قرار دهید:
 
 ```text
 CLOUDINARY_URL=cloudinary://API_KEY:API_SECRET@CLOUD_NAME
 CLOUDINARY_FOLDER=attarbashi
 ```
 
-3. Deploy جدید انجام دهید. در Build Log، وابستگی‌ها نصب می‌شوند و از آن پس تصویر جدید محصول یا مقاله مستقیماً و با HTTPS در Cloudinary ذخیره خواهد شد. همان Deploy دستور `sync_bundled_media_to_cloudinary` را نیز اجرا می‌کند: این دستور ۳۷۷ تصویر کاتالوگ موجود در repository را یک‌بار به Cloudinary می‌فرستد و در Deployهای بعدی فقط وجودشان را بررسی می‌کند.
-
-> فقط واردکردن **Cloud name / Cloudinary ID** کافی نیست. پروژه برای فعال‌کردن Cloudinary به `API_KEY` و `API_SECRET` هم نیاز دارد؛ در غیر این صورت عمداً به MEDIA محلی برمی‌گردد. روی Render تولیدی، MEDIA محلی آدرس پایدار برای تصاویر کاتالوگ نیست.
-
-به‌جای `CLOUDINARY_URL` می‌توانید سه متغیر `CLOUDINARY_CLOUD_NAME`، `CLOUDINARY_API_KEY` و `CLOUDINARY_API_SECRET` را جداگانه وارد کنید. تنظیم `CLOUDINARY_FOLDER` اختیاری است، پوشهٔ Cloudinary را مشخص می‌کند و پیش‌فرض آن `attarbashi` است. برای توسعهٔ محلی یا وقتی این متغیرها خالی‌اند، پروژه خودکار به ذخیره‌سازی محلی `MEDIA` برمی‌گردد.
+به‌جای `CLOUDINARY_URL` می‌توانید `CLOUDINARY_CLOUD_NAME`، `CLOUDINARY_API_KEY` و `CLOUDINARY_API_SECRET` را جداگانه وارد کنید. فقط Cloud name کافی نیست. `CLOUDINARY_FOLDER` اختیاری است و پیش‌فرض آن `attarbashi` است.
 
 > کلیدهای Cloudinary را فقط در Render Environment یا فایل `.env` خصوصی وارد کنید؛ هرگز آن‌ها را در GitHub، screenshot یا ticket عمومی قرار ندهید.
 
