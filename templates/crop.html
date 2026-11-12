@@ -1,8 +1,9 @@
 {% extends 'base.html' %}
 {% load static humanize l10n shop_tags %}
 {% block title %}{{ product.name }} | عطارباشی{% endblock title %}
+{% block meta_description %}{{ product.short_description|default:product.description|truncatechars:155|default:product.name }} | خرید آنلاین از عطارباشی{% endblock meta_description %}
+{% block structured_data %}<script type="application/ld+json">{{ product_schema_json }}</script>{% endblock structured_data %}
 {% block content %}
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
 
 <div class="product-detail-page">
   <div class="detail-container">
@@ -22,7 +23,10 @@
       <!-- GALLERY -->
       <div class="gallery-col">
         <div class="gallery-main">
-          <img src="{{ product.image_url }}" alt="{{ product.name }}" id="mainImage">
+          {% responsive_media product.image_url 480 as product_image_480 %}
+          {% responsive_media product.image_url 768 as product_image_768 %}
+          {% responsive_media product.image_url 1200 as product_image_1200 %}
+          <img src="{{ product_image_768 }}" srcset="{{ product_image_480 }} 480w, {{ product_image_768 }} 768w, {{ product_image_1200 }} 1200w" sizes="(max-width: 900px) 92vw, 48vw" alt="{{ product.name }}" id="mainImage" width="1200" height="1200" fetchpriority="high" decoding="async">
         </div>
         {# هر محصول فعلاً یک تصویر اصلی دارد؛ نمایش تکراری تصویر برای واریانت‌ها حذف شد. #}
       </div>
@@ -236,7 +240,7 @@
             {% with rel.primary_variant as rv %}
             <div class="related-card">
               <a href="{{ rel.get_absolute_url }}" class="related-card-link">
-                <div class="related-img"><img src="{{ rel.image_url|cloudinary_thumbnail:360 }}" srcset="{{ rel.image_url|cloudinary_thumbnail:240 }} 240w, {{ rel.image_url|cloudinary_thumbnail:360 }} 360w, {{ rel.image_url|cloudinary_thumbnail:480 }} 480w" sizes="(max-width: 680px) 42vw, 180px" alt="{{ rel.name }}" loading="lazy" decoding="async"></div>
+                <div class="related-img"><img src="{{ rel.image_url|cloudinary_thumbnail:360 }}" srcset="{{ rel.image_url|cloudinary_thumbnail:240 }} 240w, {{ rel.image_url|cloudinary_thumbnail:360 }} 360w, {{ rel.image_url|cloudinary_thumbnail:480 }} 480w" sizes="(max-width: 680px) 42vw, 180px" alt="{{ rel.name }}" width="480" height="480" loading="lazy" decoding="async"></div>
                 <div class="related-title">{{ rel.name }}</div>
                 {% if rv and rv.price %}
                   <div class="related-price">{{ rv.price|format_price }} تومان</div>
@@ -264,7 +268,8 @@
           {% for art in related_articles %}
           <a href="{{ art.get_absolute_url }}" class="pra-card">
             <div class="pra-img">
-              <img src="{{ art.image_url }}" alt="{{ art.title }}" loading="lazy">
+              {% responsive_media art.image_url 480 as related_article_image %}
+              <img src="{{ related_article_image }}" alt="{{ art.title }}" width="480" height="270" loading="lazy" decoding="async">
               <span class="pra-badge">{{ art.category_name }}</span>
             </div>
             <div class="pra-content">
@@ -1035,8 +1040,7 @@
     const message = 'حداکثر موجودی انتخاب شده' + (stock ? ' (' + formatFaNumber(stock) + ' عدد)' : '');
     if (detailQtyControl) {
       detailQtyControl.classList.remove('is-at-stock');
-      void detailQtyControl.offsetWidth;
-      detailQtyControl.classList.add('is-at-stock');
+      window.requestAnimationFrame(() => window.requestAnimationFrame(() => detailQtyControl.classList.add('is-at-stock')));
       window.setTimeout(() => detailQtyControl.classList.remove('is-at-stock'), 600);
     }
     // A fixed toast sits above the page, rather than inside this product box.

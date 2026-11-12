@@ -1,0 +1,66 @@
+/* Self-hosted Vazirmatn: preloaded regular/bold files arrive before first paint.
+   optional prevents a late font swap from moving the full RTL layout on a
+   slow connection; the system fallback remains readable if it misses first paint. */
+@font-face {
+  font-family: "Vazirmatn";
+  src: url("../fonts/vazirmatn/Vazirmatn-Thin.woff2") format("woff2");
+  font-weight: 100;
+  font-style: normal;
+  font-display: optional;
+}
+@font-face {
+  font-family: "Vazirmatn";
+  src: url("../fonts/vazirmatn/Vazirmatn-ExtraLight.woff2") format("woff2");
+  font-weight: 200;
+  font-style: normal;
+  font-display: optional;
+}
+@font-face {
+  font-family: "Vazirmatn";
+  src: url("../fonts/vazirmatn/Vazirmatn-Light.woff2") format("woff2");
+  font-weight: 300;
+  font-style: normal;
+  font-display: optional;
+}
+@font-face {
+  font-family: "Vazirmatn";
+  src: url("../fonts/vazirmatn/Vazirmatn-Regular.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: optional;
+}
+@font-face {
+  font-family: "Vazirmatn";
+  src: url("../fonts/vazirmatn/Vazirmatn-Medium.woff2") format("woff2");
+  font-weight: 500;
+  font-style: normal;
+  font-display: optional;
+}
+@font-face {
+  font-family: "Vazirmatn";
+  src: url("../fonts/vazirmatn/Vazirmatn-SemiBold.woff2") format("woff2");
+  font-weight: 600;
+  font-style: normal;
+  font-display: optional;
+}
+@font-face {
+  font-family: "Vazirmatn";
+  src: url("../fonts/vazirmatn/Vazirmatn-Bold.woff2") format("woff2");
+  font-weight: 700;
+  font-style: normal;
+  font-display: optional;
+}
+@font-face {
+  font-family: "Vazirmatn";
+  src: url("../fonts/vazirmatn/Vazirmatn-ExtraBold.woff2") format("woff2");
+  font-weight: 800;
+  font-style: normal;
+  font-display: optional;
+}
+@font-face {
+  font-family: "Vazirmatn";
+  src: url("../fonts/vazirmatn/Vazirmatn-Black.woff2") format("woff2");
+  font-weight: 900;
+  font-style: normal;
+  font-display: optional;
+}

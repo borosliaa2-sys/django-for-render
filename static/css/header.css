@@ -454,6 +454,23 @@ header.site-header.header-scrolled .logo img{
     :root {
         --site-header-height: 60px;
     }
+    .menu-btn{
+        display: block;
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        padding: 0;
+        margin: -1px;
+        overflow: hidden;
+        clip: rect(0, 0, 0, 0);
+        white-space: nowrap;
+        border: 0;
+    }
+    .menu-btn:focus-visible + .header-top .menu-icon{
+        outline: 2px solid var(--secondary-color);
+        outline-offset: 4px;
+        border-radius: 4px;
+    }
     .menu-icon{
         display: block;
         width: 30px;

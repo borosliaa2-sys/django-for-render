@@ -1,11 +1,14 @@
 <!DOCTYPE html>
-{% load static %}
+{% load static shop_tags %}
 <html lang="fa" dir="rtl">
 <head>
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}محصولات خانگی و گیاهی عطارباشی{% endblock title %}</title>
+    <meta name="description" content="{% block meta_description %}فروشگاه آنلاین عطارباشی؛ محصولات طبیعی، گیاهان دارویی، دمنوش، ادویه، خشکبار و فرآورده‌های سنتی با ضمانت اصالت.{% endblock meta_description %}">
+    <meta name="robots" content="{{ robots_directive }}">
+    <link rel="canonical" href="{{ canonical_url }}">
     <!-- Brand icons: cropped transparently from the store logo for every major platform. -->
     <link rel="icon" href="{% static 'images/favicon.ico' %}?v=20261107-crop" sizes="any">
     <link rel="shortcut icon" href="{% static 'images/favicon.ico' %}?v=20261107-crop">
@@ -16,15 +19,21 @@
     <meta name="theme-color" content="#f8c34a">
     <meta name="msapplication-TileColor" content="#f8c34a">
     <meta name="msapplication-TileImage" content="{% static 'images/favicon-192.png' %}?v=20261107-crop">
-    <link rel="stylesheet" href="{% static 'css/css.css' %}">
-    <link rel="stylesheet" href="{% static 'css/header.css' %}">
-    <link rel="stylesheet" href="{% static 'css/header-fix.css' %}">
-    <link rel="stylesheet" href="{% static 'css/_main.css' %}?v=20261105-featured-original">
-    <link rel="stylesheet" href="{% static 'css/_category.css' %}">
-    <link rel="stylesheet" href="{% static 'css/cart_actions.css' %}">
-    <link rel="stylesheet" href="{% static 'css/_ppr.css' %}?v=20261105-featured-original">
-    <link href="https://cdn.jsdelivr.net/npm/remixicon@4.9.0/fonts/remixicon.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
+    <!-- Preloading the two most-used local text fonts keeps the RTL layout stable. -->
+    <link rel="preload" href="{% static 'fonts/vazirmatn/Vazirmatn-Regular.woff2' %}" as="font" type="font/woff2" crossorigin>
+    <link rel="preload" href="{% static 'fonts/vazirmatn/Vazirmatn-Bold.woff2' %}" as="font" type="font/woff2" crossorigin>
+    <link rel="stylesheet" href="{% static 'css/site.css' %}">
+    <!-- Decorative icon sheets are self-hosted and no longer delay first paint. -->
+    <link rel="preload" href="{% static 'vendor/remixicon/remixicon.css' %}" as="style">
+    <link rel="stylesheet" href="{% static 'vendor/remixicon/remixicon.css' %}" media="print" onload="this.media='all'">
+    <link rel="preload" href="{% static 'vendor/fontawesome/css/all.min.css' %}" as="style">
+    <link rel="stylesheet" href="{% static 'vendor/fontawesome/css/all.min.css' %}" media="print" onload="this.media='all'">
+    <noscript>
+        <link rel="stylesheet" href="{% static 'vendor/remixicon/remixicon.css' %}">
+        <link rel="stylesheet" href="{% static 'vendor/fontawesome/css/all.min.css' %}">
+    </noscript>
+    <script type="application/ld+json">{{ organization_schema_json }}</script>
+    {% block structured_data %}{% endblock structured_data %}
     {% block extra_css %}{% endblock extra_css %}
 </head>
 <body class="{% block body_class %}{% endblock body_class %}">
@@ -33,8 +42,9 @@
     <header class="site-header">
         <input type="checkbox" class="menu-btn" id="menu-btn">
         <div class="header-top">
-            <label for="menu-btn" class="menu-icon" aria-label="منو">
-                <span class="nav-icon"></span>
+            <label for="menu-btn" class="menu-icon">
+                <span class="visually-hidden">باز و بسته کردن منوی اصلی</span>
+                <span class="nav-icon" aria-hidden="true"></span>
             </label>
             <div class="nav-location">
                 <a href="{% url 'shop:contact' %}">
@@ -43,7 +53,9 @@
                 </a>
             </div>
             <a href="{% url 'shop:home' %}" class="logo">
-                <img src="{% static 'images/logo.jpg' %}" alt="عطارباشی">
+                {% static 'images/logo.jpg' as site_logo_source %}
+                {% responsive_media site_logo_source 80 as header_logo %}
+                <img src="{{ header_logo }}" alt="عطارباشی" width="40" height="40" decoding="async">
             </a>
 
             <div class="nav-btns">
@@ -135,7 +147,8 @@
             <div class="footer-container">
                 <div class="footer-col footer-about">
                     <a href="{% url 'shop:home' %}" class="footer-logo" aria-label="بازگشت به صفحه اصلی عطارباشی">
-                        <img src="{% static 'images/logo.jpg' %}" alt="عطارباشی">
+                        {% responsive_media site_logo_source 96 as footer_logo %}
+                        <img src="{{ footer_logo }}" alt="عطارباشی" width="44" height="44" loading="lazy" decoding="async">
                         <span>عطارباشی</span>
                     </a>
                     <p>فروشگاه آنلاین محصولات طبیعی و سنتی عطارباشی؛ ارائه‌دهنده مرغوب‌ترین گیاهان دارویی، دمنوش‌ها، خشکبار اعلا و فرآورده‌های سنتی با تضمین کیفیت و اصالت.</p>

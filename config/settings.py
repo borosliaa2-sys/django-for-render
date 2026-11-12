@@ -154,6 +154,7 @@ TEMPLATES = [
                 "django.contrib.messages.context_processors.messages",
                 "shop.context_processors.cart",
                 "shop.context_processors.navigation_categories",
+                "shop.context_processors.seo",
             ],
         },
     },
@@ -193,6 +194,9 @@ NUMBER_GROUPING = 3
 STATIC_URL = "/static/"
 STATICFILES_DIRS = [BASE_DIR / "static"]
 STATIC_ROOT = BASE_DIR / "staticfiles"
+# Hashed static files are immutable; this also gives any intentionally
+# unversioned legacy static URL a sensible repeat-visit lifetime.
+WHITENOISE_MAX_AGE = 60 * 60 * 24 * 365
 
 MEDIA_URL = "/media/"
 MEDIA_ROOT = BASE_DIR / "media"

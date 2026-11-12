@@ -1,8 +1,10 @@
 from pathlib import Path
+from urllib.parse import urlencode, unquote, urlsplit
 
 from django import template
 from django.conf import settings
 from django.templatetags.static import static
+from django.urls import reverse
 
 register = template.Library()
 
@@ -65,24 +67,44 @@ def cart_quantity(cart_quantities, variant_id):
         return 0
 
 
+@register.simple_tag
+def responsive_media(image_value, width):
+    """Return a cacheable, same-origin WebP derivative for a local image.
+
+    Product media and bundled static editorial assets both pass through the
+    trusted responsive endpoint.  Remote URLs are deliberately not proxied:
+    normalised catalogue records are local, and an unexpected remote value is
+    left untouched rather than turning this site into an open image proxy.
+    """
+    source_url = str(getattr(image_value, "url", image_value) or "").strip()
+    if not source_url:
+        return ""
+    try:
+        target_width = max(64, min(int(width), 2000))
+    except (TypeError, ValueError):
+        return source_url
+
+    parsed = urlsplit(source_url)
+    if parsed.scheme or parsed.netloc:
+        return source_url
+
+    source_path = unquote(parsed.path or "")
+    static_url = str(getattr(settings, "STATIC_URL", "/static/") or "/static/")
+    media_url = str(getattr(settings, "MEDIA_URL", "/media/") or "/media/")
+    if not source_path.startswith((static_url, media_url)):
+        return source_url
+
+    # Preserve the normal public path but discard an old cache-busting query;
+    # the derivative URL itself is versioned by its source mtime and size.
+    normalized_source = source_path
+    return f"{reverse('responsive_media', args=[target_width])}?{urlencode({'src': normalized_source})}"
+
+
 @register.filter(name="cloudinary_thumbnail")
 def cloudinary_thumbnail(url, width=480):
-    """Return a responsive, CDN-transformed Cloudinary URL for product cards.
+    """Backward-compatible filter now backed by same-origin derivatives.
 
-    Bundled/local/static URLs are intentionally left untouched. Cloudinary uses
-    the original as its master; this URL asks the CDN for only the size needed
-    by a list/card, with automatic WebP/AVIF selection and quality.
+    Older templates and any custom content can still call this filter.  It no
+    longer emits a browser-facing Cloudinary URL for a local source.
     """
-    raw_url = str(url or "")
-    marker = "/image/upload/"
-    if "res.cloudinary.com" not in raw_url or marker not in raw_url:
-        return raw_url
-    try:
-        target_width = max(80, min(int(width), 1600))
-    except (TypeError, ValueError):
-        target_width = 480
-    prefix, suffix = raw_url.split(marker, 1)
-    if suffix.startswith("f_auto,"):
-        return raw_url
-    transforms = f"f_auto,q_auto,c_limit,w_{target_width}"
-    return f"{prefix}{marker}{transforms}/{suffix}"
+    return responsive_media(url, width)

@@ -1,4 +1,4 @@
-{% load static %}
+{% load static shop_tags %}
 {% if home_articles %}
 <section id="home-articles" class="home-articles" data-home-article-carousel aria-labelledby="home-articles-title">
   <div class="home-articles__header">
@@ -15,7 +15,10 @@
   <div class="home-articles__stage" aria-roledescription="carousel" aria-label="مقالات منتخب">
     {% for article in home_articles %}
     <article class="home-article-slide{% if forloop.first %} is-active{% endif %}" data-home-article-slide aria-hidden="{% if forloop.first %}false{% else %}true{% endif %}">
-      <img src="{{ article.image_url }}" alt="" {% if forloop.first %}fetchpriority="high"{% else %}loading="lazy"{% endif %}>
+      {% responsive_media article.image_url 480 as article_image_480 %}
+      {% responsive_media article.image_url 768 as article_image_768 %}
+      {% responsive_media article.image_url 1200 as article_image_1200 %}
+      <img src="{{ article_image_768 }}" srcset="{{ article_image_480 }} 480w, {{ article_image_768 }} 768w, {{ article_image_1200 }} 1200w" sizes="(max-width: 680px) 100vw, 1100px" alt="" width="1600" height="900" loading="lazy" decoding="async">
       <div class="home-article-slide__shade"></div>
       <a href="{{ article.get_absolute_url }}" class="home-article-slide__link" {% if not forloop.first %}tabindex="-1"{% endif %}>
         <span class="home-article-slide__category">{{ article.category_name }}</span>

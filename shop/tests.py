@@ -1,9 +1,11 @@
+from io import BytesIO
 from pathlib import Path
 from tempfile import TemporaryDirectory
 from unittest.mock import patch
 
 from django.test import TestCase, Client, override_settings
 from django.urls import reverse
+from PIL import Image
 from account.models import CustomUser
 from shop.models import Article, Category, Product, ProductVariant, Order, OrderItem
 from shop.cart import Cart
@@ -313,7 +315,7 @@ class ShopFullFlowTests(TestCase):
             local_response = self.client.get(f"/media/{image_name}")
             self.assertEqual(local_response.status_code, 200)
             self.assertEqual(b"".join(local_response.streaming_content), b"local-product-image")
-            self.assertIn("max-age=86400", local_response["Cache-Control"])
+            self.assertIn("max-age=31536000", local_response["Cache-Control"])
 
             local_file.unlink()
 
@@ -327,6 +329,54 @@ class ShopFullFlowTests(TestCase):
             self.assertEqual(recovered_response.status_code, 200)
             self.assertEqual(b"".join(recovered_response.streaming_content), b"recovered-product-image")
             recovery.assert_called_once()
+
+    def test_responsive_media_returns_a_small_same_origin_webp(self):
+        image_name = "products/test-responsive-source.webp"
+        Product.objects.filter(pk=self.product.pk).update(image_file=image_name)
+        with TemporaryDirectory() as media_root, override_settings(MEDIA_ROOT=media_root):
+            source = Path(media_root) / image_name
+            source.parent.mkdir(parents=True)
+            Image.new("RGB", (1200, 1200), "#c68a4b").save(source, "WEBP", quality=90)
+
+            response = self.client.get(
+                reverse("responsive_media", kwargs={"width": 160}),
+                {"src": f"/media/{image_name}"},
+            )
+            self.assertEqual(response.status_code, 200)
+            self.assertEqual(response["Content-Type"], "image/webp")
+            self.assertIn("max-age=31536000", response["Cache-Control"])
+            payload = b"".join(response.streaming_content)
+            with Image.open(BytesIO(payload)) as derivative:
+                self.assertEqual(derivative.size, (160, 160))
+
+            unknown = self.client.get(
+                reverse("responsive_media", kwargs={"width": 160}),
+                {"src": "/media/not-a-known-file.webp"},
+            )
+            self.assertEqual(unknown.status_code, 404)
+
+    def test_crawl_endpoints_and_canonical_markup_are_present(self):
+        home = self.client.get(reverse("shop:home"))
+        self.assertEqual(home.status_code, 200)
+        self.assertContains(home, 'rel="canonical" href="https://attarbashiesf.ir/"')
+        self.assertContains(home, 'type="application/ld+json"')
+        self.assertContains(home, 'name="robots" content="index,follow"')
+        # The source markup must use the same-origin responsive endpoint rather
+        # than a Cloudinary transformation URL.
+        self.assertContains(home, "/media/optimized/160/?src=")
+        self.assertNotContains(home, "res.cloudinary.com")
+        self.assertNotContains(home, 'class="menu-icon" aria-label=')
+        self.assertContains(home, 'for="menu-btn" class="menu-icon"')
+
+        robots = self.client.get("/robots.txt")
+        self.assertEqual(robots.status_code, 200)
+        self.assertContains(robots, "Sitemap: https://attarbashiesf.ir/sitemap.xml")
+        self.assertContains(robots, "Disallow: /cart/")
+
+        sitemap = self.client.get("/sitemap.xml")
+        self.assertEqual(sitemap.status_code, 200)
+        self.assertContains(sitemap, "<urlset")
+        self.assertContains(sitemap, self.product.get_absolute_url())
 
     def test_custom_404_view(self):
         res = self.client.get("/a-page-that-definitely-does-not-exist/")

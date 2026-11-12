@@ -197,12 +197,20 @@ function showToast(message, type = 'success') {
 }
 
 // ۵. انیمیشن سبد خرید
+function restartCssAnimation(element, className) {
+    if (!element) return;
+    element.classList.remove(className);
+    // Two frames let the browser commit the removal without synchronously
+    // querying layout (the old offsetWidth technique forced a reflow).
+    window.requestAnimationFrame(function () {
+        window.requestAnimationFrame(function () {
+            element.classList.add(className);
+        });
+    });
+}
+
 window.addToCartAnim = function () {
-    const cartIcon = document.querySelector('.nav-cart');
-    if (!cartIcon) return;
-    cartIcon.style.animation = 'none';
-    void cartIcon.offsetWidth;
-    cartIcon.style.animation = 'cartAdd 0.5s ease';
+    restartCssAnimation(document.querySelector('.nav-cart'), 'is-cart-added');
 };
 
 // تابع کمکی برای گرفتن توکن CSRF
@@ -238,9 +246,7 @@ function showStockLimit(form, stock) {
     const message = `حداکثر موجودی انتخاب شده (${formatPersianNumber(stock)} عدد)`;
     // Shake the compact control in place, but keep the explanatory notice in
     // the fixed toast layer so it cannot be cropped by a product card.
-    form.classList.remove('is-at-stock');
-    void form.offsetWidth;
-    form.classList.add('is-at-stock');
+    restartCssAnimation(form, 'is-at-stock');
     window.setTimeout(() => form.classList.remove('is-at-stock'), 600);
     showToast(message, 'warning');
 }
@@ -489,5 +495,6 @@ animStyle.textContent = `
         75% { transform: scale(0.95); }
         100% { transform: scale(1); }
     }
+    .nav-cart.is-cart-added { animation: cartAdd 0.5s ease; }
 `;
 document.head.appendChild(animStyle);

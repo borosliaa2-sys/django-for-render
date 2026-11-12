@@ -1,8 +1,9 @@
 {% extends 'base.html' %}
 {% load static humanize shop_tags %}
 {% block title %}{{ article.title }} | وبلاگ عطارباشی{% endblock title %}
+{% block meta_description %}{{ article.summary|truncatechars:155 }}{% endblock meta_description %}
+{% block structured_data %}<script type="application/ld+json">{{ article_schema_json }}</script>{% endblock structured_data %}
 {% block content %}
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
 
 <div class="article-detail-page">
   <div class="article-detail-container">
@@ -51,7 +52,10 @@
 
         {% if article.image_url %}
         <div class="art-featured-image">
-          <img src="{{ article.image_url }}" alt="{{ article.title }}">
+          {% responsive_media article.image_url 640 as featured_image_640 %}
+          {% responsive_media article.image_url 960 as featured_image_960 %}
+          {% responsive_media article.image_url 1400 as featured_image_1400 %}
+          <img src="{{ featured_image_960 }}" srcset="{{ featured_image_640 }} 640w, {{ featured_image_960 }} 960w, {{ featured_image_1400 }} 1400w" sizes="(max-width: 900px) 92vw, 760px" alt="{{ article.title }}" width="1600" height="900" fetchpriority="high" decoding="async">
         </div>
         {% endif %}
 
@@ -76,7 +80,7 @@
             <div class="arp-card">
               <a href="{{ p.get_absolute_url }}" class="arp-card-link">
                 <div class="arp-img">
-                  <img src="{{ p.image_url|cloudinary_thumbnail:360 }}" srcset="{{ p.image_url|cloudinary_thumbnail:240 }} 240w, {{ p.image_url|cloudinary_thumbnail:360 }} 360w" sizes="(max-width: 680px) 42vw, 180px" alt="{{ p.name }}" loading="lazy" decoding="async">
+                  <img src="{{ p.image_url|cloudinary_thumbnail:360 }}" srcset="{{ p.image_url|cloudinary_thumbnail:240 }} 240w, {{ p.image_url|cloudinary_thumbnail:360 }} 360w" sizes="(max-width: 680px) 42vw, 180px" alt="{{ p.name }}" width="360" height="360" loading="lazy" decoding="async">
                 </div>
                 <div class="arp-info">
                   <h4>{{ p.name }}</h4>
@@ -112,7 +116,9 @@
       <!-- SIDEBAR -->
       <aside class="article-sidebar">
         <div class="sidebar-card author-box">
-          <img src="{% static 'images/logo.jpg' %}" alt="عطارباشی" class="author-avatar">
+          {% static 'images/logo.jpg' as article_author_logo_source %}
+          {% responsive_media article_author_logo_source 128 as article_author_logo %}
+          <img src="{{ article_author_logo }}" alt="عطارباشی" class="author-avatar" width="70" height="70" loading="lazy" decoding="async">
           <h3>عطاری آنلاین عطارباشی</h3>
           <p>ارائه‌دهنده مرغوب‌ترین گیاهان دارویی، دمنوش‌ها و فرآورده‌های سنتی با تضمین کیفیت و اصالت.</p>
           <a href="{% url 'shop:search' %}" class="btn-shop-link"><i class="fas fa-shopping-bag"></i> ورود به فروشگاه</a>
@@ -124,7 +130,8 @@
           <div class="recent-list">
             {% for r in related_articles %}
             <a href="{{ r.get_absolute_url }}" class="recent-item">
-              <img src="{{ r.image_url }}" alt="{{ r.title }}">
+              {% responsive_media r.image_url 160 as recent_image %}
+              <img src="{{ recent_image }}" alt="{{ r.title }}" width="160" height="90" loading="lazy" decoding="async">
               <div>
                 <h4>{{ r.title }}</h4>
                 <span><i class="far fa-clock"></i> {{ r.reading_time }} دقیقه</span>

@@ -24,7 +24,11 @@
             <div id="shamsi-date"><i class="ri-calendar-2-line"></i><span>امروز؛ درحال بارگذاری...</span></div>
         </div>
         <div class="main-content-img">
-            <img src="{% static 'images/home-hero.webp' %}" alt="عطاری عطارباشی">
+            {% static 'images/home-hero.webp' as hero_image_source %}
+            {% responsive_media hero_image_source 480 as hero_image_480 %}
+            {% responsive_media hero_image_source 768 as hero_image_768 %}
+            {% responsive_media hero_image_source 1000 as hero_image_1000 %}
+            <img src="{{ hero_image_768 }}" srcset="{{ hero_image_480 }} 480w, {{ hero_image_768 }} 768w, {{ hero_image_1000 }} 1000w" sizes="(max-width: 768px) 92vw, 50vw" alt="عطاری عطارباشی" width="1000" height="1000" fetchpriority="high" decoding="async">
             <div class="floating-element floating-1"><i class="ri-truck-line"></i><span>ارسال سریع</span></div>
             <div class="floating-element floating-2"><i class="ri-vip-crown-2-line"></i><span>تضمین اصالت</span></div>
         </div>
@@ -42,7 +46,8 @@
         <a href="{% url 'shop:category' cat.slug %}" class="category-box">
             <div class="category-box-img">
                 {% category_icon_url cat.icon_image as category_icon %}
-                <img src="{{ category_icon }}" alt="{{ cat.name }}">
+                {% responsive_media category_icon 128 as category_icon_128 %}
+                <img src="{{ category_icon_128 }}" alt="{{ cat.name }}" width="128" height="128" loading="lazy" decoding="async">
             </div>
             <strong class="category-name">{{ cat.name }}</strong>
             <span class="category-count">{{ cat.product_count }} محصول</span>
@@ -77,7 +82,7 @@
             {% with product.primary_variant as variant %}
             <div class="pro-box" data-product-id="{{ product.id }}" data-variant-id="{{ variant.id|default:''|unlocalize }}" data-product-name="{{ product.name }}" data-product-price="{% if variant %}{{ variant.price|unlocalize }}{% endif %}" data-product-img="{{ product.image_url|cloudinary_thumbnail:900 }}" data-product-href="{{ product.get_absolute_url }}" style="cursor:pointer;" onclick="location.href=this.dataset.productHref">
                 <div class="pro-box-img">
-                    <img src="{{ product.image_url|cloudinary_thumbnail:480 }}" srcset="{{ product.image_url|cloudinary_thumbnail:320 }} 320w, {{ product.image_url|cloudinary_thumbnail:480 }} 480w, {{ product.image_url|cloudinary_thumbnail:640 }} 640w" sizes="(max-width: 680px) 46vw, (max-width: 1100px) 30vw, 260px" alt="{{ product.name }}" loading="lazy" decoding="async">
+                    <img src="{{ product.image_url|cloudinary_thumbnail:240 }}" srcset="{{ product.image_url|cloudinary_thumbnail:160 }} 160w, {{ product.image_url|cloudinary_thumbnail:240 }} 240w, {{ product.image_url|cloudinary_thumbnail:320 }} 320w" sizes="(max-width: 480px) 130px, (max-width: 768px) 142px, 190px" width="320" height="320" alt="{{ product.name }}" loading="lazy" decoding="async">
                     <button type="button" class="quick-view-btn" aria-label="پیش‌نمایش سریع" title="مشاهده سریع" onclick="event.stopPropagation(); openQuickPreview(this);"><i class="ri-eye-line"></i></button>
                     <button type="button" class="fav-btn {% if product.id in wishlist_ids %}active{% endif %}" data-url="{% url 'shop:wishlist_toggle' product.id %}" data-product-id="{{ product.id }}" onclick="event.stopPropagation(); toggleWishlistAjax(event, this);" title="افزودن به علاقه‌مندی"><i class="{% if product.id in wishlist_ids %}ri-heart-3-fill{% else %}ri-heart-3-line{% endif %}"></i></button>
                 </div>

@@ -1,5 +1,3 @@
-@import url("https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css");
-
 /* === ریست پایه — توضیح: همه‌ی مرورگرها margin/padding پیش‌فرض دارند؛ این ریست یکدست می‌کند === */
 *{
     margin: 0;
@@ -29,6 +27,29 @@ html, body{
 img{
     max-width: 100%;
     display: block;
+}
+/* Accessible text that is invisible without removing an element from the
+   accessibility tree (used by the mobile-menu checkbox label). */
+.visually-hidden{
+    position:absolute !important;
+    width:1px !important;
+    height:1px !important;
+    padding:0 !important;
+    margin:-1px !important;
+    overflow:hidden !important;
+    clip:rect(0, 0, 0, 0) !important;
+    white-space:nowrap !important;
+    border:0 !important;
+}
+/* Icon font styles are intentionally deferred. Reserve their one-em inline
+   box in critical CSS so the glyph stylesheet cannot move nearby RTL text. */
+i[class^="ri-"], i[class*=" ri-"],
+i.fas, i.far, i.fab, i.fa, i[class*=" fa-"]{
+    display:inline-block;
+    width:1em;
+    min-width:1em;
+    line-height:1;
+    text-align:center;
 }
 /* متغیر ارتفاع هدر — بقیه‌ی صفحات با calc(var(--site-header-height)+...) فاصله می‌گیرند */
 :root{

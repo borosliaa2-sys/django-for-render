@@ -1,10 +1,18 @@
 """
 ویوهای فروشگاه — خانه، جستجو (امن، صفحه‌بندی، اعتبارسنجی)، جزئیات و دسته
 """
+from __future__ import annotations
+
+import json
+
+from django.conf import settings
 from django.contrib import messages
 from django.db.models import Avg, Case, Count, F, IntegerField, Max, Q, QuerySet, Value, When
+from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
+from django.urls import reverse
 from django.utils.decorators import method_decorator
+from django.utils.safestring import mark_safe
 from django.views.decorators.cache import never_cache
 from django.views.generic import DetailView, ListView, TemplateView
 
@@ -13,6 +21,22 @@ from .models import Article, Category, Product
 
 MAX_Q_LENGTH = 100
 ALLOWED_SORTS = {"popular", "cheap", "expensive", "newest"}
+
+
+def _site_origin(request) -> str:
+    canonical_host = str(getattr(settings, "CANONICAL_HOST", "") or "").strip()
+    return f"https://{canonical_host}" if canonical_host else request.build_absolute_uri("/").rstrip("/")
+
+
+def _absolute_site_url(request, value: str) -> str:
+    raw = str(value or "")
+    return raw if raw.startswith(("http://", "https://")) else f"{_site_origin(request)}{raw}"
+
+
+def _json_ld(payload: dict) -> str:
+    """Serialize dynamic schema safely for an application/ld+json script."""
+    serialized = json.dumps(payload, ensure_ascii=False, separators=(",", ":"), default=str)
+    return mark_safe(serialized.replace("<", "\\u003c").replace(">", "\\u003e").replace("&", "\\u0026"))
 
 
 class HomeView(TemplateView):
@@ -189,6 +213,30 @@ class ProductDetailView(DetailView):
         product = self.object
         ctx["variants"] = product.variants.filter(is_active=True).order_by("price")
         ctx["primary_variant"] = product.variants.filter(is_active=True).order_by("price").first()
+        primary_variant = ctx["primary_variant"]
+        product_schema = {
+            "@context": "https://schema.org",
+            "@type": "Product",
+            "@id": f"{_site_origin(self.request)}{product.get_absolute_url()}#product",
+            "name": product.name,
+            "url": _absolute_site_url(self.request, product.get_absolute_url()),
+            "image": [_absolute_site_url(self.request, product.image_url)],
+            "description": product.short_description or product.description or f"خرید {product.name} از عطارباشی",
+            "category": product.category.name,
+            "brand": {"@type": "Brand", "name": "عطارباشی"},
+            "sku": str(product.pk),
+        }
+        if primary_variant and primary_variant.price:
+            product_schema["offers"] = {
+                "@type": "Offer",
+                "url": _absolute_site_url(self.request, product.get_absolute_url()),
+                # Store prices are entered in tomans; Schema.org uses ISO IRR.
+                "price": str(int(primary_variant.price) * 10),
+                "priceCurrency": "IRR",
+                "availability": "https://schema.org/InStock" if primary_variant.stock > 0 else "https://schema.org/OutOfStock",
+                "seller": {"@id": f"{_site_origin(self.request)}/#organization"},
+            }
+        ctx["product_schema_json"] = _json_ld(product_schema)
         ctx["related"] = (
             Product.objects.filter(is_active=True, category=product.category)
             .exclude(pk=product.pk)
@@ -501,6 +549,21 @@ class ArticleDetailView(DetailView):
             .prefetch_related("variants")
             .order_by("category__sort_order", "sort_order", "name")[:4]
         )
+        article_schema = {
+            "@context": "https://schema.org",
+            "@type": "BlogPosting",
+            "@id": f"{_site_origin(self.request)}{article.get_absolute_url()}#article",
+            "mainEntityOfPage": _absolute_site_url(self.request, article.get_absolute_url()),
+            "headline": article.title,
+            "description": article.summary,
+            "image": [_absolute_site_url(self.request, article.image_url)],
+            "datePublished": article.created_at.isoformat(),
+            "dateModified": article.updated_at.isoformat(),
+            "inLanguage": "fa-IR",
+            "author": {"@type": "Person", "name": article.author_name},
+            "publisher": {"@id": f"{_site_origin(self.request)}/#organization"},
+        }
+        ctx["article_schema_json"] = _json_ld(article_schema)
         return ctx
 
 
@@ -512,5 +575,29 @@ def custom_404(request, exception=None):
 def custom_500(request):
     """صفحه خطای ۵۰۰ سفارشی"""
     return render(request, "500.html", status=500)
+
+
+def robots_txt(request):
+    """Expose crawl rules and the canonical sitemap at the domain root."""
+    from django.conf import settings
+
+    canonical_host = str(getattr(settings, "CANONICAL_HOST", "") or "").strip()
+    origin = f"https://{canonical_host}" if canonical_host else request.build_absolute_uri("/").rstrip("/")
+    lines = (
+        "User-agent: *",
+        "Allow: /",
+        "Disallow: /admin/",
+        "Disallow: /account/",
+        "Disallow: /api/",
+        "Disallow: /cart/",
+        "Disallow: /checkout/",
+        "Disallow: /payment/",
+        "Disallow: /profile/",
+        "Disallow: /wishlist/",
+        f"Sitemap: {origin}{reverse('django.contrib.sitemaps.views.sitemap')}",
+    )
+    response = HttpResponse("\n".join(lines) + "\n", content_type="text/plain; charset=utf-8")
+    response["Cache-Control"] = "public, max-age=86400"
+    return response
 
 

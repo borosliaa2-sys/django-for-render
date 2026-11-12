@@ -13,4 +13,11 @@ application = get_wsgi_application()
 # Render reset has removed a file, WhiteNoise falls through to Django's
 # /media/ view, which recovers its Cloudinary backup server-side and caches it
 # locally again. A browser is never redirected to Cloudinary.
-application = WhiteNoise(application, root=str(settings.MEDIA_ROOT), prefix="media/")
+application = WhiteNoise(
+    application,
+    root=str(settings.MEDIA_ROOT),
+    prefix="media/",
+    # Catalogue filenames are immutable (new uploads receive a new storage
+    # name). Match the derivative endpoint's long browser cache lifetime.
+    max_age=60 * 60 * 24 * 365,
+)

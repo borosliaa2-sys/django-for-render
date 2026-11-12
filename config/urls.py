@@ -15,10 +15,13 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 from django.contrib import admin
+from django.contrib.sitemaps.views import sitemap
 from django.http import HttpResponse
 from django.urls import include, path
 
-from shop.media_views import serve_site_media
+from shop.media_views import serve_responsive_media, serve_site_media
+from shop.sitemaps import sitemaps
+from shop.views import robots_txt
 
 
 def healthz(request):
@@ -28,6 +31,10 @@ def healthz(request):
 
 urlpatterns = [
     path("healthz/", healthz, name="healthz"),
+    path("robots.txt", robots_txt, name="robots_txt"),
+    path("sitemap.xml", sitemap, {"sitemaps": sitemaps}, name="django.contrib.sitemaps.views.sitemap"),
+    # Responsive derivatives must come before the catch-all media route.
+    path("media/optimized/<int:width>/", serve_responsive_media, name="responsive_media"),
     # Always same-origin: this view serves a local image and recovers it from
     # Cloudinary server-side only when the local file is absent.
     path("media/<path:media_path>", serve_site_media, name="site_media"),

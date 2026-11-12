@@ -1,8 +1,7 @@
 {% extends 'base.html' %}
-{% load static %}
+{% load static shop_tags %}
 {% block title %}مقالات و دانشنامه طب سنتی | عطارباشی{% endblock title %}
 {% block content %}
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
 
 <div class="blog-page">
   <div class="blog-container">
@@ -64,7 +63,9 @@
       {% for art in articles %}
       <article class="article-card">
         <a href="{{ art.get_absolute_url }}" class="art-img-wrap">
-          <img src="{{ art.image_url }}" alt="{{ art.title }}" loading="lazy">
+          {% responsive_media art.image_url 400 as art_image_400 %}
+          {% responsive_media art.image_url 720 as art_image_720 %}
+          <img src="{{ art_image_400 }}" srcset="{{ art_image_400 }} 400w, {{ art_image_720 }} 720w" sizes="(max-width: 680px) 100vw, 33vw" alt="{{ art.title }}" width="1600" height="900" loading="lazy" decoding="async">
           <span class="art-cat-badge">{{ art.category_name }}</span>
         </a>
         <div class="art-body">
