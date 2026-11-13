@@ -20,8 +20,8 @@
       {% responsive_media article.image_url 1200 as article_image_1200 %}
       <img src="{{ article_image_768 }}" srcset="{{ article_image_480 }} 480w, {{ article_image_768 }} 768w, {{ article_image_1200 }} 1200w" sizes="(max-width: 680px) 100vw, 1100px" alt="" width="1600" height="900" loading="lazy" decoding="async">
       <div class="home-article-slide__shade"></div>
+      <span class="home-article-slide__category">{{ article.category_name }}</span>
       <a href="{{ article.get_absolute_url }}" class="home-article-slide__link" {% if not forloop.first %}tabindex="-1"{% endif %}>
-        <span class="home-article-slide__category">{{ article.category_name }}</span>
         <div class="home-article-slide__content">
           <span class="home-article-slide__meta"><i class="ri-time-line"></i> {{ article.reading_time }} دقیقه مطالعه</span>
           <h3>{{ article.title }}</h3>

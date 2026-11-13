@@ -237,6 +237,32 @@ class ProductDetailView(DetailView):
                 "seller": {"@id": f"{_site_origin(self.request)}/#organization"},
             }
         ctx["product_schema_json"] = _json_ld(product_schema)
+        ctx["breadcrumb_schema_json"] = _json_ld(
+            {
+                "@context": "https://schema.org",
+                "@type": "BreadcrumbList",
+                "itemListElement": [
+                    {
+                        "@type": "ListItem",
+                        "position": 1,
+                        "name": "صفحه اصلی",
+                        "item": _absolute_site_url(self.request, "/"),
+                    },
+                    {
+                        "@type": "ListItem",
+                        "position": 2,
+                        "name": product.category.name,
+                        "item": _absolute_site_url(self.request, product.category.get_absolute_url()),
+                    },
+                    {
+                        "@type": "ListItem",
+                        "position": 3,
+                        "name": product.name,
+                        "item": _absolute_site_url(self.request, product.get_absolute_url()),
+                    },
+                ],
+            }
+        )
         ctx["related"] = (
             Product.objects.filter(is_active=True, category=product.category)
             .exclude(pk=product.pk)
@@ -564,6 +590,32 @@ class ArticleDetailView(DetailView):
             "publisher": {"@id": f"{_site_origin(self.request)}/#organization"},
         }
         ctx["article_schema_json"] = _json_ld(article_schema)
+        ctx["breadcrumb_schema_json"] = _json_ld(
+            {
+                "@context": "https://schema.org",
+                "@type": "BreadcrumbList",
+                "itemListElement": [
+                    {
+                        "@type": "ListItem",
+                        "position": 1,
+                        "name": "صفحه اصلی",
+                        "item": _absolute_site_url(self.request, "/"),
+                    },
+                    {
+                        "@type": "ListItem",
+                        "position": 2,
+                        "name": "مقالات و وبلاگ",
+                        "item": _absolute_site_url(self.request, reverse("shop:article_list")),
+                    },
+                    {
+                        "@type": "ListItem",
+                        "position": 3,
+                        "name": article.title,
+                        "item": _absolute_site_url(self.request, article.get_absolute_url()),
+                    },
+                ],
+            }
+        )
         return ctx
 
 

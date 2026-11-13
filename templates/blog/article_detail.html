@@ -2,7 +2,10 @@
 {% load static humanize shop_tags %}
 {% block title %}{{ article.title }} | وبلاگ عطارباشی{% endblock title %}
 {% block meta_description %}{{ article.summary|truncatechars:155 }}{% endblock meta_description %}
-{% block structured_data %}<script type="application/ld+json">{{ article_schema_json }}</script>{% endblock structured_data %}
+{% block structured_data %}
+<script type="application/ld+json">{{ article_schema_json }}</script>
+<script type="application/ld+json">{{ breadcrumb_schema_json }}</script>
+{% endblock structured_data %}
 {% block content %}
 
 <div class="article-detail-page">

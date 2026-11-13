@@ -2,7 +2,10 @@
 {% load static humanize l10n shop_tags %}
 {% block title %}{{ product.name }} | عطارباشی{% endblock title %}
 {% block meta_description %}{{ product.short_description|default:product.description|truncatechars:155|default:product.name }} | خرید آنلاین از عطارباشی{% endblock meta_description %}
-{% block structured_data %}<script type="application/ld+json">{{ product_schema_json }}</script>{% endblock structured_data %}
+{% block structured_data %}
+<script type="application/ld+json">{{ product_schema_json }}</script>
+<script type="application/ld+json">{{ breadcrumb_schema_json }}</script>
+{% endblock structured_data %}
 {% block content %}
 
 <div class="product-detail-page">
@@ -583,7 +586,7 @@
   .toman { font-size: 0.88rem; font-weight: 800; color: #e11d48; margin-right: 2px; }
   .price-box .old-price {
     text-decoration: line-through;
-    color: #94a3b8;
+    color: #64748b;
     font-size: 0.92rem;
     margin-right: 6px;
     font-weight: 500;

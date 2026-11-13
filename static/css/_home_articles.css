@@ -16,7 +16,8 @@
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  color: #b55d3f;
+  /* AA contrast on the soft peach pill. */
+  color: #8f432b;
   background: #fff1ea;
   border: 1px solid #ffd9ca;
   border-radius: 999px;
@@ -98,13 +99,15 @@
     linear-gradient(0deg, rgba(23, 15, 10, .48), transparent 62%);
 }
 .home-article-slide__link {
+  /* Keep the article link large enough to tap, but do not cover the carousel
+     controls. The previous full-slide overlay overlapped the dot buttons and
+     made Lighthouse treat both controls as cramped targets. */
   position: absolute;
-  inset: 0;
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-end;
-  align-items: flex-start;
-  padding: 34px 44px 45px;
+  right: 30px;
+  bottom: 50px;
+  width: min(620px, calc(100% - 108px));
+  min-height: 48px;
+  padding: 8px 10px;
   color: #fff;
   text-align: right;
   text-decoration: none;
@@ -203,23 +206,38 @@
 .home-articles__dots {
   position: absolute;
   z-index: 2;
-  right: 24px;
-  bottom: 25px;
+  right: 16px;
+  bottom: 14px;
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 2px;
 }
 .home-articles__dot {
-  width: 7px;
-  height: 7px;
+  /* A 28px hit area meets the touch-target audit while ::before keeps the
+     visual pagination dots intentionally compact. */
+  display: grid;
+  width: 28px;
+  height: 28px;
+  place-items: center;
   padding: 0;
   border: 0;
-  border-radius: 99px;
-  background: rgba(255,255,255,.58);
+  border-radius: 50%;
+  background: transparent;
   cursor: pointer;
+}
+.home-articles__dot::before {
+  content: '';
+  width: 8px;
+  height: 8px;
+  border-radius: 99px;
+  background: rgba(255,255,255,.72);
   transition: width .25s ease, background .25s ease;
 }
-.home-articles__dot.is-active { width: 24px; background: #fff; }
+.home-articles__dot.is-active::before { width: 18px; background: #fff; }
+.home-articles__dot:focus-visible {
+  outline: 2px solid #fff;
+  outline-offset: 2px;
+}
 
 @media (max-width: 700px) {
   .home-articles { margin: 58px auto 56px; padding: 0 12px; }
@@ -233,7 +251,13 @@
   .home-article-slide__shade {
     background: linear-gradient(90deg, rgba(27, 18, 12, .17) 0%, rgba(27, 18, 12, .8) 100%), linear-gradient(0deg, rgba(23, 15, 10, .54), transparent 65%);
   }
-  .home-article-slide__link { padding: 22px 18px 44px; }
+  .home-article-slide__link {
+    right: 10px;
+    bottom: 38px;
+    width: calc(100% - 82px);
+    min-height: 48px;
+    padding: 6px 8px;
+  }
   .home-article-slide__category { top: 13px; right: 13px; padding: 5px 9px; font-size: .64rem; }
   .home-article-slide__content { max-width: 100%; }
   .home-article-slide__content h3 { font-size: 1.05rem; margin: 7px 0; }
@@ -242,12 +266,12 @@
   .home-article-slide__cta { padding: 6px 10px; font-size: .7rem; }
   .home-articles__controls { left: 13px; bottom: 13px; gap: 5px; }
   .home-articles__arrow { width: 30px; height: 30px; font-size: 1rem; }
-  .home-articles__dots { right: 14px; bottom: 17px; }
+  .home-articles__dots { right: 6px; bottom: 4px; }
 }
 
 @media (max-width: 430px) {
   .home-articles__stage { height: 202px; }
-  .home-article-slide__link { padding: 17px 15px 38px; }
+  .home-article-slide__link { bottom: 45px; padding: 5px 6px; }
   .home-article-slide__content h3 { font-size: .93rem; line-height: 1.4; }
   .home-article-slide__content p { display: none; }
   .home-article-slide__category { top: 10px; right: 10px; }

@@ -1505,7 +1505,8 @@ body:not(.is-home) .all-content {
 }
 
 .category-ppr .section-header-title p {
-    color: #858585;
+    /* #626262 on white exceeds WCAG AA for the small descriptive line. */
+    color: #626262;
     font-size: 0.72rem;
 }
 
@@ -1931,7 +1932,9 @@ body:not(.is-home) .all-content {
 .more-badge {
     margin-top: 6px;
     background: #faece1;
-    color: var(--secondary-color, #ff805d) !important;
+    /* The brand orange is too light on this pale chip; retain the warm hue
+       with an AA-compliant foreground. */
+    color: #9c2f16 !important;
     font-size: 0.74rem !important;
     font-weight: 800 !important;
     padding: 3px 10px;
@@ -2108,7 +2111,8 @@ body:not(.is-home) .all-content {
 }
 
 .old-price {
-    color: #94a3b8;
+    /* Muted but still 4.5:1+ against the card's white background. */
+    color: #64748b;
     text-decoration: line-through;
     font-size: 0.76rem;
     font-weight: 500;

@@ -253,6 +253,9 @@ class ShopFullFlowTests(TestCase):
         res = self.client.get(reverse("shop:product_detail", kwargs={"slug": self.product.slug}))
         self.assertEqual(res.status_code, 200)
         self.assertContains(res, "عرق نعناع دو آتیشه")
+        self.assertContains(res, '"@type":"Product"')
+        self.assertContains(res, '"@type":"BreadcrumbList"')
+        self.assertContains(res, self.cat.get_absolute_url())
 
     def test_wishlist_view(self):
         self.client.post(reverse("shop:wishlist_toggle", kwargs={"product_id": self.product.id}))
@@ -367,6 +370,7 @@ class ShopFullFlowTests(TestCase):
         self.assertNotContains(home, "res.cloudinary.com")
         self.assertNotContains(home, 'class="menu-icon" aria-label=')
         self.assertContains(home, 'for="menu-btn" class="menu-icon"')
+        self.assertContains(home, '<main class="all-content" id="site-main">')
 
         robots = self.client.get("/robots.txt")
         self.assertEqual(robots.status_code, 200)
