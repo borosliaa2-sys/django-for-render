@@ -119,9 +119,10 @@ class Product(models.Model):
         return self.name
 
     def save(self, *args, **kwargs):
-        # Files uploaded from Django admin are converted to oriented WebP and
-        # constrained to 1600px before storage. Bundled/fixture media stays as-is.
-        optimize_new_upload(self.image_file)
+        # Files uploaded from Django admin are converted to oriented WebP,
+        # constrained to 1600px, and named from the Persian product title.
+        # Bundled/fixture media stays as-is.
+        optimize_new_upload(self.image_file, descriptive_name=self.name)
         if not self.slug:
             base = slugify(self.name, allow_unicode=True)
             self.slug = self._unique_slug(base)
@@ -478,9 +479,10 @@ class Article(models.Model):
         return "/static/images/articles/herbal-tea-calm.webp"
 
     def save(self, *args, **kwargs):
-        # Images uploaded through the admin are automatically converted to a
-        # correctly oriented WebP at a web-friendly maximum size.
-        optimize_new_upload(self.image_file)
+        # Images uploaded through the admin are automatically converted to an
+        # oriented WebP at a web-friendly maximum size and named from the
+        # article title, preserving Persian words for new media paths.
+        optimize_new_upload(self.image_file, descriptive_name=self.title)
         if not self.slug:
             base = slugify(self.title, allow_unicode=True)
             self.slug = self._unique_slug(base)

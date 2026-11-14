@@ -16,6 +16,11 @@ a:focus-visible{
 ul{
     list-style-type: none;
 }
+/* Prevent the browser's default blue touch flash on links and controls.
+   Keyboard users still receive the intentional :focus-visible indicator above. */
+html{
+    -webkit-tap-highlight-color: transparent;
+}
 html, body{
     font-family: Vazirmatn, sans-serif;
     background: #fff;

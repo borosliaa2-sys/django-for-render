@@ -3,6 +3,7 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 from unittest.mock import patch
 
+from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase, Client, override_settings
 from django.urls import reverse
 from PIL import Image
@@ -358,6 +359,33 @@ class ShopFullFlowTests(TestCase):
             )
             self.assertEqual(unknown.status_code, 404)
 
+    def test_new_uploads_keep_descriptive_persian_filenames(self):
+        def jpeg_upload(upload_name):
+            payload = BytesIO()
+            Image.new("RGB", (40, 25), "#8a4f21").save(payload, "JPEG")
+            return SimpleUploadedFile(upload_name, payload.getvalue(), content_type="image/jpeg")
+
+        with TemporaryDirectory() as media_root, override_settings(MEDIA_ROOT=media_root):
+            product = Product.objects.create(
+                category=self.cat,
+                name="روغن سیاه دانه ممتاز",
+                image_file=jpeg_upload("camera-original.JPG"),
+            )
+            article = Article.objects.create(
+                title="خواص دمنوش به لیمو",
+                category_name="آموزش",
+                summary="راهنمای کوتاه",
+                content="متن مقاله",
+                image_file=jpeg_upload("IMG-1001.jpg"),
+            )
+
+            self.assertTrue(product.image_file.name.endswith("/روغن-سیاه-دانه-ممتاز.webp"))
+            self.assertTrue(article.image_file.name.endswith("/خواص-دمنوش-به-لیمو.webp"))
+            self.assertTrue((Path(media_root) / product.image_file.name).is_file())
+            self.assertTrue((Path(media_root) / article.image_file.name).is_file())
+            with Image.open(Path(media_root) / product.image_file.name) as optimized:
+                self.assertEqual(optimized.format, "WEBP")
+
     def test_crawl_endpoints_and_canonical_markup_are_present(self):
         home = self.client.get(reverse("shop:home"))
         self.assertEqual(home.status_code, 200)
@@ -371,6 +399,8 @@ class ShopFullFlowTests(TestCase):
         self.assertNotContains(home, 'class="menu-icon" aria-label=')
         self.assertContains(home, 'for="menu-btn" class="menu-icon"')
         self.assertContains(home, '<main class="all-content" id="site-main">')
+        self.assertContains(home, "Vazirmatn-variable")
+        self.assertNotContains(home, "Vazirmatn-Regular")
 
         robots = self.client.get("/robots.txt")
         self.assertEqual(robots.status_code, 200)

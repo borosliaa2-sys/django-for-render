@@ -19,9 +19,8 @@
     <meta name="theme-color" content="#f8c34a">
     <meta name="msapplication-TileColor" content="#f8c34a">
     <meta name="msapplication-TileImage" content="{% static 'images/favicon-192.png' %}?v=20261107-crop">
-    <!-- Preloading the two most-used local text fonts keeps the RTL layout stable. -->
-    <link rel="preload" href="{% static 'fonts/vazirmatn/Vazirmatn-Regular.woff2' %}" as="font" type="font/woff2" crossorigin>
-    <link rel="preload" href="{% static 'fonts/vazirmatn/Vazirmatn-Bold.woff2' %}" as="font" type="font/woff2" crossorigin>
+    <!-- One variable Persian font covers every weight and is fetched before first paint. -->
+    <link rel="preload" href="{% static 'fonts/vazirmatn/Vazirmatn-variable.woff2' %}" as="font" type="font/woff2" crossorigin>
     <link rel="stylesheet" href="{% static 'css/site.css' %}">
     <!-- Decorative icon sheets are self-hosted and no longer delay first paint. -->
     <link rel="preload" href="{% static 'vendor/remixicon/remixicon.css' %}" as="style">
