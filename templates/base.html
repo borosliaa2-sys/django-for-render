@@ -9,6 +9,21 @@
     <meta name="description" content="{% block meta_description %}فروشگاه آنلاین عطارباشی؛ محصولات طبیعی، گیاهان دارویی، دمنوش، ادویه، خشکبار و فرآورده‌های سنتی با ضمانت اصالت.{% endblock meta_description %}">
     <meta name="robots" content="{{ robots_directive }}">
     <link rel="canonical" href="{{ canonical_url }}">
+    <!-- Social crawlers (Telegram, WhatsApp, Instagram, X, etc.) read these
+         server-rendered Open Graph tags without running JavaScript. Detail
+         views supply a page-specific absolute image, title, and description. -->
+    <meta property="og:locale" content="fa_IR">
+    <meta property="og:site_name" content="عطارباشی">
+    <meta property="og:type" content="{{ social_type|default:'website' }}">
+    <meta property="og:title" content="{{ social_title|default:'عطارباشی | محصولات طبیعی و سنتی' }}">
+    <meta property="og:description" content="{{ social_description|default:'فروشگاه آنلاین عطارباشی؛ محصولات طبیعی، گیاهان دارویی، دمنوش، ادویه، خشکبار و فرآورده‌های سنتی.' }}">
+    <meta property="og:url" content="{{ social_url|default:canonical_url }}">
+    <meta property="og:image" content="{{ social_image|default:social_default_image }}">
+    <meta property="og:image:alt" content="{{ social_image_alt|default:'عطارباشی' }}">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="{{ social_title|default:'عطارباشی | محصولات طبیعی و سنتی' }}">
+    <meta name="twitter:description" content="{{ social_description|default:'فروشگاه آنلاین عطارباشی؛ محصولات طبیعی، گیاهان دارویی، دمنوش، ادویه، خشکبار و فرآورده‌های سنتی.' }}">
+    <meta name="twitter:image" content="{{ social_image|default:social_default_image }}">
     <!-- Brand icons: cropped transparently from the store logo for every major platform. -->
     <link rel="icon" href="{% static 'images/favicon.ico' %}?v=20261107-crop" sizes="any">
     <link rel="shortcut icon" href="{% static 'images/favicon.ico' %}?v=20261107-crop">
@@ -147,7 +162,7 @@
                 <div class="footer-col footer-about">
                     <a href="{% url 'shop:home' %}" class="footer-logo" aria-label="بازگشت به صفحه اصلی عطارباشی">
                         {% responsive_media site_logo_source 96 as footer_logo %}
-                        <img src="{{ footer_logo }}" alt="عطارباشی" width="44" height="44" loading="lazy" decoding="async">
+                        <img src="{{ footer_logo }}" alt="" width="44" height="44" loading="lazy" decoding="async">
                         <span>عطارباشی</span>
                     </a>
                     <p>فروشگاه آنلاین محصولات طبیعی و سنتی عطارباشی؛ ارائه‌دهنده مرغوب‌ترین گیاهان دارویی، دمنوش‌ها، خشکبار اعلا و فرآورده‌های سنتی با تضمین کیفیت و اصالت.</p>

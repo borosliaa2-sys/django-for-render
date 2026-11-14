@@ -83,7 +83,7 @@
             <div class="arp-card">
               <a href="{{ p.get_absolute_url }}" class="arp-card-link">
                 <div class="arp-img">
-                  <img src="{{ p.image_url|cloudinary_thumbnail:360 }}" srcset="{{ p.image_url|cloudinary_thumbnail:240 }} 240w, {{ p.image_url|cloudinary_thumbnail:360 }} 360w" sizes="(max-width: 680px) 42vw, 180px" alt="{{ p.name }}" width="360" height="360" loading="lazy" decoding="async">
+                  <img src="{{ p.image_url|cloudinary_thumbnail:360 }}" srcset="{{ p.image_url|cloudinary_thumbnail:240 }} 240w, {{ p.image_url|cloudinary_thumbnail:360 }} 360w" sizes="(max-width: 680px) 42vw, 180px" alt="" width="360" height="360" loading="lazy" decoding="async">
                 </div>
                 <div class="arp-info">
                   <h4>{{ p.name }}</h4>
@@ -109,9 +109,9 @@
         <div class="art-share-bar">
           <span>اشتراک‌گذاری این مقاله:</span>
           <div class="share-links">
-            <a href="https://telegram.me/share/url?url={{ request.build_absolute_uri }}&text={{ article.title }}" target="_blank" title="تلگرام"><i class="fab fa-telegram"></i></a>
-            <a href="https://api.whatsapp.com/send?text={{ article.title }}%20{{ request.build_absolute_uri }}" target="_blank" title="واتساپ"><i class="fab fa-whatsapp"></i></a>
-            <a href="javascript:void(0)" onclick="navigator.clipboard.writeText(window.location.href); alert('لینک مقاله کپی شد!');" title="کپی لینک"><i class="fas fa-link"></i></a>
+            <a href="https://t.me/share/url?url={{ social_url|urlencode }}&amp;text={{ article.title|urlencode }}" target="_blank" rel="noopener noreferrer" aria-label="اشتراک‌گذاری مقاله در تلگرام" title="تلگرام"><i class="fab fa-telegram" aria-hidden="true"></i></a>
+            <a href="https://api.whatsapp.com/send?text={{ article.title|urlencode }}%20{{ social_url|urlencode }}" target="_blank" rel="noopener noreferrer" aria-label="اشتراک‌گذاری مقاله در واتساپ" title="واتساپ"><i class="fab fa-whatsapp" aria-hidden="true"></i></a>
+            <button type="button" class="share-copy-link" data-copy-url="{{ social_url }}" aria-label="کپی لینک مقاله" title="کپی لینک"><i class="fas fa-link" aria-hidden="true"></i></button>
           </div>
         </div>
       </main>
@@ -134,7 +134,7 @@
             {% for r in related_articles %}
             <a href="{{ r.get_absolute_url }}" class="recent-item">
               {% responsive_media r.image_url 160 as recent_image %}
-              <img src="{{ recent_image }}" alt="{{ r.title }}" width="160" height="90" loading="lazy" decoding="async">
+              <img src="{{ recent_image }}" alt="" width="160" height="90" loading="lazy" decoding="async">
               <div>
                 <h4>{{ r.title }}</h4>
                 <span><i class="far fa-clock"></i> {{ r.reading_time }} دقیقه</span>
@@ -429,21 +429,28 @@
     gap: 10px;
   }
   .share-links { display: flex; gap: 8px; }
-  .share-links a {
+  .share-links a,
+  .share-links button {
     width: 34px;
     height: 34px;
     border-radius: 50%;
+    border: 0;
     background: #faece1;
-    color: var(--secondary-color);
+    color: #9c2f16;
     display: flex;
     align-items: center;
     justify-content: center;
     text-decoration: none;
+    font: inherit;
     font-size: 1rem;
+    cursor: pointer;
     transition: all 0.2s ease;
   }
-  .share-links a:hover {
-    background: var(--secondary-color);
+  .share-links a:hover,
+  .share-links a:focus-visible,
+  .share-links button:hover,
+  .share-links button:focus-visible {
+    background: #9c2f16;
     color: #fff;
   }
 

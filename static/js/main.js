@@ -157,6 +157,8 @@ function showToast(message, type = 'success') {
     }
 
     const toast = document.createElement('div');
+    toast.setAttribute('role', 'status');
+    toast.setAttribute('aria-live', 'polite');
     const isSuccess = type === 'success';
     const isError = type === 'error';
     const isWarning = type === 'warning';
@@ -471,6 +473,39 @@ document.addEventListener('click', function (e) {
     if (!url || !url.includes('/wishlist/toggle/')) return;
 
     window.toggleWishlistAjax(e, wishBtn);
+});
+
+// کپی امن لینک اشتراک‌گذاری مقاله. دکمه (و نه لینک javascript:) برای
+// این عمل استفاده می‌شود تا لینک‌های واقعی صفحه کاملاً قابل خزش بمانند.
+function fallbackCopyText(text) {
+    const field = document.createElement('textarea');
+    field.value = text;
+    field.setAttribute('readonly', '');
+    field.style.cssText = 'position:fixed;opacity:0;pointer-events:none;';
+    document.body.appendChild(field);
+    field.select();
+    const copied = document.execCommand('copy');
+    field.remove();
+    return copied;
+}
+
+document.addEventListener('click', function (event) {
+    const copyButton = event.target.closest('[data-copy-url]');
+    if (!copyButton) return;
+
+    const url = copyButton.dataset.copyUrl || window.location.href;
+    const done = function () { showToast('لینک مقاله کپی شد.'); };
+    const failed = function () { showToast('کپی لینک انجام نشد؛ لطفاً آدرس صفحه را دستی کپی کنید.', 'error'); };
+
+    if (navigator.clipboard && window.isSecureContext) {
+        navigator.clipboard.writeText(url).then(done).catch(function () {
+            fallbackCopyText(url) ? done() : failed();
+        });
+    } else if (fallbackCopyText(url)) {
+        done();
+    } else {
+        failed();
+    }
 });
 
 // استایل‌های پویا برای Toast و چرخش لودر

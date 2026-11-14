@@ -96,7 +96,9 @@ def seo(request):
     # json.dumps returns only our fixed values here.  Marking it safe prevents
     # Django from escaping quote characters inside application/ld+json.
     return {
+        "site_origin": origin,
         "canonical_url": canonical_url,
+        "social_default_image": f"{origin}/static/images/logo.jpg",
         "robots_directive": robots_directive,
         "organization_schema_json": mark_safe(json.dumps(organization, ensure_ascii=False, separators=(",", ":"))),
     }

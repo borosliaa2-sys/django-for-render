@@ -257,6 +257,29 @@ class ShopFullFlowTests(TestCase):
         self.assertContains(res, '"@type":"Product"')
         self.assertContains(res, '"@type":"BreadcrumbList"')
         self.assertContains(res, self.cat.get_absolute_url())
+        # The review labels now point at their fields and product links expose
+        # server-rendered metadata for social crawlers without JavaScript.
+        self.assertContains(res, 'for="id_rating"')
+        self.assertContains(res, 'property="og:type" content="product"')
+        self.assertContains(res, 'property="og:image" content="https://attarbashiesf.ir/static/images/logo.')
+
+    def test_article_detail_has_social_preview_and_crawlable_share_controls(self):
+        article = Article.objects.create(
+            title="مقاله تست اشتراک‌گذاری",
+            slug="article-share-test",
+            category_name="آموزش",
+            summary="توضیح کوتاه برای پیش‌نمایش اشتراک‌گذاری مقاله.",
+            content="<h2>متن آزمایشی</h2><p>جزئیات مقاله آزمایشی.</p>",
+            image="images/articles/herbal-tea-calm.webp",
+        )
+        res = self.client.get(article.get_absolute_url())
+        self.assertEqual(res.status_code, 200)
+        self.assertContains(res, 'property="og:type" content="article"')
+        self.assertContains(res, 'property="og:title" content="مقاله تست اشتراک‌گذاری | وبلاگ عطارباشی"')
+        self.assertContains(res, 'property="og:image" content="https://attarbashiesf.ir/static/images/articles/herbal-tea-calm.webp"')
+        self.assertContains(res, 'https://t.me/share/url?url=')
+        self.assertContains(res, 'data-copy-url="https://attarbashiesf.ir/blog/article-share-test/"')
+        self.assertNotContains(res, "javascript:void(0)")
 
     def test_wishlist_view(self):
         self.client.post(reverse("shop:wishlist_toggle", kwargs={"product_id": self.product.id}))

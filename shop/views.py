@@ -12,7 +12,9 @@ from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.utils.decorators import method_decorator
+from django.utils.html import strip_tags
 from django.utils.safestring import mark_safe
+from django.utils.text import Truncator
 from django.views.decorators.cache import never_cache
 from django.views.generic import DetailView, ListView, TemplateView
 
@@ -31,6 +33,12 @@ def _site_origin(request) -> str:
 def _absolute_site_url(request, value: str) -> str:
     raw = str(value or "")
     return raw if raw.startswith(("http://", "https://")) else f"{_site_origin(request)}{raw}"
+
+
+def _social_description(value: str, fallback: str) -> str:
+    """Return concise plain text that is safe and useful in share previews."""
+    plain = " ".join(strip_tags(str(value or "")).split())
+    return Truncator(plain or fallback).chars(200)
 
 
 def _json_ld(payload: dict) -> str:
@@ -237,6 +245,15 @@ class ProductDetailView(DetailView):
                 "seller": {"@id": f"{_site_origin(self.request)}/#organization"},
             }
         ctx["product_schema_json"] = _json_ld(product_schema)
+        ctx["social_type"] = "product"
+        ctx["social_title"] = f"{product.name} | عطارباشی"
+        ctx["social_description"] = _social_description(
+            product.short_description or product.description,
+            f"خرید {product.name} از فروشگاه عطارباشی.",
+        )
+        ctx["social_url"] = _absolute_site_url(self.request, product.get_absolute_url())
+        ctx["social_image"] = _absolute_site_url(self.request, product.image_url)
+        ctx["social_image_alt"] = product.name
         ctx["breadcrumb_schema_json"] = _json_ld(
             {
                 "@context": "https://schema.org",
@@ -590,6 +607,12 @@ class ArticleDetailView(DetailView):
             "publisher": {"@id": f"{_site_origin(self.request)}/#organization"},
         }
         ctx["article_schema_json"] = _json_ld(article_schema)
+        ctx["social_type"] = "article"
+        ctx["social_title"] = f"{article.title} | وبلاگ عطارباشی"
+        ctx["social_description"] = _social_description(article.summary, article.title)
+        ctx["social_url"] = _absolute_site_url(self.request, article.get_absolute_url())
+        ctx["social_image"] = _absolute_site_url(self.request, article.image_url)
+        ctx["social_image_alt"] = article.title
         ctx["breadcrumb_schema_json"] = _json_ld(
             {
                 "@context": "https://schema.org",
