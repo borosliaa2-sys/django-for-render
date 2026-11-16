@@ -277,9 +277,23 @@ def upload_card_receipt(request, order_number):
     order.card_receipt = receipt
     order.receipt_uploaded_at = timezone.now()
     order.status = "awaiting_receipt"
-    order.save(update_fields=["card_receipt", "receipt_uploaded_at", "status", "updated_at"])
+    try:
+        # PrivateReceiptStorage verifies the Cloudinary recovery copy whenever
+        # Cloudinary is configured. Do not tell a customer the receipt is
+        # registered if that verified save failed.
+        order.save(update_fields=["card_receipt", "receipt_uploaded_at", "status", "updated_at"])
+    except Exception:
+        order.card_receipt = None
+        messages.error(
+            request,
+            "ذخیرهٔ امن رسید کامل نشد؛ رسید ثبت نگردید. لطفاً چند لحظه بعد دوباره تلاش کنید یا با پشتیبانی تماس بگیرید.",
+        )
+        return redirect("shop:card_payment_instructions", order_number=order.order_number)
     notify_card_receipt_uploaded(order)
-    messages.success(request, "رسید شما ثبت شد. پس از بررسی فروشگاه، وضعیت سفارش به‌روزرسانی می‌شود.")
+    success_message = "رسید شما به‌صورت امن ثبت شد. پس از بررسی فروشگاه، وضعیت سفارش به‌روزرسانی می‌شود."
+    if getattr(settings, "CLOUDINARY_ENABLED", False):
+        success_message = "رسید شما به‌صورت امن ثبت و نسخهٔ پشتیبان Cloudinary آن تأیید شد. پس از بررسی فروشگاه، وضعیت سفارش به‌روزرسانی می‌شود."
+    messages.success(request, success_message)
     return redirect("shop:card_payment_instructions", order_number=order.order_number)
 
 

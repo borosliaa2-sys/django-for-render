@@ -706,7 +706,10 @@ class OrderItem(models.Model):
 
     @property
     def total_price(self):
-        return self.price * self.quantity
+        # Django admin also renders an empty inline form for a new order item.
+        # That unsaved row has ``price=None``; it must not make the whole order
+        # change page fail with a 500 while staff is reviewing a receipt.
+        return int(self.price or 0) * int(self.quantity or 0)
 
 
 @receiver(pre_delete, sender=Order)

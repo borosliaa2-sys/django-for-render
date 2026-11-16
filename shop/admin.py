@@ -46,11 +46,19 @@ class OrderAdmin(admin.ModelAdmin):
             notify_payment_success(obj)
 
     def receipt_review_display(self, obj):
-        if obj.status == "awaiting_receipt" and obj.card_receipt:
-            return format_html('<span style="color:#b45309;font-weight:800;">🧾 نیازمند بررسی</span>')
-        if obj.card_receipt:
-            return format_html('<span style="color:#15803d;font-weight:700;">رسید ثبت شده</span>')
-        return "—"
+        """Give staff a direct protected receipt link from the order list."""
+        if not obj.card_receipt:
+            return "—"
+        receipt_url = reverse("shop:view_card_receipt", kwargs={"order_number": obj.order_number})
+        if obj.status == "awaiting_receipt":
+            return format_html(
+                '<a href="{}" target="_blank" rel="noopener" style="color:#b45309;font-weight:800;text-decoration:none;">🧾 نیازمند بررسی — مشاهده رسید</a>',
+                receipt_url,
+            )
+        return format_html(
+            '<a href="{}" target="_blank" rel="noopener" style="color:#15803d;font-weight:700;text-decoration:none;">رسید ثبت شده — مشاهده</a>',
+            receipt_url,
+        )
     receipt_review_display.short_description = "رسید کارت‌به‌کارت"
 
     def receipt_preview(self, obj):

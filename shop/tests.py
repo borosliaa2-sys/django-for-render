@@ -570,6 +570,84 @@ class ShopFullFlowTests(TestCase):
         self.assertContains(response, "رسید نیازمند بررسی")
         self.assertContains(response, "پیام خوانده‌نشده")
 
+    def test_admin_order_change_displays_a_private_receipt_preview(self):
+        """A receipt must not turn the staff order screen into a server error."""
+        with TemporaryDirectory() as root:
+            private_root = Path(root) / "private-receipts"
+            with override_settings(PRIVATE_RECEIPTS_ROOT=private_root):
+                order = Order.objects.create(
+                    user=self.admin_user,
+                    order_number="AT-ADMIN-RECEIPT",
+                    full_name="خریدار رسید",
+                    phone_number="09120007777",
+                    address="نشانی تست",
+                    payment_method="card_to_card",
+                    status="awaiting_receipt",
+                    total_price=65000,
+                )
+                image_bytes = BytesIO()
+                Image.new("RGB", (24, 24), "#a84d2a").save(image_bytes, "PNG")
+                order.card_receipt = SimpleUploadedFile("receipt.png", image_bytes.getvalue(), content_type="image/png")
+                order.save(update_fields=["card_receipt", "updated_at"])
+                self.client.force_login(self.admin_user)
+                response = self.client.get(f"/admin/shop/order/{order.pk}/change/")
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "باز کردن تصویر با اندازه کامل")
+        receipt_url = reverse("shop:view_card_receipt", kwargs={"order_number": order.order_number})
+        self.assertContains(response, receipt_url)
+
+        changelist = self.client.get("/admin/shop/order/?status__exact=awaiting_receipt")
+        self.assertEqual(changelist.status_code, 200)
+        self.assertContains(changelist, "نیازمند بررسی — مشاهده رسید")
+        self.assertContains(changelist, receipt_url)
+
+    def test_legacy_receipt_source_can_be_found_for_a_cloudinary_recovery_backup(self):
+        from shop.management.commands.sync_bundled_media_to_cloudinary import Command
+
+        name = "payment_receipts/2026/11/legacy-receipt.png"
+        with TemporaryDirectory() as root:
+            media_root = Path(root) / "media"
+            private_root = Path(root) / "private-receipts"
+            legacy_file = media_root / name
+            legacy_file.parent.mkdir(parents=True)
+            legacy_file.write_bytes(b"legacy-receipt")
+            with override_settings(MEDIA_ROOT=media_root, PRIVATE_RECEIPTS_ROOT=private_root):
+                order = Order(order_number="AT-LEGACY-RECEIPT", card_receipt=name)
+                source, origin = Command()._local_source(
+                    order.card_receipt, name, is_receipt=True
+                )
+
+        self.assertEqual(origin, "legacy")
+        self.assertEqual(source, legacy_file.resolve())
+
+    def test_private_receipt_cloudinary_backup_is_verified_or_the_local_copy_is_rolled_back(self):
+        from shop.receipt_storage import PrivateReceiptStorage
+
+        with TemporaryDirectory() as root:
+            private_root = Path(root) / "private-receipts"
+            with override_settings(PRIVATE_RECEIPTS_ROOT=private_root):
+                storage = PrivateReceiptStorage()
+                with patch("shop.receipt_storage.cloudinary_backup_enabled", return_value=True), patch(
+                    "shop.receipt_storage.sync_local_file_to_cloudinary", return_value="uploaded"
+                ) as sync:
+                    saved = storage.save(
+                        "payment_receipts/2026/11/verified.png",
+                        SimpleUploadedFile("verified.png", b"verified-receipt", content_type="image/png"),
+                    )
+                self.assertTrue((private_root / saved).is_file())
+                sync.assert_called_once_with(saved, private_root / saved)
+
+                with patch("shop.receipt_storage.cloudinary_backup_enabled", return_value=True), patch(
+                    "shop.receipt_storage.sync_local_file_to_cloudinary", side_effect=OSError("Cloudinary down")
+                ):
+                    with self.assertRaises(OSError):
+                        storage.save(
+                            "payment_receipts/2026/11/rejected.png",
+                            SimpleUploadedFile("rejected.png", b"rejected-receipt", content_type="image/png"),
+                        )
+                self.assertFalse((private_root / "payment_receipts/2026/11/rejected.png").exists())
+
     def test_card_receipt_is_private_and_is_available_only_to_owner_or_staff(self):
         with TemporaryDirectory() as root:
             media_root = Path(root) / "media"
