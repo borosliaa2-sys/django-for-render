@@ -2,7 +2,8 @@
 from django.contrib import admin
 from django.utils.html import format_html
 from django.utils.safestring import mark_safe
-from .models import Article, CartItem, Category, ContactMessage, Order, OrderItem, Product, ProductVariant, Review, Wishlist
+from .models import Article, CartItem, Category, ContactMessage, CustomerAddress, Order, OrderItem, Product, ProductVariant, Review, Wishlist
+from .telegram_notifications import notify_payment_success
 
 
 class OrderItemInline(admin.TabularInline):
@@ -14,13 +15,28 @@ class OrderItemInline(admin.TabularInline):
 
 @admin.register(Order)
 class OrderAdmin(admin.ModelAdmin):
-    list_display = ("order_number", "full_name", "phone_number", "status", "stock_reserved_display", "grand_total_display", "postal_tracking_code", "created_at")
-    list_filter = ("status", "stock_reserved", "created_at", "province")
+    list_display = ("order_number", "full_name", "phone_number", "shipping_method", "payment_method", "status", "stock_reserved_display", "grand_total_display", "postal_tracking_code", "created_at")
+    list_filter = ("status", "shipping_method", "payment_method", "stock_reserved", "created_at", "province")
     search_fields = ("order_number", "full_name", "phone_number", "postal_tracking_code", "payment_reference")
     list_editable = ("status", "postal_tracking_code")
-    readonly_fields = ("order_number", "stock_reserved", "created_at", "updated_at", "payment_reference")
+    readonly_fields = ("order_number", "stock_reserved", "created_at", "updated_at", "payment_reference", "payment_authority", "card_payment_deadline", "receipt_uploaded_at")
     inlines = [OrderItemInline]
     actions = ["cancel_and_restock_orders", "mark_as_paid", "mark_as_processing", "mark_as_shipped"]
+
+    def save_model(self, request, obj, form, change):
+        was_paid = False
+        if change:
+            previous = Order.objects.filter(pk=obj.pk).only("status").first()
+            was_paid = bool(previous and previous.status in {"paid", "processing", "shipped", "delivered"})
+        if obj.status == "paid" and not obj.stock_reserved:
+            try:
+                obj.reserve_stock()
+            except ValueError as exc:
+                self.message_user(request, str(exc), level="ERROR")
+                return
+        super().save_model(request, obj, form, change)
+        if obj.status == "paid" and not was_paid:
+            notify_payment_success(obj)
 
     def grand_total_display(self, obj):
         return f"{obj.grand_total:,} تومان"
@@ -44,15 +60,20 @@ class OrderAdmin(admin.ModelAdmin):
 
     @admin.action(description="✅ تغییر وضعیت به پرداخت‌شده (آماده‌سازی)")
     def mark_as_paid(self, request, queryset):
+        notified = 0
         for order in queryset:
+            was_paid = order.status in {"paid", "processing", "shipped", "delivered"}
             order.status = "paid"
             if not order.stock_reserved:
                 try:
                     order.reserve_stock()
                 except ValueError:
-                    pass
+                    continue
             order.save(update_fields=["status"])
-        self.message_user(request, "وضعیت سفارش‌های انتخاب‌شده به پرداخت‌شده تغییر یافت.")
+            if not was_paid:
+                notify_payment_success(order)
+                notified += 1
+        self.message_user(request, f"وضعیت سفارش‌ها به پرداخت‌شده تغییر یافت؛ برای {notified} سفارش اطلاع‌رسانی تلگرام ارسال شد.")
 
     @admin.action(description="📦 تغییر وضعیت به در حال بسته‌بندی در انبار")
     def mark_as_processing(self, request, queryset):
@@ -94,6 +115,14 @@ class CategoryAdmin(admin.ModelAdmin):
     def product_count_display(self, obj):
         return obj.products.count()
     product_count_display.short_description = "تعداد محصولات"
+
+
+@admin.register(CustomerAddress)
+class CustomerAddressAdmin(admin.ModelAdmin):
+    list_display = ("user", "label", "full_name", "phone_number", "province", "city", "is_default", "updated_at")
+    list_filter = ("is_default", "province")
+    search_fields = ("user__username", "full_name", "phone_number", "address", "city")
+    list_select_related = ("user",)
 
 
 @admin.register(Product)

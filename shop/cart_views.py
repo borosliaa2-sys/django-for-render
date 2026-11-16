@@ -1,13 +1,14 @@
 """
 ویوهای سبد خرید — افزودن/به‌روزرسانی/حذف (POST امن + بررسی موجودی انبار در دیتابیس + پشتیبانی AJAX)
 """
+from django.conf import settings
 from django.contrib import messages
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.http import require_POST
 
 from .cart import Cart
-from .models import ProductVariant
+from .models import CustomerAddress, ProductVariant
 
 
 def _is_ajax(request) -> bool:
@@ -164,4 +165,17 @@ def cart_clear(request):
 def cart_detail(request):
     cart = Cart(request)
     items = list(cart)
-    return render(request, "cart.html", {"items": items, "cart": cart})
+    saved_addresses = []
+    if request.user.is_authenticated:
+        saved_addresses = CustomerAddress.objects.filter(user=request.user)
+    return render(
+        request,
+        "cart.html",
+        {
+            "items": items,
+            "cart": cart,
+            "saved_addresses": saved_addresses,
+            "zarinpal_enabled": getattr(settings, "ZARINPAL_ENABLED", False),
+            "card_to_card_enabled": getattr(settings, "CARD_TO_CARD_ENABLED", False),
+        },
+    )

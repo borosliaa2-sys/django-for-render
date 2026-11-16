@@ -497,17 +497,51 @@ class Article(models.Model):
         return slug
 
 
+class CustomerAddress(models.Model):
+    """نشانی تحویل قابل استفادهٔ مجدد برای هر کاربر واردشده."""
+
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="saved_addresses", verbose_name="کاربر")
+    label = models.CharField("عنوان آدرس", max_length=80, blank=True)
+    full_name = models.CharField("نام و نام خانوادگی", max_length=150)
+    phone_number = models.CharField("شماره تماس", max_length=20)
+    province = models.CharField("استان", max_length=80, blank=True)
+    city = models.CharField("شهر", max_length=80, blank=True)
+    address = models.TextField("آدرس دقیق پستی")
+    postal_code = models.CharField("کد پستی", max_length=20, blank=True)
+    is_default = models.BooleanField("نشانی پیش‌فرض", default=False)
+    created_at = models.DateTimeField("تاریخ ثبت", auto_now_add=True)
+    updated_at = models.DateTimeField("به‌روزرسانی", auto_now=True)
+
+    class Meta:
+        verbose_name = "نشانی ذخیره‌شده مشتری"
+        verbose_name_plural = "نشانی‌های ذخیره‌شده مشتریان"
+        ordering = ["-is_default", "-updated_at"]
+
+    def __str__(self):
+        return f"{self.full_name} — {self.city}"
+
+
 class Order(models.Model):
     """
     سفارشات مشتریان عطارباشی
     """
     STATUS_CHOICES = [
         ('pending', 'در انتظار پرداخت'),
+        ('awaiting_receipt', 'در انتظار بررسی رسید'),
         ('paid', 'پرداخت شده و در حال آماده‌سازی'),
         ('processing', 'در حال بسته‌بندی در انبار'),
-        ('shipped', 'ارسال شده به اداره پست'),
+        ('shipped', 'ارسال شده'),
         ('delivered', 'تحویل داده شده به مشتری'),
         ('cancelled', 'لغو شده'),
+    ]
+    SHIPPING_METHOD_CHOICES = [
+        ('tipax', 'تیپاکس — کرایه هنگام تحویل'),
+        ('freight', 'باربری — کرایه هنگام تحویل'),
+        ('dekapost', 'دکاپست — کرایه هنگام تحویل'),
+    ]
+    PAYMENT_METHOD_CHOICES = [
+        ('zarinpal', 'پرداخت آنلاین زرین‌پال'),
+        ('card_to_card', 'کارت‌به‌کارت'),
     ]
 
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True, related_name='orders', verbose_name="کاربر")
@@ -519,10 +553,18 @@ class Order(models.Model):
     city = models.CharField("شهر", max_length=80, blank=True)
     address = models.TextField("آدرس دقیق پستی")
     postal_code = models.CharField("کد پستی", max_length=20, blank=True)
+    shipping_method = models.CharField("روش ارسال", max_length=20, choices=SHIPPING_METHOD_CHOICES, default="tipax")
+    payment_method = models.CharField("روش پرداخت", max_length=20, choices=PAYMENT_METHOD_CHOICES, default="zarinpal")
+    card_payment_deadline = models.DateTimeField("مهلت کارت‌به‌کارت", null=True, blank=True)
+    card_receipt = models.ImageField("رسید کارت‌به‌کارت", upload_to="payment_receipts/%Y/%m/", blank=True, null=True)
+    receipt_uploaded_at = models.DateTimeField("زمان ارسال رسید", null=True, blank=True)
     total_price = models.PositiveIntegerField("مبلغ کل محصولات (تومان)", default=0)
-    shipping_cost = models.PositiveIntegerField("هزینه ارسال (تومان)", default=35000)
-    status = models.CharField("وضعیت سفارش", max_length=20, choices=STATUS_CHOICES, default='paid')
+    # The requested delivery methods collect carriage at delivery, so it is not
+    # added to the online amount.
+    shipping_cost = models.PositiveIntegerField("هزینه ارسال (تومان)", default=0)
+    status = models.CharField("وضعیت سفارش", max_length=20, choices=STATUS_CHOICES, default='pending')
     stock_reserved = models.BooleanField("موجودی رزرو/کسر شده در انبار", default=False)
+    payment_authority = models.CharField("Authority زرین‌پال", max_length=120, blank=True)
     payment_reference = models.CharField("کد رهگیری بانکی / درگاه", max_length=100, blank=True)
     notes = models.TextField("توضیحات مشتری", blank=True)
     created_at = models.DateTimeField("تاریخ ثبت سفارش", auto_now_add=True)
@@ -554,6 +596,7 @@ class Order(models.Model):
         # شماره مرحله برای استپر وضعیت در پیگیری سفارش (1 تا 4)
         mapping = {
             'pending': 1,
+            'awaiting_receipt': 1,
             'paid': 2,
             'processing': 2,
             'shipped': 3,

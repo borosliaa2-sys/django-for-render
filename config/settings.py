@@ -248,6 +248,32 @@ LOGGING = {
 }
 
 
-# ----- Zarinpal -----
+# ----- Payments and owner notifications -----
 ZARINPAL_MERCHANT_ID = os.environ.get("ZARINPAL_MERCHANT_ID", "00000000-0000-0000-0000-000000000000")
 ZARINPAL_SANDBOX = env_flag("ZARINPAL_SANDBOX", "0")
+# DEBUG keeps the existing test gateway simulation available locally. A public
+# deployment requires an actual merchant ID before the radio option is active.
+ZARINPAL_ENABLED = bool(
+    DEBUG
+    or (
+        ZARINPAL_MERCHANT_ID
+        and not ZARINPAL_MERCHANT_ID.startswith("00000000")
+        and ZARINPAL_MERCHANT_ID != "YOUR_MERCHANT_ID"
+    )
+)
+
+# Card-to-card details are deliberately configured outside source control.
+# Set all owner-facing values in Render before enabling this public option.
+CARD_TO_CARD_NUMBER = "".join(ch for ch in os.environ.get("CARD_TO_CARD_NUMBER", "") if ch.isdigit())
+CARD_TO_CARD_ACCOUNT_HOLDER = os.environ.get("CARD_TO_CARD_ACCOUNT_HOLDER", "").strip()
+CARD_TO_CARD_BANK_NAME = os.environ.get("CARD_TO_CARD_BANK_NAME", "").strip()
+CARD_TO_CARD_PAYMENT_WINDOW_MINUTES = max(1, int(os.environ.get("CARD_TO_CARD_PAYMENT_WINDOW_MINUTES", "120")))
+CARD_TO_CARD_ENABLED = len(CARD_TO_CARD_NUMBER) == 16
+
+# Outbound Telegram notifications require only these values; no webhook or
+# background bot process is enabled unless incoming bot commands are added.
+TELEGRAM_BOT_TOKEN = os.environ.get("TELEGRAM_BOT_TOKEN", "").strip()
+TELEGRAM_CHAT_IDS = csv_env("TELEGRAM_CHAT_IDS")
+TELEGRAM_NOTIFICATIONS_ENABLED = env_flag("TELEGRAM_NOTIFICATIONS_ENABLED", "1") and bool(
+    TELEGRAM_BOT_TOKEN and TELEGRAM_CHAT_IDS
+)

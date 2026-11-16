@@ -3,13 +3,15 @@ from django.urls import path, register_converter
 from . import api
 from .cart_views import cart_add, cart_clear, cart_detail, cart_remove, cart_update
 from .order_views import (
-    CheckoutView,
     FaqView,
-    OrderInvoiceView,
-    OrderTrackingView,
-    PaymentResultView,
-    PaymentVerifyView,
-    UserOrdersView,
+    card_payment_instructions,
+    create_order,
+    order_invoice,
+    order_tracking,
+    payment_result,
+    payment_verify,
+    upload_card_receipt,
+    user_orders,
 )
 from .views import (
     AboutView,
@@ -49,14 +51,16 @@ urlpatterns = [
     path("terms/", TermsView.as_view(), name="terms"),
     path("faq/", FaqView.as_view(), name="faq"),
     # سفارش، رهگیری و پرداخت
-    path("tracking/", OrderTrackingView.as_view(), name="order_tracking"),
-    path("checkout/", CheckoutView.as_view(), name="checkout"),
-    path("payment/verify/", PaymentVerifyView.as_view(), name="payment_verify"),
-    path("payment/result/", OrderInvoiceView.as_view(), name="payment_result"),
-    path("order/invoice/<str:order_number>/", OrderInvoiceView.as_view(), name="order_invoice"),
+    path("tracking/", order_tracking, name="order_tracking"),
+    path("checkout/", create_order, name="checkout"),
+    path("payment/verify/", payment_verify, name="payment_verify"),
+    path("payment/result/", payment_result, name="payment_result"),
+    path("payment/card/<str:order_number>/", card_payment_instructions, name="card_payment_instructions"),
+    path("payment/card/<str:order_number>/receipt/", upload_card_receipt, name="upload_card_receipt"),
+    path("order/invoice/<str:order_number>/", order_invoice, name="order_invoice"),
     # پروفایل کاربری و سفارشات
-    path("profile/", UserOrdersView.as_view(), name="user_profile"),
-    path("profile/orders/", UserOrdersView.as_view(), name="user_orders"),
+    path("profile/", user_orders, name="user_profile"),
+    path("profile/orders/", user_orders, name="user_orders"),
     # سبد خرید
     path("cart/", cart_detail, name="cart_detail"),
     path("cart/add/<int:variant_id>/", cart_add, name="cart_add"),

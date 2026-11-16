@@ -1,0 +1,38 @@
+{% extends 'base.html' %}
+{% load humanize %}
+{% block title %}پرداخت کارت‌به‌کارت سفارش {{ order.order_number }} | عطارباشی{% endblock %}
+{% block content %}
+<main class="card-payment-page">
+  <section class="card-payment-box">
+    <span class="eyebrow"><i class="ri-bank-card-line"></i> پرداخت کارت‌به‌کارت</span>
+    <h1>تکمیل پرداخت سفارش #{{ order.order_number }}</h1>
+    {% if expired %}
+      <div class="alert error"><i class="ri-time-line"></i> مهلت دو ساعتهٔ ثبت رسید پایان یافته است. برای ادامه با پشتیبانی تماس بگیرید.</div>
+    {% elif order.status == 'awaiting_receipt' %}
+      <div class="alert success"><i class="ri-checkbox-circle-line"></i> رسید شما ثبت شده است و پس از بررسی فروشگاه، وضعیت سفارش به‌روزرسانی می‌شود.</div>
+    {% else %}
+      <p class="intro">مبلغ زیر را به شماره کارت فروشگاه انتقال دهید و تصویر رسید را حداکثر تا دو ساعت دیگر ارسال کنید. هزینهٔ ارسال توسط {{ order.get_shipping_method_display|cut:' — کرایه هنگام تحویل' }} هنگام تحویل دریافت می‌شود.</p>
+      <div class="amount"><span>مبلغ قابل پرداخت</span><strong>{{ order.grand_total|intcomma }} <small>تومان</small></strong></div>
+      <div class="bank-details">
+        <div><span>شماره کارت</span><b dir="ltr">{{ card_number|default:'در حال تکمیل' }}</b></div>
+        {% if card_holder %}<div><span>به نام</span><b>{{ card_holder }}</b></div>{% endif %}
+        {% if bank_name %}<div><span>بانک</span><b>{{ bank_name }}</b></div>{% endif %}
+        <div><span>مهلت ثبت رسید</span><b>{{ order.card_payment_deadline|date:"Y/m/d - H:i" }}</b></div>
+      </div>
+      <form method="post" action="{% url 'shop:upload_card_receipt' order.order_number %}" enctype="multipart/form-data" class="receipt-form">
+        {% csrf_token %}
+        <label for="receipt">تصویر رسید پرداخت <em>حداکثر ۸ مگابایت</em></label>
+        <input id="receipt" name="receipt" type="file" accept="image/jpeg,image/png,image/webp" required>
+        <button type="submit"><i class="ri-upload-cloud-2-line"></i> ارسال رسید برای بررسی</button>
+      </form>
+    {% endif %}
+    <div class="actions">
+      <a href="{% url 'shop:order_invoice' order.order_number %}"><i class="ri-file-list-3-line"></i> مشاهدهٔ سفارش</a>
+      <a href="{% url 'shop:contact' %}"><i class="ri-customer-service-2-line"></i> تماس با پشتیبانی</a>
+    </div>
+  </section>
+</main>
+<style>
+.card-payment-page{background:#fdfcfb;padding:48px 16px 82px;min-height:60vh}.card-payment-box{max-width:640px;margin:auto;background:#fff;border:1px solid #f1dfd1;border-radius:22px;padding:30px;box-shadow:0 12px 38px rgba(76,44,24,.07)}.eyebrow{color:#9c2f16;font-weight:800;font-size:.85rem}.card-payment-box h1{font-size:1.35rem;color:#2b1f15;margin:10px 0 14px}.intro{color:#6b5a4a;line-height:2;font-size:.93rem}.amount{background:#fff7f2;border:1px dashed #edaa87;border-radius:14px;padding:16px;display:flex;justify-content:space-between;align-items:center;margin:20px 0}.amount span,.bank-details span{color:#6b5a4a;font-size:.86rem}.amount strong{color:#9c2f16;font-size:1.28rem}.amount small{font-size:.8rem}.bank-details{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin:18px 0}.bank-details div{border:1px solid #eee3da;padding:11px;border-radius:11px}.bank-details span{display:block;margin-bottom:4px}.bank-details b{color:#2b1f15;font-size:.94rem}.receipt-form{margin-top:24px;padding-top:20px;border-top:1px solid #f1e9e2}.receipt-form label{font-weight:800;color:#2b1f15;display:block;margin-bottom:8px}.receipt-form em{font-size:.78rem;font-style:normal;color:#6b5a4a;font-weight:500}.receipt-form input{display:block;width:100%;box-sizing:border-box;border:1px solid #decab9;border-radius:10px;padding:9px;margin-bottom:13px;font:inherit}.receipt-form button{border:0;border-radius:22px;background:#9c2f16;color:#fff;padding:11px 18px;font:inherit;font-weight:800;cursor:pointer}.alert{border-radius:12px;padding:13px;line-height:1.8;font-size:.9rem}.alert.error{background:#fef2f2;color:#991b1b}.alert.success{background:#f0fdf4;color:#166534}.actions{display:flex;flex-wrap:wrap;gap:13px;margin-top:25px}.actions a{color:#9c2f16;font-size:.86rem;font-weight:800;text-decoration:none}@media(max-width:500px){.card-payment-box{padding:22px 16px}.bank-details{grid-template-columns:1fr}.amount{align-items:flex-start;gap:7px;flex-direction:column}}
+</style>
+{% endblock %}

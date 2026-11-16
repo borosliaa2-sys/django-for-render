@@ -152,41 +152,61 @@
             <h3><i class="ri-map-pin-user-line"></i> اطلاعات تحویل‌گیرنده و پرداخت</h3>
             <button type="button" class="cm-close" onclick="closeCheckoutModal()">✕</button>
           </div>
-          <form method="post" action="{% url 'shop:checkout' %}" class="cm-form">
+          <form method="post" action="{% url 'shop:checkout' %}" class="cm-form" id="checkoutForm">
             {% csrf_token %}
+            {% if saved_addresses %}
+            <fieldset class="cm-choice-group">
+              <legend>نشانی‌های ذخیره‌شده</legend>
+              <div class="saved-addresses">
+                {% for saved in saved_addresses %}
+                <label class="saved-address-option">
+                  <input type="radio" name="saved_address_id" value="{{ saved.id }}" data-full-name="{{ saved.full_name }}" data-phone-number="{{ saved.phone_number }}" data-province="{{ saved.province }}" data-city="{{ saved.city }}" data-address="{{ saved.address }}" data-postal-code="{{ saved.postal_code }}" {% if saved.is_default %}checked{% endif %}>
+                  <span><strong>{{ saved.label|default:'نشانی ذخیره‌شده' }}</strong><small>{{ saved.full_name }}، {{ saved.province }}، {{ saved.city }} — {{ saved.address }}</small></span>
+                </label>
+                {% endfor %}
+                <label class="saved-address-option new-address-option"><input type="radio" name="saved_address_id" value=""><span><strong>ثبت نشانی جدید</strong><small>اطلاعات فرم زیر برای این سفارش استفاده می‌شود.</small></span></label>
+              </div>
+            </fieldset>
+            {% endif %}
             <div class="cm-grid">
               <div class="cm-field">
-                <label>نام و نام خانوادگی تحویل‌گیرنده:</label>
-                <input type="text" name="full_name" value="{% if user.is_authenticated %}{{ user.get_full_name|default:user.username }}{% endif %}" placeholder="مثال: علی احمدی" required>
+                <label for="fullName">نام و نام خانوادگی تحویل‌گیرنده:</label>
+                <input id="fullName" type="text" name="full_name" value="{% if user.is_authenticated %}{{ user.get_full_name|default:user.username }}{% endif %}" placeholder="مثال: علی احمدی" required>
               </div>
               <div class="cm-field">
-                <label>شماره همراه (جهت پیامک رهگیری پستی):</label>
-                <input type="tel" name="phone_number" value="{% if user.is_authenticated %}{{ user.phone_number|default:'' }}{% endif %}" placeholder="0912..." required>
+                <label for="phoneNumber">شماره همراه:</label>
+                <input id="phoneNumber" type="tel" name="phone_number" value="{% if user.is_authenticated %}{{ user.phone_number|default:'' }}{% endif %}" placeholder="0912..." required>
               </div>
-              <div class="cm-field">
-                <label>استان:</label>
-                <input type="text" name="province" value="تهران" required>
+              <div class="cm-field"><label for="province">استان:</label><input id="province" type="text" name="province" placeholder="مثال: اصفهان" required></div>
+              <div class="cm-field"><label for="city">شهر:</label><input id="city" type="text" name="city" placeholder="مثال: اصفهان" required></div>
+            </div>
+            <div class="cm-field cm-full"><label for="address">آدرس پستی دقیق:</label><textarea id="address" name="address" rows="2" placeholder="خیابان، کوچه، پلاک، زنگ..." required></textarea></div>
+            <div class="cm-field cm-full"><label for="postalCode">کدپستی <small>(اختیاری)</small>:</label><input id="postalCode" type="text" inputmode="numeric" name="postal_code" placeholder="۱۰ رقم"></div>
+            <label class="save-address-check"><input type="checkbox" name="save_address" value="1"> این نشانی را در حسابم ذخیره کن</label>
+            <div class="cm-field cm-full"><label for="addressLabel">عنوان نشانی <small>(اختیاری)</small>:</label><input id="addressLabel" type="text" name="address_label" placeholder="مثال: خانه"></div>
+
+            <fieldset class="cm-choice-group">
+              <legend>روش ارسال</legend>
+              <div class="method-options">
+                <label class="method-option"><input type="radio" name="shipping_method" value="tipax" checked><span><strong>تیپاکس</strong><small>کرایه هنگام تحویل از مشتری دریافت می‌شود.</small></span></label>
+                <label class="method-option"><input type="radio" name="shipping_method" value="freight"><span><strong>باربری</strong><small>کرایه هنگام تحویل از مشتری دریافت می‌شود.</small></span></label>
+                <label class="method-option"><input type="radio" name="shipping_method" value="dekapost"><span><strong>دکاپست</strong><small>کرایه هنگام تحویل از مشتری دریافت می‌شود.</small></span></label>
+                <label class="method-option disabled" aria-disabled="true"><input type="radio" disabled><span><strong>پست</strong><small>به‌زودی پس از تکمیل شرایط قراردادی فعال می‌شود.</small></span></label>
               </div>
-              <div class="cm-field">
-                <label>شهر:</label>
-                <input type="text" name="city" value="تهران" required>
+            </fieldset>
+
+            <fieldset class="cm-choice-group">
+              <legend>روش پرداخت</legend>
+              <div class="method-options">
+                <label class="method-option {% if not zarinpal_enabled %}disabled{% endif %}"><input type="radio" name="payment_method" value="zarinpal" {% if zarinpal_enabled %}checked{% else %}disabled{% endif %}><span><strong>پرداخت آنلاین زرین‌پال</strong><small>{% if zarinpal_enabled %}اتصال امن به درگاه بانکی{% else %}در حال تکمیل توسط فروشگاه{% endif %}</small></span></label>
+                <label class="method-option {% if not card_to_card_enabled %}disabled{% endif %}"><input type="radio" name="payment_method" value="card_to_card" {% if zarinpal_enabled %}{% elif card_to_card_enabled %}checked{% else %}disabled{% endif %}><span><strong>کارت‌به‌کارت</strong><small>پس از ثبت سفارش، دو ساعت برای پرداخت و ارسال رسید فرصت دارید.</small></span></label>
+                <label class="method-option disabled" aria-disabled="true"><input type="radio" disabled><span><strong>اسنپ‌پی — ۴ قسط</strong><small>به‌زودی؛ در حال راه‌اندازی سرویس.</small></span></label>
               </div>
-            </div>
-            <div class="cm-field cm-full">
-              <label>آدرس پستی دقیق:</label>
-              <textarea name="address" rows="2" placeholder="خیابان، کوچه، پلاک، زنگ..." required></textarea>
-            </div>
-            <div class="cm-field cm-full">
-              <label>توضیحات اختیاری (مثلاً تحویل عصرها):</label>
-              <input type="text" name="notes" placeholder="یادداشت برای پیک یا انبار">
-            </div>
+            </fieldset>
 
             <div class="cm-summary-bar">
-              <span>مبلغ نهایی قابل پرداخت: <strong>{{ cart.total_price|intcomma }} تومان</strong></span>
-              <button type="submit" class="btn-cm-submit">
-                <span>تایید نهایی و پرداخت</span>
-                <i class="ri-bank-card-line"></i>
-              </button>
+              <span>مبلغ کالاهای قابل پرداخت: <strong>{{ cart.total_price|intcomma }} تومان</strong><small>کرایه ارسال هنگام تحویل پرداخت می‌شود.</small></span>
+              <button type="submit" class="btn-cm-submit"><span>ثبت سفارش و ادامه پرداخت</span><i class="ri-bank-card-line"></i></button>
             </div>
           </form>
         </div>
@@ -264,7 +284,7 @@
   .cm-summary-bar span { font-size: 0.88rem; color: #554433; }
   .cm-summary-bar strong { color: var(--secondary-color); font-size: 1.05rem; }
   .btn-cm-submit {
-    background: linear-gradient(135deg, var(--secondary-color) 0%, #ff6b4a 100%);
+    background: linear-gradient(135deg, #9c2f16 0%, #d95735 100%);
     color: #fff;
     border: none;
     padding: 10px 22px;
@@ -277,6 +297,17 @@
     align-items: center;
     gap: 6px;
   }
+  .checkout-modal-card { max-height: calc(100vh - 32px); overflow-y: auto; }
+  .cm-choice-group { border: 1px solid #ecd9ca; border-radius: 12px; margin: 15px 0; padding: 12px; }
+  .cm-choice-group legend { padding: 0 5px; color: #4a3b2c; font-weight: 900; font-size: .88rem; }
+  .method-options, .saved-addresses { display: grid; gap: 8px; }
+  .method-option, .saved-address-option { display: flex; align-items: flex-start; gap: 9px; border: 1px solid #eee3da; padding: 10px; border-radius: 10px; cursor: pointer; }
+  .method-option input, .saved-address-option input { margin-top: 3px; accent-color: #9c2f16; }
+  .method-option span, .saved-address-option span { display: grid; gap: 3px; color: #2b1f15; font-size: .85rem; }
+  .method-option small, .saved-address-option small, .cm-summary-bar small { color: #6b5a4a; font-size: .76rem; font-weight: 500; line-height: 1.65; }
+  .method-option.disabled { opacity: .58; cursor: not-allowed; background: #faf8f6; }
+  .save-address-check { display: flex; gap: 7px; align-items: center; color: #4a3b2c; font-size: .83rem; font-weight: 700; margin: 4px 0 10px; }
+  .cm-summary-bar > span { display: grid; gap: 3px; }
   @media(max-width: 500px) {
     .cm-grid { grid-template-columns: 1fr; }
   }
@@ -309,6 +340,19 @@ document.addEventListener("DOMContentLoaded", function() {
       setTimeout(openCheckoutModal, 150);
     {% endif %}
   }
+
+  function populateAddress(input) {
+    if (!input || !input.value) return;
+    const fields = { fullName: 'fullName', phoneNumber: 'phoneNumber', province: 'province', city: 'city', address: 'address', postalCode: 'postalCode' };
+    Object.entries(fields).forEach(([key, id]) => {
+      const target = document.getElementById(id);
+      if (target && input.dataset[key] !== undefined) target.value = input.dataset[key];
+    });
+  }
+  document.querySelectorAll('input[name="saved_address_id"]').forEach(input => {
+    input.addEventListener('change', () => populateAddress(input));
+    if (input.checked) populateAddress(input);
+  });
 });
 </script>
 

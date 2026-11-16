@@ -25,3 +25,17 @@ services:
       # `sync: false` prevents a database URL from being committed to Git.
       - key: DATABASE_URL
         sync: false
+      # Private checkout and outbound-notification configuration. Add their
+      # real values only in Render Environment; none are stored in Git.
+      - key: ZARINPAL_MERCHANT_ID
+        sync: false
+      - key: CARD_TO_CARD_NUMBER
+        sync: false
+      - key: CARD_TO_CARD_ACCOUNT_HOLDER
+        sync: false
+      - key: CARD_TO_CARD_BANK_NAME
+        sync: false
+      - key: TELEGRAM_BOT_TOKEN
+        sync: false
+      - key: TELEGRAM_CHAT_IDS
+        sync: false

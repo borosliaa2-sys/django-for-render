@@ -8,7 +8,7 @@ from django.test import TestCase, Client, override_settings
 from django.urls import reverse
 from PIL import Image
 from account.models import CustomUser
-from shop.models import Article, Category, Product, ProductVariant, Order, OrderItem
+from shop.models import Article, Category, CustomerAddress, Product, ProductVariant, Order, OrderItem
 from shop.cart import Cart
 
 class ShopFullFlowTests(TestCase):
@@ -439,3 +439,68 @@ class ShopFullFlowTests(TestCase):
         res = self.client.get("/a-page-that-definitely-does-not-exist/")
         self.assertEqual(res.status_code, 404)
         self.assertContains(res, "صفحه مورد نظر شما پیدا نشد", status_code=404)
+
+    def test_checkout_displays_enabled_carriers_disabled_options_and_saved_address(self):
+        CustomerAddress.objects.create(
+            user=self.admin_user,
+            label="خانه",
+            full_name="کاربر تست",
+            phone_number="09120000000",
+            province="اصفهان",
+            city="اصفهان",
+            address="خیابان نمونه",
+            is_default=True,
+        )
+        self.client.force_login(self.admin_user)
+        self.client.post(reverse("shop:cart_add", kwargs={"variant_id": self.variant.id}), {"quantity": 1})
+        response = self.client.get(reverse("shop:cart_detail"))
+        self.assertContains(response, "تیپاکس")
+        self.assertContains(response, "باربری")
+        self.assertContains(response, "دکاپست")
+        self.assertContains(response, "اسنپ‌پی — ۴ قسط")
+        self.assertContains(response, "پست")
+        self.assertContains(response, "خانه")
+        self.assertContains(response, 'data-province="اصفهان"')
+
+    @override_settings(CARD_TO_CARD_ENABLED=True, CARD_TO_CARD_NUMBER="1111222233334444")
+    def test_card_to_card_order_has_two_hour_deadline_and_no_online_shipping_charge(self):
+        self.client.force_login(self.admin_user)
+        self.client.post(reverse("shop:cart_add", kwargs={"variant_id": self.variant.id}), {"quantity": 2})
+        with patch("shop.order_views.notify_new_order") as notify_new_order:
+            response = self.client.post(
+                reverse("shop:checkout"),
+                {
+                    "full_name": "خریدار کارت",
+                    "phone_number": "09121112233",
+                    "province": "تهران",
+                    "city": "تهران",
+                    "address": "خیابان آزادی",
+                    "shipping_method": "freight",
+                    "payment_method": "card_to_card",
+                },
+            )
+        self.assertEqual(response.status_code, 302)
+        order = Order.objects.get(phone_number="09121112233")
+        self.assertEqual(order.shipping_method, "freight")
+        self.assertEqual(order.payment_method, "card_to_card")
+        self.assertEqual(order.shipping_cost, 0)
+        self.assertEqual(order.grand_total, 130000)
+        self.assertEqual(order.status, "pending")
+        self.assertFalse(order.stock_reserved)
+        self.assertIsNotNone(order.card_payment_deadline)
+        notify_new_order.assert_called_once_with(order)
+
+    def test_valid_support_message_triggers_outbound_alert_after_saving(self):
+        with patch("shop.views.notify_support_message") as notify_support:
+            response = self.client.post(
+                reverse("shop:contact"),
+                {
+                    "full_name": "مریم تست",
+                    "phone": "09121234567",
+                    "email": "",
+                    "category": "support",
+                    "message": "برای پیگیری سفارش کمک می‌خواهم.",
+                },
+            )
+        self.assertEqual(response.status_code, 302)
+        notify_support.assert_called_once()

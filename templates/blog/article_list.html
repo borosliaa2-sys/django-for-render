@@ -210,23 +210,21 @@
     flex-shrink: 0;
   }
 
-  /* نوار موضوعات اسکرول‌پذیر در موبایل */
+  /* On larger screens every topic stays visible; small screens retain a
+     compact, touch-scrollable strip rather than squeezing the labels. */
   .blog-cats-wrap {
     width: 100%;
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-    scrollbar-width: none;
     margin-bottom: 24px;
-    padding-bottom: 4px;
   }
-  .blog-cats-wrap::-webkit-scrollbar { display: none; }
   .blog-cats {
     display: flex;
+    justify-content: center;
     gap: 8px;
-    flex-wrap: nowrap;
-    width: max-content;
+    flex-wrap: wrap;
+    width: 100%;
     margin: 0 auto;
     padding: 0 4px;
+    box-sizing: border-box;
   }
   .cat-pill {
     background: #fff;
@@ -397,7 +395,9 @@
     .blog-header p { font-size: 0.84rem; }
     .articles-grid { grid-template-columns: 1fr; gap: 14px; }
     .art-img-wrap { height: 160px; }
-    .blog-cats { justify-content: flex-start; }
+    .blog-cats-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none; padding-bottom: 4px; }
+    .blog-cats-wrap::-webkit-scrollbar { display: none; }
+    .blog-cats { justify-content: flex-start; flex-wrap: nowrap; width: max-content; }
   }
 
   @media (max-width: 480px) {

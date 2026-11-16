@@ -20,6 +20,7 @@ from django.views.generic import DetailView, ListView, TemplateView
 
 from .forms import ContactMessageForm, ReviewForm
 from .models import Article, Category, Product
+from .telegram_notifications import notify_support_message
 
 MAX_Q_LENGTH = 100
 ALLOWED_SORTS = {"popular", "cheap", "expensive", "newest"}
@@ -455,7 +456,10 @@ class ContactView(TemplateView):
     def post(self, request, *args, **kwargs):
         form = ContactMessageForm(request.POST)
         if form.is_valid():
-            form.save()
+            contact_message = form.save()
+            # Best-effort outbound alert only; this never opens a Telegram
+            # webhook/polling channel and never affects form submission.
+            notify_support_message(contact_message)
             messages.success(
                 request,
                 "پیام شما ثبت شد. همکاران عطارباشی پس از بررسی با شما تماس می‌گیرند.",
