@@ -708,7 +708,12 @@ class ShopFullFlowTests(TestCase):
     def test_cloudinary_backup_uses_a_stable_non_random_public_id(self):
         """A later sync must HEAD the exact resource uploaded on the first run."""
         import cloudinary.uploader
-        from shop.cloudinary_backup import sync_local_file_to_cloudinary
+        from shop.cloudinary_backup import _cloudinary_asset_folder, sync_local_file_to_cloudinary
+
+        self.assertEqual(
+            _cloudinary_asset_folder("payment_receipts/2026/11/receipt.png"),
+            "payment_receipts/2026/11",
+        )
 
         class FakeStorage:
             TAG = "media"
@@ -734,7 +739,38 @@ class ShopFullFlowTests(TestCase):
         upload.assert_called_once()
         kwargs = upload.call_args.kwargs
         self.assertEqual(kwargs["public_id"], "attarbashi/products/catalog/ai-tahini")
+        self.assertEqual(kwargs["asset_folder"], "products/catalog")
         self.assertEqual(kwargs["resource_type"], "image")
         self.assertFalse(kwargs["use_filename"])
         self.assertFalse(kwargs["unique_filename"])
         self.assertFalse(kwargs["overwrite"])
+
+    def test_existing_cloudinary_receipt_is_moved_out_of_home_without_reuploading(self):
+        import cloudinary.api
+        from shop.cloudinary_backup import sync_local_file_to_cloudinary
+
+        class ExistingStorage:
+            TAG = "media"
+
+            def exists(self, name):
+                return True
+
+            def _prepend_prefix(self, name):
+                return f"attarbashi/{name}"
+
+            def _get_resource_type(self, name):
+                return "image"
+
+        with patch("shop.cloudinary_backup._remote_storage", return_value=ExistingStorage()), patch(
+            "cloudinary.api.update"
+        ) as update:
+            result = sync_local_file_to_cloudinary(
+                "payment_receipts/2026/11/receipt.png", Path("/not-needed-when-remote-exists")
+            )
+
+        self.assertEqual(result, "existing")
+        update.assert_called_once_with(
+            "attarbashi/payment_receipts/2026/11/receipt",
+            resource_type="image",
+            asset_folder="payment_receipts/2026/11",
+        )

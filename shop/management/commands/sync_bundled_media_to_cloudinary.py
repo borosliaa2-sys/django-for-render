@@ -1,6 +1,6 @@
 """Mirror bundled catalogue media to Cloudinary as a recovery backup.
 
-The site always serves images through its own ``/media/`` URL.  Cloudinary is
+The site always serves images through its own ``/media/`` URL. Cloudinary is
 not a browser-facing delivery provider: this command merely guarantees a copy
 exists there so a reset local disk can restore the file server-side on demand.
 """
@@ -9,7 +9,7 @@ from pathlib import Path
 from django.conf import settings
 from django.core.management.base import BaseCommand, CommandError
 
-from shop.cloudinary_backup import sync_local_file_to_cloudinary
+from shop.cloudinary_backup import organize_existing_cloudinary_receipt, sync_local_file_to_cloudinary
 from shop.models import Article, Order, Product
 
 
@@ -25,13 +25,7 @@ class Command(BaseCommand):
 
     @staticmethod
     def _legacy_receipt_source(stored_name: str) -> Path | None:
-        """Locate a receipt uploaded before private receipt storage existed.
-
-        Database records keep the same logical ``payment_receipts/...`` name
-        after the privacy release, but their old physical file is still under
-        MEDIA_ROOT. The field now points at PRIVATE_RECEIPTS_ROOT, so a normal
-        ``field.storage.path`` lookup cannot find such a legacy file.
-        """
+        """Locate a receipt uploaded before private receipt storage existed."""
         if not stored_name.startswith("payment_receipts/"):
             return None
         legacy_root = Path(settings.MEDIA_ROOT).resolve()
@@ -67,9 +61,25 @@ class Command(BaseCommand):
             stored_name = str(getattr(field, "name", "") or "").lstrip("/")
             source, origin = self._local_source(field, stored_name, is_receipt=is_receipt)
             if source is None:
+                # A pre-v38 receipt can already exist remotely in Home while
+                # its old ephemeral Render-local original has disappeared.
+                # It can still be organized by its public ID alone.
+                if is_receipt:
+                    try:
+                        remote_state = organize_existing_cloudinary_receipt(stored_name)
+                    except Exception as exc:
+                        raise CommandError(
+                            f"Could not inspect the existing Cloudinary receipt {stored_name}. "
+                            "Verify the API key, API secret, cloud name and Cloudinary account limits."
+                        ) from exc
+                    if remote_state == "existing":
+                        existing += 1
+                        self.stdout.write(f"Organized existing Cloudinary receipt: {stored_name}")
+                        continue
                 missing += 1
                 self.stderr.write(f"Missing local {label}: {stored_name}")
                 continue
+
             if origin == "legacy":
                 legacy_sources += 1
                 self.stdout.write(f"Using legacy MEDIA_ROOT copy for {label}: {stored_name}")
