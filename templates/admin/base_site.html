@@ -1,0 +1,36 @@
+{% extends "admin/base.html" %}
+{% load admin_alerts %}
+
+{% block title %}مدیریت عطارباشی | {{ block.super }}{% endblock %}
+
+{% block extrastyle %}
+  {{ block.super }}
+  <style>
+    .admin-alert-badge {
+      display:inline-block;
+      margin:0 0 0 7px;
+      padding:5px 9px;
+      border-radius:999px;
+      color:#fff !important;
+      font-weight:700;
+      font-size:12px;
+      line-height:1.35;
+      text-decoration:none;
+    }
+    .admin-alert-badge--receipt { background:#b45309; }
+    .admin-alert-badge--message { background:#9c2f16; }
+    .admin-alert-badge:hover { filter:brightness(.92); }
+    @media (max-width: 760px) {
+      .admin-alert-badge { margin:5px 0 0 5px; font-size:11px; }
+    }
+  </style>
+{% endblock %}
+
+{% block branding %}
+  <h1 id="site-name"><a href="{% url 'admin:index' %}">مدیریت عطارباشی</a></h1>
+{% endblock %}
+
+{% block userlinks %}
+  {% admin_review_badges %}
+  {{ block.super }}
+{% endblock %}

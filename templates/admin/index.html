@@ -1,0 +1,7 @@
+{% extends "admin/index.html" %}
+{% load admin_alerts %}
+
+{% block content %}
+  {% admin_review_panel %}
+  {{ block.super }}
+{% endblock %}

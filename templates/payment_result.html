@@ -68,8 +68,8 @@
           </tbody>
           <tfoot>
             <tr>
-              <td colspan="4" class="invoice-summary-label" style="text-align:left; font-weight:700;">هزینه ارسال:</td>
-              <td>{{ order.shipping_cost|intcomma }} تومان</td>
+              <td colspan="4" class="invoice-summary-label" style="text-align:left; font-weight:700;">{{ order.get_shipping_method_display }}:</td>
+              <td>کرایه هنگام تحویل</td>
             </tr>
             <tr class="total-row">
               <td colspan="4" class="invoice-summary-label" style="text-align:left; font-weight:800;">مبلغ کل فاکتور:</td>

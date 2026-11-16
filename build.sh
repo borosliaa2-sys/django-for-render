@@ -14,7 +14,13 @@ python manage.py normalize_local_media_references
 python manage.py apply_managed_catalog_media
 # Cloudinary is a recovery backup only. It never becomes the visitor-facing
 # image URL and is used server-side only when a local file has disappeared.
-python manage.py sync_bundled_media_to_cloudinary
+# Do not scan/re-upload the whole bundled catalogue on every deployment:
+# Cloudinary sync is opt-in for an intentional first/repair backup run.
+if [ "${CLOUDINARY_SYNC_BUNDLED_MEDIA_ON_BUILD:-0}" = "1" ]; then
+  python manage.py sync_bundled_media_to_cloudinary
+else
+  echo "Skipping bulk Cloudinary media sync (set CLOUDINARY_SYNC_BUNDLED_MEDIA_ON_BUILD=1 for a one-time intentional sync)."
+fi
 # Repairs versioned category assets in an existing Neon DB and creates only
 # missing starter articles; safe to run at every deploy.
 python manage.py ensure_site_content

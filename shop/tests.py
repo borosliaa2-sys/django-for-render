@@ -8,7 +8,7 @@ from django.test import TestCase, Client, override_settings
 from django.urls import reverse
 from PIL import Image
 from account.models import CustomUser
-from shop.models import Article, CartItem, Category, CustomerAddress, Product, ProductVariant, Order, OrderItem
+from shop.models import Article, CartItem, Category, ContactMessage, CustomerAddress, Product, ProductVariant, Order, OrderItem
 from shop.cart import Cart
 
 class ShopFullFlowTests(TestCase):
@@ -234,6 +234,26 @@ class ShopFullFlowTests(TestCase):
         self.assertEqual(order.status, "cancelled")
         self.assertNotEqual(order.status, "paid")
         self.assertNotEqual(order.status, "processing")
+
+    def test_tracking_never_adds_legacy_carrier_fee_to_afterpay_order(self):
+        order = Order.objects.create(
+            user=self.admin_user,
+            order_number="AT-CARRIER-FEE",
+            full_name="خریدار کرایه",
+            phone_number="09120003333",
+            address="اصفهان",
+            shipping_method="tipax",
+            shipping_cost=35000,
+            total_price=65000,
+            status="pending",
+        )
+        self.assertEqual(order.grand_total, 65000)
+        self.client.force_login(self.admin_user)
+        response = self.client.get(reverse("shop:order_tracking"), {"query": order.order_number})
+        self.assertContains(response, "کرایه ارسال:")
+        self.assertContains(response, "شرکت حمل پرداخت می")
+        self.assertContains(response, "مبلغ سفارش (بدون کرایه)")
+        self.assertNotContains(response, "35,000 تومان")
 
     def test_home_page_rendering(self):
         res = self.client.get(reverse("shop:home"))
@@ -523,6 +543,75 @@ class ShopFullFlowTests(TestCase):
             self.client.post(reverse("shop:checkout"), data)
         self.assertEqual(CustomerAddress.objects.filter(user=self.admin_user).count(), 1)
 
+    def test_admin_dashboard_surfaces_receipts_and_unread_support_alerts(self):
+        Order.objects.create(
+            user=self.admin_user,
+            order_number="AT-RECEIPT-REVIEW",
+            full_name="خریدار رسید",
+            phone_number="09120009999",
+            address="نشانی تست",
+            payment_method="card_to_card",
+            status="awaiting_receipt",
+            card_receipt="payment_receipts/test-receipt.png",
+            total_price=65000,
+        )
+        ContactMessage.objects.create(
+            full_name="پیام‌دهنده",
+            phone="09120008888",
+            category="support",
+            message="این پیام هنوز در انتظار بررسی است.",
+            status="new",
+        )
+        self.client.force_login(self.admin_user)
+        response = self.client.get("/admin/")
+        self.assertContains(response, "موارد نیازمند رسیدگی")
+        self.assertContains(response, "1 رسید کارت‌به‌کارت")
+        self.assertContains(response, "1 پیام پشتیبانی")
+        self.assertContains(response, "رسید نیازمند بررسی")
+        self.assertContains(response, "پیام خوانده‌نشده")
+
+    def test_card_receipt_is_private_and_is_available_only_to_owner_or_staff(self):
+        with TemporaryDirectory() as root:
+            media_root = Path(root) / "media"
+            private_root = Path(root) / "private-receipts"
+            with override_settings(MEDIA_ROOT=media_root, PRIVATE_RECEIPTS_ROOT=private_root):
+                order = Order.objects.create(
+                    user=self.admin_user,
+                    order_number="AT-PRIVATE-RECEIPT",
+                    full_name="خریدار رسید خصوصی",
+                    phone_number="09120007777",
+                    address="نشانی تست",
+                    payment_method="card_to_card",
+                    status="pending",
+                    total_price=65000,
+                )
+                image_bytes = BytesIO()
+                Image.new("RGB", (24, 24), "#a84d2a").save(image_bytes, "PNG")
+                upload = SimpleUploadedFile("receipt.png", image_bytes.getvalue(), content_type="image/png")
+                self.client.force_login(self.admin_user)
+                with patch("shop.order_views.notify_card_receipt_uploaded"):
+                    upload_response = self.client.post(
+                        reverse("shop:upload_card_receipt", kwargs={"order_number": order.order_number}),
+                        {"receipt": upload},
+                    )
+                self.assertEqual(upload_response.status_code, 302)
+                order.refresh_from_db()
+                private_path = Path(order.card_receipt.storage.path(order.card_receipt.name))
+                self.assertTrue(private_path.is_file())
+                self.assertFalse((media_root / order.card_receipt.name).exists())
+
+                owner_response = self.client.get(reverse("shop:view_card_receipt", kwargs={"order_number": order.order_number}))
+                self.assertEqual(owner_response.status_code, 200)
+                self.assertEqual(owner_response["Cache-Control"], "private, no-store")
+
+                direct_response = self.client.get(f"/media/{order.card_receipt.name}")
+                self.assertEqual(direct_response.status_code, 404)
+
+                outsider = CustomUser.objects.create_user(username="outsider", phone_number="09120006666", password="testpassword123")
+                self.client.force_login(outsider)
+                outsider_response = self.client.get(reverse("shop:view_card_receipt", kwargs={"order_number": order.order_number}))
+                self.assertEqual(outsider_response.status_code, 404)
+
     def test_valid_support_message_triggers_outbound_alert_after_saving(self):
         with patch("shop.views.notify_support_message") as notify_support:
             response = self.client.post(
@@ -537,3 +626,37 @@ class ShopFullFlowTests(TestCase):
             )
         self.assertEqual(response.status_code, 302)
         notify_support.assert_called_once()
+
+    def test_cloudinary_backup_uses_a_stable_non_random_public_id(self):
+        """A later sync must HEAD the exact resource uploaded on the first run."""
+        import cloudinary.uploader
+        from shop.cloudinary_backup import sync_local_file_to_cloudinary
+
+        class FakeStorage:
+            TAG = "media"
+
+            def exists(self, name):
+                return False
+
+            def _prepend_prefix(self, name):
+                return f"attarbashi/{name}"
+
+            def _get_resource_type(self, name):
+                return "image"
+
+        with TemporaryDirectory() as root:
+            source = Path(root) / "ai-tahini.webp"
+            source.write_bytes(b"webp-image")
+            with patch("shop.cloudinary_backup._remote_storage", return_value=FakeStorage()), patch(
+                "cloudinary.uploader.upload"
+            ) as upload:
+                result = sync_local_file_to_cloudinary("products/catalog/ai-tahini.webp", source)
+
+        self.assertEqual(result, "uploaded")
+        upload.assert_called_once()
+        kwargs = upload.call_args.kwargs
+        self.assertEqual(kwargs["public_id"], "attarbashi/products/catalog/ai-tahini")
+        self.assertEqual(kwargs["resource_type"], "image")
+        self.assertFalse(kwargs["use_filename"])
+        self.assertFalse(kwargs["unique_filename"])
+        self.assertFalse(kwargs["overwrite"])

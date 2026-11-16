@@ -21,7 +21,7 @@ from django.http import FileResponse, Http404
 from django.views.decorators.http import require_GET
 from PIL import Image, ImageOps, UnidentifiedImageError
 
-from .models import Article, Product
+from .models import Article, Order, Product
 
 _MAX_RECOVERY_BYTES = 20 * 1024 * 1024
 _IMAGE_CACHE_SECONDS = 60 * 60 * 24 * 365
@@ -58,6 +58,7 @@ def _is_known_media(name: str) -> bool:
     return (
         Product.objects.filter(image_file=name).exists()
         or Article.objects.filter(image_file=name).exists()
+        or Order.objects.filter(card_receipt=name).exists()
     )
 
 
@@ -112,6 +113,40 @@ def _recover_from_cloudinary(name: str, target: Path) -> bool:
     return False
 
 
+def get_available_media_path(raw_name: str) -> Path:
+    """Return a local media file, restoring its known recovery copy if needed."""
+    name, target = _safe_local_path(raw_name)
+    if target.is_file():
+        return target
+    if not _is_known_media(name) or not _recover_from_cloudinary(name, target):
+        raise Http404("Media recovery copy not found")
+    return target
+
+
+def get_order_receipt_path(order: Order) -> Path:
+    """Return an authorized order receipt, including one legacy media fallback."""
+    receipt = order.card_receipt
+    name = str(getattr(receipt, "name", "") or "")
+    if not name:
+        raise Http404("Receipt not found")
+    try:
+        target = Path(receipt.storage.path(name)).resolve()
+    except (AttributeError, NotImplementedError, ValueError, OSError):
+        raise Http404("Receipt storage is unavailable")
+    if target.is_file():
+        return target
+
+    # Receipts uploaded before private storage was introduced may remain in the
+    # old MEDIA_ROOT location. They are never served publicly, but the owner or
+    # staff member can still retrieve them through this authenticated route.
+    _legacy_name, legacy_target = _safe_local_path(name)
+    if legacy_target.is_file():
+        return legacy_target
+    if not _recover_from_cloudinary(name, target):
+        raise Http404("Receipt recovery copy not found")
+    return target
+
+
 def _file_response(path: Path):
     content_type, _encoding = mimetypes.guess_type(str(path))
     if not content_type:
@@ -154,10 +189,12 @@ def _responsive_source(raw_source: str) -> tuple[str, str, Path]:
     source_path = _url_path(raw_source)
     media_url_path = _url_path(str(getattr(settings, "MEDIA_URL", "/media/") or "/media/"))
     if source_path.startswith(media_url_path):
-        name, target = _safe_local_path(source_path[len(media_url_path):])
-        if not target.is_file():
-            if not _is_known_media(name) or not _recover_from_cloudinary(name, target):
-                raise Http404("Media recovery copy not found")
+        name, _target = _safe_local_path(source_path[len(media_url_path):])
+        # Payment receipts are private documents, never a public responsive
+        # image source. They are served through the authenticated order route.
+        if name.startswith("payment_receipts/"):
+            raise Http404("Private media")
+        target = get_available_media_path(name)
         return "media", name, target
 
     name, target = _static_source_path(source_path)
@@ -225,13 +262,8 @@ def serve_responsive_media(request, width: int):
 
 @require_GET
 def serve_site_media(request, media_path: str):
-    """Serve media from Attarbashi; use Cloudinary only after a local miss."""
-    name, target = _safe_local_path(media_path)
-    if target.is_file():
-        return _file_response(target)
-
-    if not _is_known_media(name):
-        raise Http404("Media not found")
-    if not _recover_from_cloudinary(name, target):
-        raise Http404("Media recovery copy not found")
-    return _file_response(target)
+    """Serve public media; payment receipts use an authenticated endpoint."""
+    name, _target = _safe_local_path(media_path)
+    if name.startswith("payment_receipts/"):
+        raise Http404("Private media")
+    return _file_response(get_available_media_path(name))

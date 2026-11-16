@@ -1,5 +1,9 @@
 """ادمین فروشگاه — Product (+MEDIA ImageField), Variant (compare_price), Review, Wishlist"""
+from pathlib import Path
+
+from django.conf import settings
 from django.contrib import admin
+from django.urls import reverse
 from django.utils.html import format_html
 from django.utils.safestring import mark_safe
 from .models import Article, CartItem, Category, ContactMessage, CustomerAddress, Order, OrderItem, Product, ProductVariant, Review, Wishlist
@@ -15,13 +19,16 @@ class OrderItemInline(admin.TabularInline):
 
 @admin.register(Order)
 class OrderAdmin(admin.ModelAdmin):
-    list_display = ("order_number", "full_name", "phone_number", "shipping_method", "payment_method", "status", "stock_reserved_display", "grand_total_display", "postal_tracking_code", "created_at")
+    list_display = ("order_number", "full_name", "phone_number", "shipping_method", "payment_method", "receipt_review_display", "status", "stock_reserved_display", "grand_total_display", "postal_tracking_code", "created_at")
     list_filter = ("status", "shipping_method", "payment_method", "stock_reserved", "created_at", "province")
     search_fields = ("order_number", "full_name", "phone_number", "postal_tracking_code", "payment_reference")
     list_editable = ("status", "postal_tracking_code")
-    readonly_fields = ("order_number", "stock_reserved", "created_at", "updated_at", "payment_reference", "payment_authority", "card_payment_deadline", "receipt_uploaded_at")
+    readonly_fields = ("order_number", "stock_reserved", "created_at", "updated_at", "payment_reference", "payment_authority", "card_payment_deadline", "receipt_uploaded_at", "receipt_preview")
+    # Customers upload receipts; staff review them through the protected preview
+    # instead of an openly addressable media URL.
+    exclude = ("card_receipt",)
     inlines = [OrderItemInline]
-    actions = ["cancel_and_restock_orders", "mark_as_paid", "mark_as_processing", "mark_as_shipped"]
+    actions = ["cancel_and_restock_orders", "mark_as_paid", "mark_as_processing", "mark_as_shipped", "clear_selected_card_receipts"]
 
     def save_model(self, request, obj, form, change):
         was_paid = False
@@ -38,6 +45,29 @@ class OrderAdmin(admin.ModelAdmin):
         if obj.status == "paid" and not was_paid:
             notify_payment_success(obj)
 
+    def receipt_review_display(self, obj):
+        if obj.status == "awaiting_receipt" and obj.card_receipt:
+            return format_html('<span style="color:#b45309;font-weight:800;">🧾 نیازمند بررسی</span>')
+        if obj.card_receipt:
+            return format_html('<span style="color:#15803d;font-weight:700;">رسید ثبت شده</span>')
+        return "—"
+    receipt_review_display.short_description = "رسید کارت‌به‌کارت"
+
+    def receipt_preview(self, obj):
+        if not obj.card_receipt:
+            return "رسیدی ارسال نشده است."
+        try:
+            receipt_url = reverse("shop:view_card_receipt", kwargs={"order_number": obj.order_number})
+            return format_html(
+                '<a href="{}" target="_blank" rel="noopener"><img src="{}" alt="رسید کارت‌به‌کارت سفارش {}" style="max-width:340px;max-height:420px;border:1px solid #ddd;border-radius:8px;display:block;"><br>باز کردن تصویر با اندازه کامل</a>',
+                receipt_url,
+                receipt_url,
+                obj.order_number,
+            )
+        except (ValueError, OSError):
+            return "فایل رسید در دسترس نیست."
+    receipt_preview.short_description = "پیش‌نمایش رسید کارت‌به‌کارت"
+
     def grand_total_display(self, obj):
         return f"{obj.grand_total:,} تومان"
     grand_total_display.short_description = "مبلغ نهایی"
@@ -47,6 +77,33 @@ class OrderAdmin(admin.ModelAdmin):
             return mark_safe('<span style="color:#10b981; font-weight:bold;">✓ کسر از انبار</span>')
         return mark_safe('<span style="color:#6b7280;">آزاد / برگشت‌خورده</span>')
     stock_reserved_display.short_description = "موجودی انبار"
+
+    @admin.action(description="🗑️ پاک کردن تصویر رسیدهای انتخاب‌شده از سرور")
+    def clear_selected_card_receipts(self, request, queryset):
+        cleared = 0
+        for order in queryset.exclude(card_receipt=""):
+            receipt = order.card_receipt
+            name = str(getattr(receipt, "name", "") or "")
+            if not name:
+                continue
+            # Delete both the current private file and a legacy public-media
+            # copy from versions deployed before receipt privacy was added.
+            try:
+                receipt.storage.delete(name)
+            except (OSError, ValueError):
+                pass
+            legacy_path = (Path(settings.MEDIA_ROOT) / name).resolve()
+            media_root = Path(settings.MEDIA_ROOT).resolve()
+            if media_root in legacy_path.parents:
+                legacy_path.unlink(missing_ok=True)
+            order.card_receipt = None
+            order.receipt_uploaded_at = None
+            order.save(update_fields=["card_receipt", "receipt_uploaded_at", "updated_at"])
+            cleared += 1
+        self.message_user(
+            request,
+            f"تصویر رسید {cleared} سفارش از فضای سرور پاک شد. اگر Cloudinary Backup فعال بوده، نسخهٔ آن را نیز از Cloudinary Media Library پاک کنید.",
+        )
 
     @admin.action(description="❌ لغو سفارش‌های انتخاب‌شده و بازگردانی موجودی به انبار")
     def cancel_and_restock_orders(self, request, queryset):

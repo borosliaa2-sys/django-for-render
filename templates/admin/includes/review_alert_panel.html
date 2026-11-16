@@ -1,0 +1,43 @@
+{% if receipt_review_count or unread_support_count %}
+<section class="admin-review-panel" aria-labelledby="admin-review-heading">
+  <div class="admin-review-panel__heading">
+    <span aria-hidden="true">🔔</span>
+    <div>
+      <h2 id="admin-review-heading">موارد نیازمند رسیدگی</h2>
+      <p>این موارد تا زمان تغییر وضعیت، در پنل مدیریت نمایش داده می‌شوند.</p>
+    </div>
+  </div>
+  <div class="admin-review-panel__cards">
+    {% if receipt_review_count %}
+      <a class="admin-review-card admin-review-card--receipt" href="{{ orders_url }}?status__exact=awaiting_receipt">
+        <span class="admin-review-card__icon" aria-hidden="true">🧾</span>
+        <span><strong>{{ receipt_review_count }} رسید کارت‌به‌کارت</strong><small>برای بررسی و تأیید پرداخت</small></span>
+        <span class="admin-review-card__arrow" aria-hidden="true">←</span>
+      </a>
+    {% endif %}
+    {% if unread_support_count %}
+      <a class="admin-review-card admin-review-card--message" href="{{ messages_url }}?status__exact=new">
+        <span class="admin-review-card__icon" aria-hidden="true">📩</span>
+        <span><strong>{{ unread_support_count }} پیام پشتیبانی</strong><small>هنوز در وضعیت «جدید» هستند</small></span>
+        <span class="admin-review-card__arrow" aria-hidden="true">←</span>
+      </a>
+    {% endif %}
+  </div>
+</section>
+<style>
+  .admin-review-panel { margin:0 0 22px; padding:18px; border:1px solid #f0d9c7; border-radius:12px; background:#fffaf6; box-shadow:0 3px 13px rgba(76,44,24,.06); }
+  .admin-review-panel__heading { display:flex; gap:10px; align-items:flex-start; margin-bottom:14px; }
+  .admin-review-panel__heading > span { font-size:24px; line-height:1; }
+  .admin-review-panel h2 { margin:0 0 3px; color:#2b1f15; font-size:17px; }
+  .admin-review-panel p { margin:0; color:#6b5a4a; font-size:12px; }
+  .admin-review-panel__cards { display:grid; grid-template-columns:repeat(auto-fit,minmax(260px,1fr)); gap:10px; }
+  .admin-review-card { display:flex; align-items:center; gap:11px; border-radius:9px; padding:13px; text-decoration:none; border:1px solid transparent; background:#fff; }
+  .admin-review-card--receipt { border-color:#f5d39a; }
+  .admin-review-card--message { border-color:#efc8bd; }
+  .admin-review-card:hover { transform:translateY(-1px); box-shadow:0 4px 12px rgba(76,44,24,.09); }
+  .admin-review-card__icon { font-size:22px; }
+  .admin-review-card strong { display:block; color:#2b1f15; font-size:14px; }
+  .admin-review-card small { display:block; color:#6b5a4a; margin-top:3px; font-size:12px; }
+  .admin-review-card__arrow { margin-right:auto; color:#9c2f16; font-weight:900; font-size:18px; }
+</style>
+{% endif %}

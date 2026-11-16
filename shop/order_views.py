@@ -17,6 +17,7 @@ from django.utils import timezone
 from django.views.decorators.http import require_GET, require_POST
 
 from .cart import Cart
+from .media_views import _file_response, get_order_receipt_path
 from .models import CustomerAddress, Order, OrderItem, ProductVariant
 from .telegram_notifications import (
     notify_card_receipt_uploaded,
@@ -280,6 +281,22 @@ def upload_card_receipt(request, order_number):
     notify_card_receipt_uploaded(order)
     messages.success(request, "رسید شما ثبت شد. پس از بررسی فروشگاه، وضعیت سفارش به‌روزرسانی می‌شود.")
     return redirect("shop:card_payment_instructions", order_number=order.order_number)
+
+
+@login_required
+@require_GET
+def view_card_receipt(request, order_number):
+    """Serve a receipt only to its customer or a staff user, never publicly."""
+    orders = Order.objects
+    if not request.user.is_staff:
+        orders = orders.filter(user=request.user)
+    order = get_object_or_404(orders, order_number=order_number, payment_method="card_to_card")
+    if not order.card_receipt or not order.card_receipt.name:
+        raise Http404("رسیدی برای این سفارش ثبت نشده است.")
+    path = get_order_receipt_path(order)
+    response = _file_response(path)
+    response["Cache-Control"] = "private, no-store"
+    return response
 
 
 @login_required

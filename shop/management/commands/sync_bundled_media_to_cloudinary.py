@@ -10,23 +10,27 @@ from django.conf import settings
 from django.core.management.base import BaseCommand, CommandError
 
 from shop.cloudinary_backup import sync_local_file_to_cloudinary
-from shop.models import Article, Product
+from shop.models import Article, Order, Product
 
 
 class Command(BaseCommand):
-    help = "Synchronize bundled catalogue/article media to Cloudinary recovery storage."
+    help = "Synchronize catalogue, article, and card-receipt media to Cloudinary recovery storage."
 
     def _sync_field(self, model, field_name: str, label: str) -> tuple[int, int, int]:
         uploaded = existing = missing = 0
-        media_root = Path(settings.MEDIA_ROOT).resolve()
-
         for obj in model.objects.exclude(**{f"{field_name}__isnull": True}).exclude(
             **{field_name: ""}
         ).iterator(chunk_size=100):
             field = getattr(obj, field_name)
             stored_name = str(getattr(field, "name", "") or "").lstrip("/")
-            source = (media_root / stored_name).resolve()
-            if media_root not in source.parents or not source.is_file():
+            try:
+                storage_root = Path(field.storage.location).resolve()
+                source = Path(field.storage.path(stored_name)).resolve()
+            except (AttributeError, NotImplementedError, OSError, ValueError):
+                missing += 1
+                self.stderr.write(f"Unavailable storage for {label}: {stored_name}")
+                continue
+            if storage_root not in source.parents or not source.is_file():
                 missing += 1
                 self.stderr.write(f"Missing bundled {label}: {stored_name}")
                 continue
@@ -58,10 +62,12 @@ class Command(BaseCommand):
 
         product_counts = self._sync_field(Product, "image_file", "product image")
         article_counts = self._sync_field(Article, "image_file", "article image")
+        receipt_counts = self._sync_field(Order, "card_receipt", "card payment receipt")
         self.stdout.write(
             self.style.SUCCESS(
                 "Cloudinary recovery backup complete: "
                 f"products uploaded/existing/missing={product_counts[0]}/{product_counts[1]}/{product_counts[2]}, "
-                f"articles uploaded/existing/missing={article_counts[0]}/{article_counts[1]}/{article_counts[2]}."
+                f"articles uploaded/existing/missing={article_counts[0]}/{article_counts[1]}/{article_counts[2]}, "
+                f"receipts uploaded/existing/missing={receipt_counts[0]}/{receipt_counts[1]}/{receipt_counts[2]}."
             )
         )

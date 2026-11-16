@@ -12,6 +12,7 @@ from .order_views import (
     payment_verify,
     upload_card_receipt,
     user_orders,
+    view_card_receipt,
 )
 from .views import (
     AboutView,
@@ -57,6 +58,7 @@ urlpatterns = [
     path("payment/result/", payment_result, name="payment_result"),
     path("payment/card/<str:order_number>/", card_payment_instructions, name="card_payment_instructions"),
     path("payment/card/<str:order_number>/receipt/", upload_card_receipt, name="upload_card_receipt"),
+    path("payment/card/<str:order_number>/receipt/view/", view_card_receipt, name="view_card_receipt"),
     path("order/invoice/<str:order_number>/", order_invoice, name="order_invoice"),
     # پروفایل کاربری و سفارشات
     path("profile/", user_orders, name="user_profile"),

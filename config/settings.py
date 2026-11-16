@@ -200,6 +200,9 @@ WHITENOISE_MAX_AGE = 60 * 60 * 24 * 365
 
 MEDIA_URL = "/media/"
 MEDIA_ROOT = BASE_DIR / "media"
+# Payment receipts are private documents and deliberately live outside the
+# browser-facing MEDIA_ROOT. They are served only after authorization.
+PRIVATE_RECEIPTS_ROOT = BASE_DIR / "private_receipts"
 
 # Compressed manifest assets are generated at build time by `collectstatic`.
 # Product/article bytes stay local and are served from this site's /media/

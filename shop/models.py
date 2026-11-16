@@ -14,6 +14,7 @@ from django.urls import reverse
 from django.utils.text import slugify
 
 from .image_optimization import optimize_new_upload
+from .receipt_storage import private_receipt_storage
 
 
 class CategoryManager(models.Manager):
@@ -556,7 +557,13 @@ class Order(models.Model):
     shipping_method = models.CharField("روش ارسال", max_length=20, choices=SHIPPING_METHOD_CHOICES, default="tipax")
     payment_method = models.CharField("روش پرداخت", max_length=20, choices=PAYMENT_METHOD_CHOICES, default="zarinpal")
     card_payment_deadline = models.DateTimeField("مهلت کارت‌به‌کارت", null=True, blank=True)
-    card_receipt = models.ImageField("رسید کارت‌به‌کارت", upload_to="payment_receipts/%Y/%m/", blank=True, null=True)
+    card_receipt = models.ImageField(
+        "رسید کارت‌به‌کارت",
+        upload_to="payment_receipts/%Y/%m/",
+        storage=private_receipt_storage,
+        blank=True,
+        null=True,
+    )
     receipt_uploaded_at = models.DateTimeField("زمان ارسال رسید", null=True, blank=True)
     total_price = models.PositiveIntegerField("مبلغ کل محصولات (تومان)", default=0)
     # The requested delivery methods collect carriage at delivery, so it is not
@@ -585,6 +592,11 @@ class Order(models.Model):
 
     @property
     def grand_total(self):
+        # Tipax, freight, and Dekapost collect carriage on delivery. Legacy
+        # orders that inherited the old 35,000-toman default must not display
+        # that amount as an online charge either.
+        if self.shipping_method in {"tipax", "freight", "dekapost"}:
+            return self.total_price
         return self.total_price + self.shipping_cost
 
     @property

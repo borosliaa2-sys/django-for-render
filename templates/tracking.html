@@ -87,8 +87,9 @@
             <div class="det-col">
               <h4><i class="ri-file-list-3-line"></i> جزئیات مالی</h4>
               <p><strong>مبلغ اقلام:</strong> {{ order.total_price|default:0 }} تومان</p>
-              <p><strong>هزینه ارسال:</strong> {{ order.shipping_cost|default:35000 }} تومان</p>
-              <p class="grand-price"><strong>مبلغ کل پرداختی:</strong> <span>{{ order.grand_total }} تومان</span></p>
+              <p><strong>روش ارسال:</strong> {{ order.get_shipping_method_display }}</p>
+              <p><strong>کرایه ارسال:</strong> هنگام تحویل به شرکت حمل پرداخت می‌شود.</p>
+              <p class="grand-price"><strong>مبلغ سفارش (بدون کرایه):</strong> <span>{{ order.grand_total }} تومان</span></p>
             </div>
           </div>
 
