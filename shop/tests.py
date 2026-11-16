@@ -673,6 +673,9 @@ class ShopFullFlowTests(TestCase):
                         {"receipt": upload},
                     )
                 self.assertEqual(upload_response.status_code, 302)
+                instructions = self.client.get(upload_response.url)
+                self.assertContains(instructions, "رسید شما به‌صورت امن ثبت شد")
+                self.assertNotContains(instructions, "Cloudinary")
                 order.refresh_from_db()
                 private_path = Path(order.card_receipt.storage.path(order.card_receipt.name))
                 self.assertTrue(private_path.is_file())
@@ -704,6 +707,28 @@ class ShopFullFlowTests(TestCase):
             )
         self.assertEqual(response.status_code, 302)
         notify_support.assert_called_once()
+
+    def test_receipt_telegram_alert_includes_the_protected_full_receipt_link(self):
+        from shop.telegram_notifications import notify_card_receipt_uploaded
+
+        order = Order(
+            order_number="ATB-261116-C930C1C",
+            full_name="خریدار تست",
+            phone_number="09120001234",
+            payment_method="card_to_card",
+            total_price=65000,
+        )
+        with patch("shop.telegram_notifications.notify") as notify:
+            notify_card_receipt_uploaded(order)
+
+        notify.assert_called_once()
+        message = notify.call_args.args[0]
+        self.assertIn("رسید کارت‌به‌کارت ارسال شد", message)
+        self.assertIn("مشاهدهٔ امن رسید", message)
+        self.assertIn(
+            "https://attarbashiesf.ir/payment/card/ATB-261116-C930C1C/receipt/view/",
+            message,
+        )
 
     def test_cloudinary_backup_uses_a_stable_non_random_public_id(self):
         """A later sync must HEAD the exact resource uploaded on the first run."""

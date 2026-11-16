@@ -290,10 +290,9 @@ def upload_card_receipt(request, order_number):
         )
         return redirect("shop:card_payment_instructions", order_number=order.order_number)
     notify_card_receipt_uploaded(order)
-    success_message = "رسید شما به‌صورت امن ثبت شد. پس از بررسی فروشگاه، وضعیت سفارش به‌روزرسانی می‌شود."
-    if getattr(settings, "CLOUDINARY_ENABLED", False):
-        success_message = "رسید شما به‌صورت امن ثبت و نسخهٔ پشتیبان Cloudinary آن تأیید شد. پس از بررسی فروشگاه، وضعیت سفارش به‌روزرسانی می‌شود."
-    messages.success(request, success_message)
+    # Cloudinary is internal recovery infrastructure; do not expose it in the
+    # customer-facing confirmation message.
+    messages.success(request, "رسید شما به‌صورت امن ثبت شد. پس از بررسی فروشگاه، وضعیت سفارش به‌روزرسانی می‌شود.")
     return redirect("shop:card_payment_instructions", order_number=order.order_number)
 
 

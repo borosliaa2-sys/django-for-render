@@ -14,6 +14,7 @@ import urllib.request
 from collections.abc import Iterable
 
 from django.conf import settings
+from django.urls import reverse
 
 logger = logging.getLogger(__name__)
 
@@ -128,10 +129,20 @@ def notify_payment_cancelled(order) -> None:
     )
 
 
+def _receipt_review_url(order) -> str:
+    """Return the protected full-receipt URL for a Telegram owner alert."""
+    path = reverse("shop:view_card_receipt", kwargs={"order_number": order.order_number})
+    canonical_host = str(getattr(settings, "CANONICAL_HOST", "") or "").strip().rstrip("/")
+    return f"https://{canonical_host}{path}" if canonical_host else path
+
+
 def notify_card_receipt_uploaded(order) -> None:
+    receipt_url = _receipt_review_url(order)
     notify(
         "🧾 رسید کارت‌به‌کارت ارسال شد؛ نیازمند بررسی\n"
         f"شماره: {order.order_number}\n"
         f"مشتری: {order.full_name} | {order.phone_number}\n"
-        f"مبلغ: {order.grand_total:,} تومان"
+        f"مبلغ: {order.grand_total:,} تومان\n"
+        "مشاهدهٔ امن رسید (ورود ادمین لازم است):\n"
+        f"{receipt_url}"
     )
