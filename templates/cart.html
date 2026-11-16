@@ -182,7 +182,7 @@
             </div>
             <div class="cm-field cm-full"><label for="address">آدرس پستی دقیق:</label><textarea id="address" name="address" rows="2" placeholder="خیابان، کوچه، پلاک، زنگ..." required></textarea></div>
             <div class="cm-field cm-full"><label for="postalCode">کدپستی <small>(اختیاری)</small>:</label><input id="postalCode" type="text" inputmode="numeric" name="postal_code" placeholder="۱۰ رقم"></div>
-            <label class="save-address-check"><input type="checkbox" name="save_address" value="1"> این نشانی را در حسابم ذخیره کن</label>
+            <label class="save-address-check"><input type="checkbox" name="save_address" value="1" checked> این نشانی را در حسابم ذخیره کن</label>
             <div class="cm-field cm-full"><label for="addressLabel">عنوان نشانی <small>(اختیاری)</small>:</label><input id="addressLabel" type="text" name="address_label" placeholder="مثال: خانه"></div>
 
             <fieldset class="cm-choice-group">
@@ -225,7 +225,7 @@
     right: 0;
     bottom: 0;
     background: rgba(0, 0, 0, 0.55);
-    backdrop-filter: blur(4px);
+    /* Blur forces an expensive full-page repaint on many desktop GPUs. */
     z-index: 2000;
     display: flex;
     align-items: center;
@@ -241,11 +241,8 @@
     width: min(560px, 100%);
     padding: 24px 20px;
     box-sizing: border-box;
-    animation: modalPop 0.25s cubic-bezier(0.16, 1, 0.3, 1);
-  }
-  @keyframes modalPop {
-    from { opacity: 0; transform: scale(0.92); }
-    to { opacity: 1; transform: scale(1); }
+    /* Keep opening the lengthy checkout form instant on desktop. */
+    contain: layout paint;
   }
   .cm-header {
     display: flex;

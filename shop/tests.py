@@ -8,7 +8,7 @@ from django.test import TestCase, Client, override_settings
 from django.urls import reverse
 from PIL import Image
 from account.models import CustomUser
-from shop.models import Article, Category, CustomerAddress, Product, ProductVariant, Order, OrderItem
+from shop.models import Article, CartItem, Category, CustomerAddress, Product, ProductVariant, Order, OrderItem
 from shop.cart import Cart
 
 class ShopFullFlowTests(TestCase):
@@ -461,6 +461,7 @@ class ShopFullFlowTests(TestCase):
         self.assertContains(response, "پست")
         self.assertContains(response, "خانه")
         self.assertContains(response, 'data-province="اصفهان"')
+        self.assertContains(response, 'name="save_address" value="1" checked')
 
     @override_settings(CARD_TO_CARD_ENABLED=True, CARD_TO_CARD_NUMBER="1111222233334444")
     def test_card_to_card_order_has_two_hour_deadline_and_no_online_shipping_charge(self):
@@ -475,6 +476,7 @@ class ShopFullFlowTests(TestCase):
                     "province": "تهران",
                     "city": "تهران",
                     "address": "خیابان آزادی",
+                    "save_address": "1",
                     "shipping_method": "freight",
                     "payment_method": "card_to_card",
                 },
@@ -488,7 +490,38 @@ class ShopFullFlowTests(TestCase):
         self.assertEqual(order.status, "pending")
         self.assertFalse(order.stock_reserved)
         self.assertIsNotNone(order.card_payment_deadline)
+        self.assertEqual(CartItem.objects.filter(user=self.admin_user).count(), 1)
+        self.assertEqual(CustomerAddress.objects.filter(user=self.admin_user).count(), 1)
+        pending_invoice = self.client.get(reverse("shop:order_invoice", kwargs={"order_number": order.order_number}))
+        self.assertContains(pending_invoice, "درخواست پرداخت ثبت شد")
+        self.assertNotContains(pending_invoice, "کد پیگیری درگاه بانکی")
+
+        # Only an actual paid transition removes the persisted cart.
+        order.reserve_stock()
+        order.status = "paid"
+        order.save(update_fields=["status"])
+        self.assertEqual(CartItem.objects.filter(user=self.admin_user).count(), 0)
         notify_new_order.assert_called_once_with(order)
+
+    @override_settings(CARD_TO_CARD_ENABLED=True, CARD_TO_CARD_NUMBER="1111222233334444")
+    def test_checked_save_address_does_not_create_duplicates(self):
+        self.client.force_login(self.admin_user)
+        self.client.post(reverse("shop:cart_add", kwargs={"variant_id": self.variant.id}), {"quantity": 1})
+        data = {
+            "full_name": "خریدار تکراری",
+            "phone_number": "09124445566",
+            "province": "تهران",
+            "city": "تهران",
+            "address": "کوچه آزمایش",
+            "postal_code": "1234567890",
+            "save_address": "1",
+            "shipping_method": "tipax",
+            "payment_method": "card_to_card",
+        }
+        with patch("shop.order_views.notify_new_order"):
+            self.client.post(reverse("shop:checkout"), data)
+            self.client.post(reverse("shop:checkout"), data)
+        self.assertEqual(CustomerAddress.objects.filter(user=self.admin_user).count(), 1)
 
     def test_valid_support_message_triggers_outbound_alert_after_saving(self):
         with patch("shop.views.notify_support_message") as notify_support:

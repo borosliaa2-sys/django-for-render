@@ -3,7 +3,7 @@
 {% block title %}فاکتور و وضعیت سفارش | عطارباشی{% endblock title %}
 {% block content %}
 <div class="payment-result-wrap">
-  <div class="payment-card {% if order and order.status == 'cancelled' %}failed-state{% elif is_success %}success-state{% else %}failed-state{% endif %}">
+  <div class="payment-card {% if order and order.status == 'cancelled' %}failed-state{% elif is_success %}success-state{% elif is_pending_payment %}pending-state{% else %}failed-state{% endif %}">
     
     {% if order and order.status == 'cancelled' %}
       <!-- سفارش لغو شده -->
@@ -88,6 +88,42 @@
         <a href="{% url 'shop:home' %}" class="btn-res-home"><i class="ri-home-4-line"></i> صفحه اصلی</a>
       </div>
 
+    {% elif is_pending_payment and order %}
+      <!-- درخواست پرداخت ثبت شده است، اما هنوز پرداخت موفق محسوب نمی‌شود. -->
+      <div class="result-status-header">
+        <div class="status-icon"><i class="ri-time-line"></i></div>
+        {% if order.status == 'awaiting_receipt' %}
+          <h1>رسید پرداخت برای بررسی ثبت شد</h1>
+          <p class="status-subtitle">رسید شما دریافت شده است، اما پرداخت هنوز توسط فروشگاه تأیید نشده و سفارش در وضعیت <strong>«{{ order.status_label }}»</strong> قرار دارد.</p>
+        {% else %}
+          <h1>درخواست پرداخت ثبت شد</h1>
+          <p class="status-subtitle">این سفارش هنوز پرداخت‌شده نیست. شماره کارت را بررسی کنید، پرداخت را انجام دهید و رسید را تا پایان مهلت ارسال کنید.</p>
+        {% endif %}
+        <div class="order-status-badge status-{{ order.status }}">{{ order.status_label }}</div>
+      </div>
+
+      <div class="receipt-summary-box">
+        <div class="rc-item"><span class="rc-label">شماره سفارش:</span><strong class="rc-val">#{{ order.order_number }}</strong></div>
+        <div class="rc-item"><span class="rc-label">روش پرداخت:</span><strong class="rc-val">{{ order.get_payment_method_display }}</strong></div>
+        <div class="rc-item"><span class="rc-label">مبلغ قابل پرداخت:</span><strong class="rc-val highlight">{{ order.grand_total|intcomma }} تومان</strong></div>
+        <div class="rc-item"><span class="rc-label">ارسال:</span><strong class="rc-val">{{ order.get_shipping_method_display }}</strong></div>
+      </div>
+
+      <div class="delivery-info-box">
+        <h3><i class="ri-map-pin-user-line"></i> اطلاعات تحویل‌گیرنده</h3>
+        <p><strong>تحویل‌گیرنده:</strong> {{ order.full_name }} ({{ order.phone_number }})</p>
+        <p><strong>آدرس:</strong> {{ order.province }} {{ order.city }} - {{ order.address }}</p>
+      </div>
+
+      <div class="pending-order-note"><i class="ri-shopping-cart-line"></i> سبد خرید شما تا زمان تأیید پرداخت حفظ می‌شود و پس از پرداخت موفق به‌صورت خودکار خالی خواهد شد.</div>
+      <div class="result-actions">
+        {% if order.payment_method == 'card_to_card' %}
+          <a href="{% url 'shop:card_payment_instructions' order.order_number %}" class="btn-res-primary"><i class="ri-upload-cloud-2-line"></i> {% if order.status == 'awaiting_receipt' %}مشاهده وضعیت رسید{% else %}پرداخت و ارسال رسید{% endif %}</a>
+        {% endif %}
+        <a href="{% url 'shop:cart_detail' %}" class="btn-res-secondary"><i class="ri-shopping-cart-line"></i> مشاهده سبد خرید</a>
+        <a href="{% url 'shop:user_orders' %}" class="btn-res-home"><i class="ri-history-line"></i> سفارش‌های من</a>
+      </div>
+
     {% elif is_success and order %}
       <!-- سفارش موفق / در حال پردازش / ارسال شده -->
       <div class="result-status-header">
@@ -103,10 +139,12 @@
           <span class="rc-label">شماره سفارش:</span>
           <strong class="rc-val">#{{ order.order_number }}</strong>
         </div>
+        {% if order.payment_method == 'zarinpal' and order.payment_reference %}
         <div class="rc-item">
           <span class="rc-label">کد پیگیری درگاه بانکی:</span>
-          <strong class="rc-val" dir="ltr">{{ order.payment_reference|default:"TRX-98234190" }}</strong>
+          <strong class="rc-val" dir="ltr">{{ order.payment_reference }}</strong>
         </div>
+        {% endif %}
         <div class="rc-item">
           <span class="rc-label">تاریخ و ساعت:</span>
           <span class="rc-val">{{ order.created_at|date:"Y/m/d - H:i" }}</span>
@@ -157,8 +195,8 @@
           </tbody>
           <tfoot>
             <tr>
-              <td colspan="4" class="invoice-summary-label" style="text-align:left; font-weight:700;">هزینه ارسال پیشتاز:</td>
-              <td>{{ order.shipping_cost|intcomma }} تومان</td>
+              <td colspan="4" class="invoice-summary-label" style="text-align:left; font-weight:700;">{{ order.get_shipping_method_display }}:</td>
+              <td>کرایه هنگام تحویل</td>
             </tr>
             <tr class="total-row">
               <td colspan="4" class="invoice-summary-label" style="text-align:left; font-weight:800;">مبلغ کل پرداخت شده:</td>
@@ -228,7 +266,7 @@
   color: #991b1b;
   border: 1px solid #fecaca;
 }
-.order-status-badge.status-pending {
+.order-status-badge.status-pending, .order-status-badge.status-awaiting_receipt {
   background: #fef3c7;
   color: #b45309;
   border: 1px solid #fde68a;
@@ -248,10 +286,12 @@
   box-shadow: 0 10px 35px rgba(0,0,0,0.04);
 }
 .success-state { border: 1.5px solid #86efac; }
+.pending-state { border: 1.5px solid #fde68a; }
 .failed-state { border: 1.5px solid #fca5a5; }
 
 .result-status-header { text-align: center; margin-bottom: 24px; }
 .success-state .status-icon { font-size: 4rem; color: #16a34a; margin-bottom: 8px; }
+.pending-state .status-icon { font-size: 4rem; color: #b45309; margin-bottom: 8px; }
 .failed-state .status-icon { font-size: 4rem; color: #dc2626; margin-bottom: 8px; }
 .result-status-header h1 { font-size: 1.45rem; font-weight: 900; color: #2b1f15; margin-bottom: 8px; }
 .status-subtitle { color: #6b5a4a; font-size: 0.92rem; line-height: 1.6; max-width: 550px; margin: 0 auto; }
@@ -279,6 +319,7 @@
 }
 .delivery-info-box h3 { font-size: 0.92rem; font-weight: 800; color: #2b1f15; margin-bottom: 6px; display: flex; align-items: center; gap: 6px; }
 .delivery-info-box p { font-size: 0.86rem; color: #554433; margin: 3px 0; }
+.pending-order-note { background:#fff8e8; color:#8a4b08; border:1px solid #fde2a7; border-radius:12px; padding:12px 14px; font-size:.86rem; line-height:1.8; margin-bottom:20px; }
 
 .invoice-items-table { margin-bottom: 24px; }
 .invoice-items-table h3 { font-size: 0.96rem; font-weight: 800; color: #2b1f15; margin-bottom: 10px; }

@@ -625,6 +625,11 @@ class Order(models.Model):
             Order.objects.filter(pk=self.pk).update(stock_reserved=True)
         return True
 
+    def clear_customer_cart(self):
+        """Remove the persisted cart only after a payment is actually confirmed."""
+        if self.user_id:
+            CartItem.objects.filter(user_id=self.user_id).delete()
+
     def release_stock(self):
         """
         آزادسازی و بازگردانی موجودی به انبار در صورت لغو سفارش یا حذف
@@ -644,9 +649,11 @@ class Order(models.Model):
 
     def save(self, *args, **kwargs):
         # بررسی تغییر وضعیت سفارش در زمان ویرایش (مثلاً تغییر وضعیت در پنل ادمین)
+        became_paid = False
         if self.pk:
             old_order = Order.objects.filter(pk=self.pk).first()
             if old_order:
+                became_paid = old_order.status != "paid" and self.status == "paid"
                 # اگر وضعیت قبلاً لغو نبوده و اکنون لغو شده است -> بازگشت موجودی به انبار
                 if old_order.status != "cancelled" and self.status == "cancelled":
                     self.release_stock()
@@ -657,6 +664,8 @@ class Order(models.Model):
                     except ValueError:
                         pass
         super().save(*args, **kwargs)
+        if became_paid:
+            self.clear_customer_cart()
 
     def delete(self, *args, **kwargs):
         if self.stock_reserved:

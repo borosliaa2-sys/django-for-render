@@ -64,17 +64,44 @@ def _address_data(request):
 
 
 def _maybe_save_address(request, data):
+    """Save an address once, without creating a duplicate on every checkout."""
     if request.POST.get("save_address") != "1":
         return
     label = (request.POST.get("address_label") or "").strip()[:80]
     make_default = request.POST.get("make_default") == "1"
+    identity = {
+        "full_name": data["full_name"],
+        "phone_number": data["phone_number"],
+        "province": data["province"],
+        "city": data["city"],
+        "address": data["address"],
+        "postal_code": data["postal_code"],
+    }
+    # Use the most recently used matching address if old duplicate data exists;
+    # new checkout attempts update it instead of inserting another row.
+    saved = CustomerAddress.objects.filter(user=request.user, **identity).order_by("-is_default", "-updated_at").first()
+    is_first_address = not CustomerAddress.objects.filter(user=request.user).exists()
+    if saved:
+        update_fields = []
+        if label and saved.label != label:
+            saved.label = label
+            update_fields.append("label")
+        if make_default and not saved.is_default:
+            CustomerAddress.objects.filter(user=request.user, is_default=True).exclude(pk=saved.pk).update(is_default=False)
+            saved.is_default = True
+            update_fields.append("is_default")
+        if update_fields:
+            update_fields.append("updated_at")
+            saved.save(update_fields=update_fields)
+        return saved
+
     if make_default:
         CustomerAddress.objects.filter(user=request.user, is_default=True).update(is_default=False)
-    CustomerAddress.objects.create(
+    return CustomerAddress.objects.create(
         user=request.user,
         label=label,
-        is_default=make_default or not CustomerAddress.objects.filter(user=request.user).exists(),
-        **data,
+        is_default=make_default or is_first_address,
+        **identity,
     )
 
 
@@ -146,7 +173,8 @@ def create_order(request):
 
     notify_new_order(order)
     if payment_method == "card_to_card":
-        cart.clear()
+        # This is only a payment request, not a confirmed sale. Keep the cart
+        # intact until the store verifies the receipt and marks the order paid.
         return redirect("shop:card_payment_instructions", order_number=order.order_number)
 
     callback_url = request.build_absolute_uri(reverse("shop:payment_verify"))
@@ -284,7 +312,17 @@ def order_tracking(request):
 @login_required
 def order_invoice(request, order_number):
     order = get_object_or_404(Order.objects.prefetch_related("items"), order_number=order_number, user=request.user)
-    return render(request, "payment_result.html", {"order": order, "is_success": order.status != "cancelled"})
+    paid_statuses = {"paid", "processing", "shipped", "delivered"}
+    pending_statuses = {"pending", "awaiting_receipt"}
+    return render(
+        request,
+        "payment_result.html",
+        {
+            "order": order,
+            "is_success": order.status in paid_statuses,
+            "is_pending_payment": order.status in pending_statuses,
+        },
+    )
 
 
 @login_required
