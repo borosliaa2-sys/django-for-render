@@ -21,7 +21,7 @@ from django.urls import include, path
 
 from shop.media_views import serve_responsive_media, serve_site_media
 from shop.sitemaps import sitemaps
-from shop.views import robots_txt
+from shop.views import llms_txt, robots_txt
 
 
 def healthz(request):
@@ -32,6 +32,7 @@ def healthz(request):
 urlpatterns = [
     path("healthz/", healthz, name="healthz"),
     path("robots.txt", robots_txt, name="robots_txt"),
+    path("llms.txt", llms_txt, name="llms_txt"),
     path("sitemap.xml", sitemap, {"sitemaps": sitemaps}, name="django.contrib.sitemaps.views.sitemap"),
     # Responsive derivatives must come before the catch-all media route.
     path("media/optimized/<int:width>/", serve_responsive_media, name="responsive_media"),

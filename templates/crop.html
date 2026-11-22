@@ -3,7 +3,7 @@
 {% block title %}{{ product.name }} | عطارباشی{% endblock title %}
 {% block meta_description %}{{ product.short_description|default:product.description|truncatechars:155|default:product.name }} | خرید آنلاین از عطارباشی{% endblock meta_description %}
 {% block structured_data %}
-<script type="application/ld+json">{{ product_schema_json }}</script>
+{% if product_schema_json %}<script type="application/ld+json">{{ product_schema_json }}</script>{% endif %}
 <script type="application/ld+json">{{ breadcrumb_schema_json }}</script>
 {% endblock structured_data %}
 {% block content %}

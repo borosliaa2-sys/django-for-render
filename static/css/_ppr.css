@@ -591,11 +591,9 @@
 }
 
 .pro-title-wrap {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 4px;
-    margin-bottom: 4px;
+    display: block;
+    min-width: 0;
+    margin-bottom: 3px;
 }
 
 .pro-text-title {
@@ -606,14 +604,24 @@
     overflow: hidden;
     text-overflow: ellipsis;
     display: block;
+    width: 100%;
 }
 
 .pro-tag {
+    align-self: flex-start;
+    display: inline-flex;
+    width: fit-content;
     font-size: 0.68rem;
     font-weight: 700;
     padding: 2px 6px;
     border-radius: 4px;
     white-space: nowrap;
+}
+
+/* On narrow carousel cards the badge gets its own row. Product names keep
+   the full card width instead of competing with the discount tag. */
+.pro-tag--below {
+    margin: 0 0 4px;
 }
 
 .out-tag {
@@ -862,6 +870,16 @@
     }
     .category-ppr .pro-text-title {
         font-size: 0.78rem;
+    }
+    /* Category carousels are deliberately sparse on desktop, but on phones
+       show availability/discount below the title instead of squeezing it
+       into the same title row. This applies to all home product carousels. */
+    .category-ppr .pro-tag.pro-tag--below {
+        display: inline-flex;
+        align-self: flex-start;
+        margin: 0 0 4px;
+        font-size: 0.64rem;
+        padding: 2px 5px;
     }
     .category-ppr .category-carousel-kicker {
         font-size: 0.65rem;

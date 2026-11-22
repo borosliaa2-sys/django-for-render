@@ -9,6 +9,7 @@ from django.views.decorators.http import require_POST
 
 from .cart import Cart
 from .models import CustomerAddress, ProductVariant
+from .torobpay import eligible as torobpay_eligible
 
 
 def _is_ajax(request) -> bool:
@@ -168,6 +169,19 @@ def cart_detail(request):
     saved_addresses = []
     if request.user.is_authenticated:
         saved_addresses = CustomerAddress.objects.filter(user=request.user)
+
+    # The official CPG guide requires eligibility to be checked before this
+    # payment method is shown. A provider/network failure therefore leaves it
+    # unavailable rather than presenting a payment option that cannot start.
+    torob_pay_eligible = False
+    torob_pay_title = "پرداخت اقساطی با ترب‌پی"
+    torob_pay_description = ""
+    if items and getattr(settings, "TOROB_PAY_ENABLED", False):
+        eligibility = torobpay_eligible(int(cart.total_price) * 10)
+        torob_pay_eligible = bool(eligibility.get("eligible"))
+        torob_pay_title = eligibility.get("title") or torob_pay_title
+        torob_pay_description = eligibility.get("description") or ""
+
     return render(
         request,
         "cart.html",
@@ -177,5 +191,9 @@ def cart_detail(request):
             "saved_addresses": saved_addresses,
             "zarinpal_enabled": getattr(settings, "ZARINPAL_ENABLED", False),
             "card_to_card_enabled": getattr(settings, "CARD_TO_CARD_ENABLED", False),
+            "torob_pay_configured": getattr(settings, "TOROB_PAY_ENABLED", False),
+            "torob_pay_eligible": torob_pay_eligible,
+            "torob_pay_title": torob_pay_title,
+            "torob_pay_description": torob_pay_description,
         },
     )

@@ -542,6 +542,7 @@ class Order(models.Model):
     ]
     PAYMENT_METHOD_CHOICES = [
         ('zarinpal', 'پرداخت آنلاین زرین‌پال'),
+        ('torob_pay', 'پرداخت اعتباری ترب‌پی'),
         ('card_to_card', 'کارت‌به‌کارت'),
     ]
 
@@ -572,6 +573,11 @@ class Order(models.Model):
     status = models.CharField("وضعیت سفارش", max_length=20, choices=STATUS_CHOICES, default='pending')
     stock_reserved = models.BooleanField("موجودی رزرو/کسر شده در انبار", default=False)
     payment_authority = models.CharField("Authority زرین‌پال", max_length=120, blank=True)
+    # Keep TorobPay's hosted-payment token separate from Zarinpal's Authority.
+    # It is never displayed to customers and is used only for server-side
+    # verify/settle/cancel calls after the provider callback.
+    torob_payment_token = models.CharField("توکن پرداخت ترب‌پی", max_length=180, blank=True, db_index=True)
+    torob_transaction_id = models.CharField("شناسه تراکنش ترب‌پی", max_length=120, blank=True, db_index=True)
     payment_reference = models.CharField("کد رهگیری بانکی / درگاه", max_length=100, blank=True)
     notes = models.TextField("توضیحات مشتری", blank=True)
     created_at = models.DateTimeField("تاریخ ثبت سفارش", auto_now_add=True)

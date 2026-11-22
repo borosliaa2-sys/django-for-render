@@ -21,9 +21,9 @@ class OrderItemInline(admin.TabularInline):
 class OrderAdmin(admin.ModelAdmin):
     list_display = ("order_number", "full_name", "phone_number", "shipping_method", "payment_method", "receipt_review_display", "status", "stock_reserved_display", "grand_total_display", "postal_tracking_code", "created_at")
     list_filter = ("status", "shipping_method", "payment_method", "stock_reserved", "created_at", "province")
-    search_fields = ("order_number", "full_name", "phone_number", "postal_tracking_code", "payment_reference")
+    search_fields = ("order_number", "full_name", "phone_number", "postal_tracking_code", "payment_reference", "torob_transaction_id")
     list_editable = ("status", "postal_tracking_code")
-    readonly_fields = ("order_number", "stock_reserved", "created_at", "updated_at", "payment_reference", "payment_authority", "card_payment_deadline", "receipt_uploaded_at", "receipt_preview")
+    readonly_fields = ("order_number", "stock_reserved", "created_at", "updated_at", "payment_reference", "payment_authority", "torob_payment_token", "torob_transaction_id", "card_payment_deadline", "receipt_uploaded_at", "receipt_preview")
     # Customers upload receipts; staff review them through the protected preview
     # instead of an openly addressable media URL.
     exclude = ("card_receipt",)

@@ -50,6 +50,18 @@ EDITORIAL_REVISION_FINGERPRINTS = {
     "دمنوش-به-لیمو-برای-عصرهای-آرام": "0f045deac1401a0b75f917285b05d9bdb7e0791afa576b5f96d8894b93ab9da1",
     "ترشی-و-زیتون-کنار-غذا": "bc5759b64249ba3ff5e2967f6363222bc7a0951a0db6704caf685b64ca73a33d",
     "راهنمای-انتخاب-مربا-برای-صبحانه": "e71739a9f3448a5caa9e28b1a25a7e2d11d50885bc5c2e29b72dd95025ce2658",
+    # v42 -> v43: update only untouched new starter articles to their own
+    # generated editorial photos, while preserving any admin edit.
+    "زرشک-پلو-خانگی-با-زعفران": "5175d727302b975ae05079ea040d6bb355673e5749b8a42266526673b1d41ec4",
+    "شله-زرد-خانگی-با-زعفران-و-گلاب": "c05fd8739d16d07bfffa0f330b93f88adc51fa28eaaf3b0c5aee02a2592c7447",
+    "سوپ-جو-خانگی-با-سبزی-خشک": "fe5a396bc7cc565784e39cda4dbfe6949c1abccb28e6d98494305b0a5cd5cc7f",
+    "ترشی-مخلوط-و-سرو-ایمن": "fa1984880c94ab3303feaf00687095e15b74dbf510514fcae17ef68cedc838a6",
+    "چای-ترش-خانگی-روش-دم-کردن": "2a9f18c20ec6c7ea2f9e9088e7a762382f48f4558334d857f83c205fe0f4950e",
+    "فرنی-آرد-برنج-با-گلاب": "547c3edef780232b02d3f51497a8be6abc6a464c1e24b8d9ae94246f8569e4d2",
+    "نان-کنجدی-خانگی-برای-عصرانه": "d3e3f727c56783b6a358c8e425b46766de3813a17b57c6963071392d8f05a5d4",
+    "خورش-سبزی-با-سبزی-خشک": "65b383990f91880ef63b9f5b590c0a1e32148a602dd7d82f65bbd8a8455284d5",
+    "دسر-ماست-با-میوه-خشک-و-گردو": "402b79d3202546a8b5fe61d532d05258ebb22b8a82ceb0445c0ae5aa43fcb964",
+    "شربت-خاکشیر-و-تخم-شربتی": "e10f3edb5e439fbdce3dd9562768b21bd40a9a6495bfc3cf46539200a89f1ade",
 }
 
 FINGERPRINT_FIELDS = ("title", "category_name", "summary", "content", "image", "reading_time")

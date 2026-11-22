@@ -273,6 +273,46 @@ CARD_TO_CARD_BANK_NAME = os.environ.get("CARD_TO_CARD_BANK_NAME", "").strip()
 CARD_TO_CARD_PAYMENT_WINDOW_MINUTES = max(1, int(os.environ.get("CARD_TO_CARD_PAYMENT_WINDOW_MINUTES", "120")))
 CARD_TO_CARD_ENABLED = len(CARD_TO_CARD_NUMBER) == 16
 
+# Torob Pay stays unavailable until the merchant supplies its official,
+# current integration package and live credentials. These four values are
+# deliberately read only from Render Environment; the public build does not
+# activate a guessed endpoint, callback, or verification flow merely because
+# credentials are present.
+TOROB_PAY_MERCHANT_CODE = os.environ.get("TOROB_PAY_MERCHANT_CODE", "").strip()
+TOROB_PAY_MERCHANT_KEY = os.environ.get("TOROB_PAY_MERCHANT_KEY", "").strip()
+TOROB_PAY_USERNAME = os.environ.get("TOROB_PAY_USERNAME", "").strip()
+TOROB_PAY_PASSWORD = os.environ.get("TOROB_PAY_PASSWORD", "").strip()
+TOROB_PAY_CREDENTIALS_CONFIGURED = all(
+    (TOROB_PAY_MERCHANT_CODE, TOROB_PAY_MERCHANT_KEY, TOROB_PAY_USERNAME, TOROB_PAY_PASSWORD)
+)
+# The official CPG implementation checks eligibility per checkout amount before
+# presenting the option. Missing credentials never expose a selectable method.
+TOROB_PAY_ENABLED = TOROB_PAY_CREDENTIALS_CONFIGURED
+TOROB_PAY_BASE_URL = os.environ.get("TOROB_PAY_BASE_URL", "https://cpg.torobpay.com").strip().rstrip("/")
+
+
+def _verified_enamad_url(name: str, default: str = "") -> str:
+    """Allow only an actual HTTPS eNamad trust-seal URL from configuration."""
+    value = os.environ.get(name, default).strip()
+    parsed = urlparse(value)
+    if parsed.scheme == "https" and parsed.hostname == "trustseal.enamad.ir":
+        return value
+    return ""
+
+
+# These public verification URLs were supplied by the verified merchant. They
+# can be replaced in Render Environment if eNamad reissues the seal; their
+# values are public IDs, not merchant credentials.
+ENAMAD_SEAL_PAGE_URL = _verified_enamad_url(
+    "ENAMAD_SEAL_PAGE_URL",
+    "https://trustseal.enamad.ir/?id=8614051&Code=LsQL7mIgGmNJQ7HCrUZ8IMNwd4am0BXC",
+)
+ENAMAD_SEAL_IMAGE_URL = _verified_enamad_url(
+    "ENAMAD_SEAL_IMAGE_URL",
+    "https://trustseal.enamad.ir/logo.aspx?id=8614051&Code=LsQL7mIgGmNJQ7HCrUZ8IMNwd4am0BXC",
+)
+ENAMAD_ENABLED = bool(ENAMAD_SEAL_PAGE_URL and ENAMAD_SEAL_IMAGE_URL)
+
 # Outbound Telegram notifications require only these values; no webhook or
 # background bot process is enabled unless incoming bot commands are added.
 TELEGRAM_BOT_TOKEN = os.environ.get("TELEGRAM_BOT_TOKEN", "").strip()

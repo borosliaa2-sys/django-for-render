@@ -14,7 +14,8 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.views.generic import TemplateView
 from django.utils import timezone
-from django.views.decorators.http import require_GET, require_POST
+from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.http import require_GET, require_POST, require_http_methods
 
 from .cart import Cart
 from .media_views import _file_response, get_order_receipt_path
@@ -25,6 +26,11 @@ from .telegram_notifications import (
     notify_payment_cancelled,
     notify_payment_success,
 )
+from .torobpay import cancel as torobpay_cancel
+from .torobpay import create_payment as torobpay_create_payment
+from .torobpay import eligible as torobpay_eligible
+from .torobpay import settle as torobpay_settle
+from .torobpay import verify as torobpay_verify
 from .zarinpal import request_payment, verify_payment
 
 
@@ -125,6 +131,8 @@ def create_order(request):
         return _checkout_error(request, "پرداخت آنلاین زرین‌پال هنوز از سمت فروشگاه فعال نشده است؛ کارت‌به‌کارت را انتخاب کنید.")
     if payment_method == "card_to_card" and not getattr(settings, "CARD_TO_CARD_ENABLED", False):
         return _checkout_error(request, "پرداخت کارت‌به‌کارت هنوز توسط فروشگاه تکمیل نشده است. لطفاً با پشتیبانی تماس بگیرید.")
+    if payment_method == "torob_pay" and not getattr(settings, "TOROB_PAY_ENABLED", False):
+        return _checkout_error(request, "پرداخت اعتباری ترب‌پی در حال حاضر برای فروشگاه فعال نیست.")
 
     delivery, error = _address_data(request)
     if error:
@@ -133,6 +141,15 @@ def create_order(request):
     # All three enabled carriers collect carriage from the customer on delivery.
     # No delivery amount is sent to the online gateway.
     total_price = sum(int(item["price"]) * int(item["qty"]) for item in cart_items)
+    if payment_method == "torob_pay":
+        if not delivery.get("postal_code"):
+            return _checkout_error(request, "برای پرداخت اعتباری ترب‌پی، کد پستی نشانی تحویل الزامی است.")
+        # The published CPG protocol says the option must be offered only after
+        # a current per-amount eligibility confirmation, so repeat the check
+        # server-side even if the cart page was opened some minutes ago.
+        eligibility = torobpay_eligible(total_price * 10)
+        if not eligibility.get("eligible"):
+            return _checkout_error(request, "ترب‌پی برای مبلغ فعلی سبد خرید قابل استفاده نیست؛ روش پرداخت دیگری انتخاب کنید.")
     try:
         with transaction.atomic():
             # Recheck every line inside the transaction before persisting price.
@@ -177,6 +194,20 @@ def create_order(request):
         # This is only a payment request, not a confirmed sale. Keep the cart
         # intact until the store verifies the receipt and marks the order paid.
         return redirect("shop:card_payment_instructions", order_number=order.order_number)
+
+    if payment_method == "torob_pay":
+        callback_url = request.build_absolute_uri(reverse("shop:torob_payment_verify"))
+        result = torobpay_create_payment(order, callback_url)
+        if not result.get("success"):
+            # No payment token was created, so this local pending order is safe
+            # to cancel; stock was never reserved and the cart stays intact.
+            order.status = "cancelled"
+            order.save(update_fields=["status", "updated_at"])
+            return _checkout_error(request, result.get("message") or "ایجاد پرداخت ترب‌پی ممکن نشد.")
+        order.torob_payment_token = result["payment_token"]
+        order.torob_transaction_id = result["transaction_id"]
+        order.save(update_fields=["torob_payment_token", "torob_transaction_id", "updated_at"])
+        return redirect(result["payment_page_url"])
 
     callback_url = request.build_absolute_uri(reverse("shop:payment_verify"))
     result = request_payment(
@@ -232,6 +263,106 @@ def payment_verify(request):
         messages.error(request, str(exc))
         return render(request, "payment_result.html", {"order": order, "is_success": False})
 
+    if newly_paid:
+        notify_payment_success(order)
+    Cart(request).clear()
+    return render(request, "payment_result.html", {"order": order, "is_success": True})
+
+
+@csrf_exempt
+@require_http_methods(["GET", "POST"])
+def torob_payment_verify(request):
+    """Verify and settle a TorobPay CPG callback on the server only.
+
+    The official provider redirects with a form POST, while a GET is allowed
+    too for safe diagnostics/browser compatibility. The external provider
+    cannot supply Django's CSRF token, hence this callback is CSRF-exempt;
+    client data is instead bound to our stored order, expected rial amount,
+    and the provider's server-to-server verify response before an order becomes
+    paid.
+    """
+    callback = request.POST if request.method == "POST" else request.GET
+    transaction_id = (callback.get("transactionId") or "").strip()
+    state = (callback.get("state") or "").strip().upper()
+    raw_amount = (callback.get("amount") or "").strip()
+    order = get_object_or_404(
+        Order.objects.prefetch_related("items__variant", "items__product"),
+        order_number=transaction_id,
+        payment_method="torob_pay",
+    )
+    paid_states = {"paid", "processing", "shipped", "delivered"}
+    if order.status in paid_states:
+        return render(request, "payment_result.html", {"order": order, "is_success": True})
+
+    try:
+        callback_amount = int(raw_amount)
+    except (TypeError, ValueError):
+        callback_amount = -1
+    expected_amount = int(order.grand_total) * 10
+    if state != "OK" or callback_amount != expected_amount:
+        # A callback carries no signed message from the provider. Never let an
+        # arbitrary POST with a predictable order number cancel an order; only
+        # a successful callback proceeds to the provider-side verify call.
+        return render(request, "payment_result.html", {"order": order, "is_success": False})
+
+    if not order.torob_payment_token:
+        messages.error(request, "توکن پرداخت ترب‌پی برای این سفارش ثبت نشده است؛ با پشتیبانی تماس بگیرید.")
+        return render(request, "payment_result.html", {"order": order, "is_success": False})
+
+    # A reserved pending order means a prior callback reached verify but did
+    # not finish its settle response. Do not submit verify twice; retry only
+    # the idempotent finalization leg.
+    if not order.stock_reserved:
+        verified = torobpay_verify(order.torob_payment_token)
+        if not verified.get("success") or verified.get("transaction_id") != order.order_number:
+            messages.error(request, verified.get("message") or "تأیید پرداخت ترب‌پی ناموفق بود.")
+            return render(request, "payment_result.html", {"order": order, "is_success": False})
+        try:
+            with transaction.atomic():
+                locked_order = (
+                    Order.objects.select_for_update()
+                    .prefetch_related("items__variant", "items__product")
+                    .get(pk=order.pk)
+                )
+                if locked_order.status in paid_states:
+                    return render(request, "payment_result.html", {"order": locked_order, "is_success": True})
+                locked_order.reserve_stock()
+                order = locked_order
+        except ValueError as exc:
+            # The provider has verified the payment but stock cannot be
+            # fulfilled. Its documented cancel endpoint handles the refund.
+            torobpay_cancel(order.torob_payment_token)
+            order.status = "cancelled"
+            order.save(update_fields=["status", "updated_at"])
+            notify_payment_cancelled(order)
+            messages.error(request, f"{exc} پرداخت ترب‌پی برای بازگشت وجه لغو شد.")
+            return render(request, "payment_result.html", {"order": order, "is_success": False})
+
+    settled = torobpay_settle(order.torob_payment_token)
+    if not settled.get("success") or settled.get("transaction_id") != order.order_number:
+        # Stock remains reserved and the order stays pending. This avoids both
+        # overselling and a false payment-success claim while the provider's
+        # documented settlement state is being finalized.
+        messages.warning(request, "پرداخت شما توسط ترب‌پی تأیید شده و نهایی‌سازی آن در حال انجام است؛ سبد خریدتان حفظ می‌شود.")
+        return render(
+            request,
+            "payment_result.html",
+            {"order": order, "is_success": False, "is_pending_payment": True, "torob_settlement_pending": True},
+        )
+
+    newly_paid = order.status not in paid_states
+    with transaction.atomic():
+        order = (
+            Order.objects.select_for_update()
+            .prefetch_related("items__variant", "items__product")
+            .get(pk=order.pk)
+        )
+        if order.status not in paid_states:
+            # This reference is returned by the provider after verify/settle;
+            # no invented bank code is generated by the storefront.
+            order.status = "paid"
+            order.payment_reference = settled["transaction_id"]
+            order.save(update_fields=["status", "payment_reference", "updated_at"])
     if newly_paid:
         notify_payment_success(order)
     Cart(request).clear()

@@ -101,4 +101,8 @@ def seo(request):
         "social_default_image": f"{origin}/static/images/logo.jpg",
         "robots_directive": robots_directive,
         "organization_schema_json": mark_safe(json.dumps(organization, ensure_ascii=False, separators=(",", ":"))),
+        # Blank until the merchant configures the two official eNamad URLs.
+        "enamad_enabled": bool(getattr(settings, "ENAMAD_ENABLED", False)),
+        "enamad_seal_page_url": getattr(settings, "ENAMAD_SEAL_PAGE_URL", ""),
+        "enamad_seal_image_url": getattr(settings, "ENAMAD_SEAL_IMAGE_URL", ""),
     }

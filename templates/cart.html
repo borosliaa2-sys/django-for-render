@@ -200,6 +200,11 @@
               <div class="method-options">
                 <label class="method-option {% if not zarinpal_enabled %}disabled{% endif %}"><input type="radio" name="payment_method" value="zarinpal" {% if zarinpal_enabled %}checked{% else %}disabled{% endif %}><span><strong>پرداخت آنلاین زرین‌پال</strong><small>{% if zarinpal_enabled %}اتصال امن به درگاه بانکی{% else %}در حال تکمیل توسط فروشگاه{% endif %}</small></span></label>
                 <label class="method-option {% if not card_to_card_enabled %}disabled{% endif %}"><input type="radio" name="payment_method" value="card_to_card" {% if zarinpal_enabled %}{% elif card_to_card_enabled %}checked{% else %}disabled{% endif %}><span><strong>کارت‌به‌کارت</strong><small>پس از ثبت سفارش، دو ساعت برای پرداخت و ارسال رسید فرصت دارید.</small></span></label>
+                {% if torob_pay_eligible %}
+                  <label class="method-option"><input type="radio" name="payment_method" value="torob_pay" {% if not zarinpal_enabled and not card_to_card_enabled %}checked{% endif %}><span><strong>{{ torob_pay_title }}</strong><small>{{ torob_pay_description|default:'خرید اعتباری از طریق درگاه رسمی ترب‌پی' }}</small></span></label>
+                {% elif not torob_pay_configured %}
+                  <label class="method-option disabled" aria-disabled="true"><input type="radio" disabled><span><strong>ترب‌پی — خرید اعتباری</strong><small>تنظیمات پذیرندگی ترب‌پی هنوز در فروشگاه وارد نشده است.</small></span></label>
+                {% endif %}
                 <label class="method-option disabled" aria-disabled="true"><input type="radio" disabled><span><strong>اسنپ‌پی — ۴ قسط</strong><small>به‌زودی؛ در حال راه‌اندازی سرویس.</small></span></label>
               </div>
             </fieldset>

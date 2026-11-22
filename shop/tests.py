@@ -1,14 +1,16 @@
+import json
 from io import BytesIO
 from pathlib import Path
 from tempfile import TemporaryDirectory
 from unittest.mock import patch
 
+from django.conf import settings
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase, Client, override_settings
 from django.urls import reverse
 from PIL import Image
 from account.models import CustomUser
-from shop.models import Article, CartItem, Category, ContactMessage, CustomerAddress, Product, ProductVariant, Order, OrderItem
+from shop.models import Article, CartItem, Category, ContactMessage, CustomerAddress, Product, ProductVariant, Order, OrderItem, Review
 from shop.cart import Cart
 
 class ShopFullFlowTests(TestCase):
@@ -260,6 +262,19 @@ class ShopFullFlowTests(TestCase):
         self.assertEqual(res.status_code, 200)
         self.assertContains(res, "عرق نعناع دو آتیشه")
 
+    def test_latest_managed_articles_use_bundled_images_and_substantial_content(self):
+        from shop.editorial_content import MANAGED_ARTICLES
+
+        latest = MANAGED_ARTICLES[-10:]
+        self.assertEqual(len(latest), 10)
+        self.assertEqual(len({item["slug"] for item in latest}), 10)
+        self.assertEqual(len({item["image"] for item in latest}), 10)
+        for item in latest:
+            self.assertTrue(item["image"].startswith("images/articles/ai-"))
+            self.assertTrue((settings.BASE_DIR / "static" / item["image"]).is_file())
+            self.assertGreaterEqual(item["content"].count("<h2>"), 4)
+            self.assertGreaterEqual(len(item["content"]), 1200)
+
     def test_suggested_products_view(self):
         res = self.client.get(reverse("shop:suggested"))
         self.assertEqual(res.status_code, 200)
@@ -275,6 +290,9 @@ class ShopFullFlowTests(TestCase):
         self.assertEqual(res.status_code, 200)
         self.assertContains(res, "عرق نعناع دو آتیشه")
         self.assertContains(res, '"@type":"Product"')
+        self.assertContains(res, '"offers":{"@type":"Offer"')
+        self.assertContains(res, '"price":"650000"')
+        self.assertContains(res, '"availability":"https://schema.org/InStock"')
         self.assertContains(res, '"@type":"BreadcrumbList"')
         self.assertContains(res, self.cat.get_absolute_url())
         # The review labels now point at their fields and product links expose
@@ -282,6 +300,27 @@ class ShopFullFlowTests(TestCase):
         self.assertContains(res, 'for="id_rating"')
         self.assertContains(res, 'property="og:type" content="product"')
         self.assertContains(res, 'property="og:image" content="https://attarbashiesf.ir/static/images/logo.')
+
+    def test_catalogue_only_product_does_not_emit_incomplete_product_schema(self):
+        catalogue_only = Product.objects.create(
+            name="محصول کاتالوگی",
+            slug="catalogue-only-product",
+            category=self.cat,
+            description="این محصول هنوز قیمت قابل خرید ندارد.",
+            is_active=True,
+        )
+        res = self.client.get(catalogue_only.get_absolute_url())
+        self.assertEqual(res.status_code, 200)
+        self.assertNotContains(res, '"@type":"Product"')
+        self.assertContains(res, '"@type":"BreadcrumbList"')
+
+    def test_product_schema_uses_only_approved_real_review_ratings(self):
+        Review.objects.create(product=self.product, guest_name="خریدار اول", rating=5, comment="نظر تایید شده", is_approved=True)
+        Review.objects.create(product=self.product, guest_name="خریدار دوم", rating=1, comment="نظر تایید نشده", is_approved=False)
+        res = self.client.get(self.product.get_absolute_url())
+        self.assertContains(res, '"aggregateRating":{"@type":"AggregateRating"')
+        self.assertContains(res, '"ratingValue":"5.0"')
+        self.assertContains(res, '"reviewCount":1')
 
     def test_article_detail_has_social_preview_and_crawlable_share_controls(self):
         article = Article.objects.create(
@@ -450,10 +489,22 @@ class ShopFullFlowTests(TestCase):
         self.assertContains(robots, "Sitemap: https://attarbashiesf.ir/sitemap.xml")
         self.assertContains(robots, "Disallow: /cart/")
 
+        llms = self.client.get("/llms.txt")
+        self.assertEqual(llms.status_code, 200)
+        self.assertEqual(llms["Content-Type"], "text/plain; charset=utf-8")
+        self.assertContains(llms, "# عطارباشی | Attarbashi")
+        self.assertContains(llms, "https://attarbashiesf.ir/sitemap.xml")
+
         sitemap = self.client.get("/sitemap.xml")
         self.assertEqual(sitemap.status_code, 200)
         self.assertContains(sitemap, "<urlset")
         self.assertContains(sitemap, self.product.get_absolute_url())
+
+    def test_verified_enamad_seal_is_rendered_from_the_supplied_official_urls(self):
+        res = self.client.get(reverse("shop:home"))
+        self.assertContains(res, 'class="enamad-seal"')
+        self.assertContains(res, "https://trustseal.enamad.ir/?id=8614051&amp;Code=LsQL7mIgGmNJQ7HCrUZ8IMNwd4am0BXC")
+        self.assertContains(res, "https://trustseal.enamad.ir/logo.aspx?id=8614051&amp;Code=LsQL7mIgGmNJQ7HCrUZ8IMNwd4am0BXC")
 
     def test_custom_404_view(self):
         res = self.client.get("/a-page-that-definitely-does-not-exist/")
@@ -482,6 +533,189 @@ class ShopFullFlowTests(TestCase):
         self.assertContains(response, "خانه")
         self.assertContains(response, 'data-province="اصفهان"')
         self.assertContains(response, 'name="save_address" value="1" checked')
+
+    @override_settings(
+        TOROB_PAY_ENABLED=True,
+        TOROB_PAY_CREDENTIALS_CONFIGURED=True,
+        TOROB_PAY_MERCHANT_CODE="merchant-code-test",
+        TOROB_PAY_MERCHANT_KEY="merchant-key-test",
+        TOROB_PAY_USERNAME="merchant-user-test",
+        TOROB_PAY_PASSWORD="merchant-password-test",
+    )
+    def test_torob_gateway_uses_official_rial_payload_and_hosted_url(self):
+        from django.core.cache import cache
+        from shop.torobpay import create_payment
+
+        class FakeResponse:
+            def __init__(self, payload):
+                self.payload = payload
+
+            def read(self):
+                return json.dumps(self.payload).encode("utf-8")
+
+            def __enter__(self):
+                return self
+
+            def __exit__(self, *args):
+                return False
+
+        order = Order.objects.create(
+            user=self.admin_user,
+            order_number="ATB-TOROB-PAYLOAD",
+            full_name="خریدار تست",
+            phone_number="09120000000",
+            province="اصفهان",
+            city="نجف‌آباد",
+            address="نشانی تست",
+            postal_code="8511111111",
+            payment_method="torob_pay",
+            total_price=65000,
+            shipping_cost=0,
+        )
+        OrderItem.objects.create(
+            order=order,
+            product=self.product,
+            variant=self.variant,
+            product_name=self.product.name,
+            variant_weight=self.variant.display_weight,
+            price=65000,
+            quantity=1,
+        )
+        cache.clear()
+        with patch(
+            "shop.torobpay.urllib.request.urlopen",
+            side_effect=[
+                FakeResponse({"successful": True, "response": {"access_token": "test-jwt"}}),
+                FakeResponse({"successful": True, "response": {"paymentToken": "payment-token", "paymentPageUrl": "https://cpg.torobpay.com/pay/test"}}),
+            ],
+        ) as urlopen:
+            result = create_payment(order, "https://attarbashiesf.ir/payment/torob/callback/")
+
+        self.assertTrue(result["success"])
+        self.assertEqual(result["payment_token"], "payment-token")
+        self.assertEqual(result["transaction_id"], order.order_number)
+        token_request, payment_request = [call.args[0] for call in urlopen.call_args_list]
+        self.assertTrue(token_request.full_url.endswith("/api/online/v1/oauth/token"))
+        self.assertTrue(payment_request.full_url.endswith("/api/online/payment/v1/token"))
+        self.assertEqual(payment_request.get_header("Authorization"), "Bearer test-jwt")
+        payload = json.loads(payment_request.data.decode("utf-8"))
+        self.assertEqual(payload["amount"], 650000)
+        self.assertEqual(payload["paymentMethodTypeDto"], "ONLINE_CREDIT")
+        self.assertEqual(payload["transactionId"], order.order_number)
+        self.assertEqual(payload["cartList"][0]["shippingAmount"], 0)
+        self.assertFalse(payload["cartList"][0]["isShipmentIncluded"])
+        self.assertEqual(payload["cartList"][0]["cartItems"][0]["amount"], 650000)
+
+    @override_settings(
+        TOROB_PAY_ENABLED=True,
+        TOROB_PAY_CREDENTIALS_CONFIGURED=True,
+        TOROB_PAY_MERCHANT_CODE="merchant-code-test",
+        TOROB_PAY_MERCHANT_KEY="merchant-key-test",
+        TOROB_PAY_USERNAME="merchant-user-test",
+        TOROB_PAY_PASSWORD="merchant-password-test",
+    )
+    def test_torob_pay_creates_a_hosted_payment_only_after_eligibility(self):
+        self.client.force_login(self.admin_user)
+        self.client.post(
+            reverse("shop:cart_add", kwargs={"variant_id": self.variant.id}),
+            {"quantity": 1},
+            HTTP_X_REQUESTED_WITH="XMLHttpRequest",
+        )
+        checkout_data = {
+            "full_name": "خریدار ترب‌پی",
+            "phone_number": "09121112233",
+            "province": "اصفهان",
+            "city": "نجف‌آباد",
+            "address": "خیابان اصلی پلاک ۱",
+            "postal_code": "8511111111",
+            "payment_method": "torob_pay",
+            "shipping_method": "tipax",
+        }
+        with patch("shop.order_views.torobpay_eligible", return_value={"eligible": True}), patch(
+            "shop.order_views.torobpay_create_payment",
+            return_value={
+                "success": True,
+                "payment_token": "torob-token-123",
+                "transaction_id": "ATB-TEST-TOROB",
+                "payment_page_url": "https://cpg.torobpay.com/payment/test-page",
+            },
+        ) as create_payment:
+            response = self.client.post(reverse("shop:checkout"), checkout_data)
+
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response["Location"], "https://cpg.torobpay.com/payment/test-page")
+        order = Order.objects.get(full_name="خریدار ترب‌پی")
+        self.assertEqual(order.payment_method, "torob_pay")
+        self.assertEqual(order.torob_payment_token, "torob-token-123")
+        self.assertEqual(order.torob_transaction_id, "ATB-TEST-TOROB")
+        self.assertEqual(order.shipping_cost, 0)
+        self.assertFalse(order.stock_reserved)
+        self.assertEqual(create_payment.call_args.args[0].pk, order.pk)
+        self.assertIn("/payment/torob/callback/", create_payment.call_args.args[1])
+
+    def test_torob_callback_verifies_settles_and_reserves_stock(self):
+        order = Order.objects.create(
+            user=self.admin_user,
+            order_number="ATB-TOROB-CALLBACK",
+            full_name="خریدار تست",
+            phone_number="09120000000",
+            province="اصفهان",
+            city="نجف‌آباد",
+            address="نشانی تست",
+            postal_code="8511111111",
+            payment_method="torob_pay",
+            total_price=65000,
+            shipping_cost=0,
+            torob_payment_token="torob-token-callback",
+            torob_transaction_id="ATB-TOROB-CALLBACK",
+        )
+        OrderItem.objects.create(
+            order=order,
+            product=self.product,
+            variant=self.variant,
+            product_name=self.product.name,
+            variant_weight=self.variant.display_weight,
+            price=self.variant.price,
+            quantity=1,
+        )
+        with patch("shop.order_views.torobpay_verify", return_value={"success": True, "transaction_id": order.order_number}), patch(
+            "shop.order_views.torobpay_settle", return_value={"success": True, "transaction_id": order.order_number}
+        ):
+            response = self.client.post(
+                reverse("shop:torob_payment_verify"),
+                {"transactionId": order.order_number, "state": "OK", "amount": "650000"},
+            )
+
+        self.assertEqual(response.status_code, 200)
+        order.refresh_from_db()
+        self.variant.refresh_from_db()
+        self.assertEqual(order.status, "paid")
+        self.assertTrue(order.stock_reserved)
+        self.assertEqual(order.payment_reference, order.order_number)
+        self.assertEqual(self.variant.stock, 9)
+
+    def test_invalid_torob_callback_cannot_cancel_a_pending_order(self):
+        order = Order.objects.create(
+            user=self.admin_user,
+            order_number="ATB-TOROB-INVALID",
+            full_name="خریدار تست",
+            phone_number="09120000000",
+            province="اصفهان",
+            city="نجف‌آباد",
+            address="نشانی تست",
+            postal_code="8511111111",
+            payment_method="torob_pay",
+            total_price=65000,
+            torob_payment_token="torob-token-invalid",
+        )
+        response = self.client.post(
+            reverse("shop:torob_payment_verify"),
+            {"transactionId": order.order_number, "state": "FAILED", "amount": "650000"},
+        )
+        self.assertEqual(response.status_code, 200)
+        order.refresh_from_db()
+        self.assertEqual(order.status, "pending")
+        self.assertFalse(order.stock_reserved)
 
     @override_settings(CARD_TO_CARD_ENABLED=True, CARD_TO_CARD_NUMBER="1111222233334444")
     def test_card_to_card_order_has_two_hour_deadline_and_no_online_shipping_charge(self):

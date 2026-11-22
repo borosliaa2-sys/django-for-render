@@ -95,6 +95,9 @@
         {% if order.status == 'awaiting_receipt' %}
           <h1>رسید پرداخت برای بررسی ثبت شد</h1>
           <p class="status-subtitle">رسید شما دریافت شده است، اما پرداخت هنوز توسط فروشگاه تأیید نشده و سفارش در وضعیت <strong>«{{ order.status_label }}»</strong> قرار دارد.</p>
+        {% elif order.payment_method == 'torob_pay' %}
+          <h1>{% if torob_settlement_pending %}پرداخت ترب‌پی در حال نهایی‌سازی است{% else %}درخواست پرداخت ترب‌پی ثبت شد{% endif %}</h1>
+          <p class="status-subtitle">پرداخت اعتباری هنوز فقط پس از تأیید سمت ترب‌پی و نهایی‌سازی امن سفارش، پرداخت‌شده محسوب می‌شود. سبد خرید تا آن زمان حفظ خواهد شد.</p>
         {% else %}
           <h1>درخواست پرداخت ثبت شد</h1>
           <p class="status-subtitle">این سفارش هنوز پرداخت‌شده نیست. شماره کارت را بررسی کنید، پرداخت را انجام دهید و رسید را تا پایان مهلت ارسال کنید.</p>
@@ -139,9 +142,9 @@
           <span class="rc-label">شماره سفارش:</span>
           <strong class="rc-val">#{{ order.order_number }}</strong>
         </div>
-        {% if order.payment_method == 'zarinpal' and order.payment_reference %}
+        {% if order.payment_reference %}
         <div class="rc-item">
-          <span class="rc-label">کد پیگیری درگاه بانکی:</span>
+          <span class="rc-label">{% if order.payment_method == 'torob_pay' %}شناسه تراکنش ترب‌پی:{% else %}کد پیگیری درگاه بانکی:{% endif %}</span>
           <strong class="rc-val" dir="ltr">{{ order.payment_reference }}</strong>
         </div>
         {% endif %}

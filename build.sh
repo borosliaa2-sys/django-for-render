@@ -7,11 +7,20 @@ pip install -r requirements.txt
 python scripts/build_frontend_assets.py
 python manage.py collectstatic --noinput
 python manage.py migrate --noinput
+# This command loads the bundled catalogue only when the target database has
+# no Product rows. On every existing deployment it exits without writing any
+# product, price, stock, title, description, or image record.
 python manage.py ensure_catalog
-# Convert legacy Cloudinary public ids back to repository-local paths whenever
-# that exact bundled file is present. Browsers then stay on this site's /media/.
-python manage.py normalize_local_media_references
-python manage.py apply_managed_catalog_media
+# Product records belong to the live database, not the release ZIP. Never
+# normalize or replace product image references during a routine deployment:
+# an administrator's current selection must win. These two legacy repair
+# commands remain available for an explicit, one-time maintenance action only.
+if [ "${CATALOG_MEDIA_MAINTENANCE_ON_BUILD:-0}" = "1" ]; then
+  python manage.py normalize_local_media_references
+  python manage.py apply_managed_catalog_media
+else
+  echo "Skipping catalogue media maintenance; routine deployments never modify existing products (set CATALOG_MEDIA_MAINTENANCE_ON_BUILD=1 only for an intentional one-time repair)."
+fi
 # Cloudinary is a recovery backup only. It never becomes the visitor-facing
 # image URL and is used server-side only when a local file has disappeared.
 # A receipt-only repair deliberately avoids scanning/re-uploading the catalogue.

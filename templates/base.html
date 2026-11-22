@@ -214,6 +214,11 @@
                         <i class="ri-mail-line"></i>
                         <a href="mailto:info@attarbashiesf.ir" dir="ltr">info@attarbashiesf.ir</a>
                     </div>
+                    {% if enamad_enabled %}
+                    <a class="enamad-seal" href="{{ enamad_seal_page_url }}" target="_blank" rel="noopener noreferrer" referrerpolicy="origin" aria-label="مشاهده و استعلام نماد اعتماد الکترونیکی عطارباشی">
+                        <img src="{{ enamad_seal_image_url }}" alt="نماد اعتماد الکترونیکی" width="86" height="86" loading="lazy" decoding="async" referrerpolicy="origin">
+                    </a>
+                    {% endif %}
                 </div>
             </div>
         </div>
@@ -323,7 +328,23 @@
         background: var(--secondary-color);
         transform: translateY(-2px);
     }
-    .footer-col h4 {
+    .enamad-seal {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 90px;
+        min-height: 90px;
+        margin-top: 14px;
+        padding: 3px;
+        border-radius: 10px;
+        background: #fff;
+    }
+    .enamad-seal img {
+        width: 86px;
+        height: 86px;
+        object-fit: contain;
+    }
+    .footer-col h4 { 
         color: #fff;
         font-size: 1.05rem;
         font-weight: 800;

@@ -89,14 +89,14 @@
                 <div class="pro-box-text">
                     <div class="pro-title-wrap">
                         <span class="pro-text-title" title="{{ product.name }}">{{ product.name }}</span>
-                        {% if not variant or variant.stock == 0 %}
-                            <span class="pro-tag out-tag">ناموجود</span>
-                        {% elif product.best_discount_percent %}
-                            <span class="pro-tag discount-tag">%{{ product.best_discount_percent }} تخفیف</span>
-                        {% elif forloop.counter <= 3 %}
-                            <span class="pro-tag new-tag">جدید</span>
-                        {% endif %}
                     </div>
+                    {% if not variant or variant.stock == 0 %}
+                        <span class="pro-tag pro-tag--below out-tag">ناموجود</span>
+                    {% elif product.best_discount_percent %}
+                        <span class="pro-tag pro-tag--below discount-tag">%{{ product.best_discount_percent }} تخفیف</span>
+                    {% elif forloop.counter <= 3 %}
+                        <span class="pro-tag pro-tag--below new-tag">جدید</span>
+                    {% endif %}
                     <div class="pro-rating">
                         {% if product.avg_rating %}
                         <div class="rating-stars">

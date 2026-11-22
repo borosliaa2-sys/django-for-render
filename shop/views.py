@@ -48,6 +48,38 @@ def _json_ld(payload: dict) -> str:
     return mark_safe(serialized.replace("<", "\\u003c").replace(">", "\\u003e").replace("&", "\\u0026"))
 
 
+def llms_txt(request):
+    """Serve a compact, factual guide for AI systems at the site root."""
+    origin = _site_origin(request)
+    lines = [
+        "# عطارباشی | Attarbashi",
+        "",
+        "> فروشگاه آنلاین محصولات عطاری، ادویه، خشکبار و مواد غذایی در ایران.",
+        "",
+        "## صفحات اصلی",
+        f"- [خانه]({origin}/): معرفی فروشگاه و محصولات منتخب.",
+        f"- [فروشگاه]({origin}/products/): جست‌وجو و مشاهده محصولات.",
+        f"- [دسته‌بندی‌ها]({origin}/categories/): مرور محصولات بر اساس دسته.",
+        f"- [مجله]({origin}/blog/): دستورها، راهنمای نگهداری و محتوای آموزشی مسئولانه.",
+        f"- [درباره ما]({origin}/about/): اطلاعات فروشگاه.",
+        f"- [تماس با ما]({origin}/contact/): راه‌های ارتباط با فروشگاه.",
+        "",
+        "## راهنمای استفاده از محتوا",
+        "- قیمت، موجودی، روش پرداخت و شرایط ارسال را فقط از صفحهٔ همان محصول و فرایند پرداخت بررسی کنید؛ ممکن است تغییر کنند.",
+        "- نوشته‌های مجله آموزشی‌اند و جایگزین تشخیص، درمان یا توصیهٔ پزشکی نیستند.",
+        "- برای نقل یا ارجاع، صفحهٔ اصلی محصول یا مقاله را پیوند دهید و تاریخ مشاهده را ذکر کنید.",
+        "",
+        "## دسترسی عمومی",
+        f"- [نقشهٔ سایت]({origin}/sitemap.xml)",
+        f"- [robots.txt]({origin}/robots.txt)",
+        "- مسیرهای حساب کاربری، پرداخت، سبد خرید و رسید پرداخت خصوصی‌اند و نباید ایندکس یا خلاصه شوند.",
+        "",
+        "## زبان",
+        "- زبان اصلی: فارسی (fa-IR).",
+    ]
+    return HttpResponse("\n".join(lines) + "\n", content_type="text/plain; charset=utf-8")
+
+
 class HomeView(TemplateView):
     """صفحه خانه — دسته‌ها + محصولات محبوب"""
     template_name = "home.html"
@@ -223,29 +255,55 @@ class ProductDetailView(DetailView):
         ctx["variants"] = product.variants.filter(is_active=True).order_by("price")
         ctx["primary_variant"] = product.variants.filter(is_active=True).order_by("price").first()
         primary_variant = ctx["primary_variant"]
-        product_schema = {
-            "@context": "https://schema.org",
-            "@type": "Product",
-            "@id": f"{_site_origin(self.request)}{product.get_absolute_url()}#product",
-            "name": product.name,
-            "url": _absolute_site_url(self.request, product.get_absolute_url()),
-            "image": [_absolute_site_url(self.request, product.image_url)],
-            "description": product.short_description or product.description or f"خرید {product.name} از عطارباشی",
-            "category": product.category.name,
-            "brand": {"@type": "Brand", "name": "عطارباشی"},
-            "sku": str(product.pk),
-        }
-        if primary_variant and primary_variant.price:
-            product_schema["offers"] = {
-                "@type": "Offer",
+        approved_reviews = product.reviews.filter(is_approved=True)
+        review_stats = approved_reviews.aggregate(average=Avg("rating"), count=Count("id"))
+        review_count = int(review_stats["count"] or 0)
+        average_rating = (
+            round(float(review_stats["average"]), 1)
+            if review_stats["average"] is not None
+            else None
+        )
+        # Emit Product rich-result data only when this page has a real,
+        # purchasable price. A catalogue-only product with no variant/price
+        # must not be labelled Product in JSON-LD: Google then correctly
+        # reports that it lacks offers, reviews, and aggregate ratings.
+        schema_variant = product.variants.filter(is_active=True, price__gt=0).order_by("price").first()
+        if schema_variant:
+            product_schema = {
+                "@context": "https://schema.org",
+                "@type": "Product",
+                "@id": f"{_site_origin(self.request)}{product.get_absolute_url()}#product",
+                "name": product.name,
                 "url": _absolute_site_url(self.request, product.get_absolute_url()),
-                # Store prices are entered in tomans; Schema.org uses ISO IRR.
-                "price": str(int(primary_variant.price) * 10),
-                "priceCurrency": "IRR",
-                "availability": "https://schema.org/InStock" if primary_variant.stock > 0 else "https://schema.org/OutOfStock",
-                "seller": {"@id": f"{_site_origin(self.request)}/#organization"},
+                "image": [_absolute_site_url(self.request, product.image_url)],
+                "description": product.short_description or product.description or f"خرید {product.name} از عطارباشی",
+                "category": product.category.name,
+                "brand": {"@type": "Brand", "name": "عطارباشی"},
+                "sku": str(product.pk),
+                "offers": {
+                    "@type": "Offer",
+                    "url": _absolute_site_url(self.request, product.get_absolute_url()),
+                    # Store prices are entered in tomans; Schema.org uses ISO IRR.
+                    "price": str(int(schema_variant.price) * 10),
+                    "priceCurrency": "IRR",
+                    "availability": "https://schema.org/InStock" if schema_variant.stock > 0 else "https://schema.org/OutOfStock",
+                    "itemCondition": "https://schema.org/NewCondition",
+                    "seller": {"@id": f"{_site_origin(self.request)}/#organization"},
+                },
             }
-        ctx["product_schema_json"] = _json_ld(product_schema)
+            # Review data is optional. Include aggregateRating only when it
+            # comes from one or more real, approved customer reviews.
+            if review_count and average_rating is not None:
+                product_schema["aggregateRating"] = {
+                    "@type": "AggregateRating",
+                    "ratingValue": str(average_rating),
+                    "reviewCount": review_count,
+                    "bestRating": "5",
+                    "worstRating": "1",
+                }
+            ctx["product_schema_json"] = _json_ld(product_schema)
+        else:
+            ctx["product_schema_json"] = ""
         ctx["social_type"] = "product"
         ctx["social_title"] = f"{product.name} | عطارباشی"
         ctx["social_description"] = _social_description(
@@ -287,11 +345,9 @@ class ProductDetailView(DetailView):
             .select_related("category")
             .prefetch_related("variants")[:4]
         )
-        approved = product.reviews.filter(is_approved=True)
-        agg = approved.aggregate(a=Avg("rating"), n=Count("id"))
-        ctx["avg_rating"] = round(float(agg["a"]), 1) if agg["a"] is not None else None
-        ctx["review_count"] = int(agg["n"] or 0)
-        ctx["reviews"] = approved.select_related("user")
+        ctx["avg_rating"] = average_rating
+        ctx["review_count"] = review_count
+        ctx["reviews"] = approved_reviews.select_related("user")
         ctx["review_form"] = ReviewForm()
 
         # مقالات مرتبط با محصول
